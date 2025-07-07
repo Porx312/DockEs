@@ -7,21 +7,22 @@ import { getCompiledDocsForSlug, getDocFrontmatter } from "@/lib/markdown";
 import { Typography } from "@/components/typography";
 
 type PageProps = {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ slug: string[], name : string }>;
 };
 
 export default async function DocsPage(props: PageProps) {
   const params = await props.params;
-  const { slug = [] } = params;
+  const { slug = [], name} = params;
 
   const pathName = slug.join("/");
-  const res = await getCompiledDocsForSlug(pathName);
+  const res = await getCompiledDocsForSlug(pathName, name);
 
   if (!res) notFound();
   return (
     <div className="flex items-start gap-10">
       <div className="flex-[4.5] py-10 mx-auto">
         <div className="w-full mx-auto">
+          {name} xd
           <DocsBreadcrumb paths={slug} />
           <Typography>
             <h1 className="sm:text-3xl text-2xl !-mt-0.5">
@@ -36,17 +37,17 @@ export default async function DocsPage(props: PageProps) {
         </div>
       </div>
 
-      <Toc path={pathName} />
+      <Toc path={pathName}  name={name} />
     </div>
   );
 }
 
 export async function generateMetadata(props: PageProps) {
   const params = await props.params;
-  const { slug = [] } = params;
+  const { slug = [], name } = params;
 
   const pathName = slug.join("/");
-  const res = await getDocFrontmatter(pathName);
+  const res = await getDocFrontmatter(pathName, name);
   if (!res) return {};
   const { title, description } = res;
   return {

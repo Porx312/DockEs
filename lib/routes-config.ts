@@ -1,6 +1,7 @@
 // for page navigation & to sort on leftbar
 
 export type EachRoute = {
+  name?: string; // name is used for the route segment in the URL
   title: string;
   href: string;
   noLink?: true; // noLink will create a route segment (section) but cannot be navigated
@@ -10,6 +11,7 @@ export type EachRoute = {
 
 export const ROUTES: EachRoute[] = [
   {
+    name: "docs",
     title: "Getting Started",
     href: "/getting-started",
     noLink: true,
@@ -45,7 +47,32 @@ export const ROUTES: EachRoute[] = [
         href: "/customize",
       },
     ],
-  },
+  },{
+  name: "zustand",
+  title: "Next.js Guide",
+  href: "/nextjs",
+  noLink: true,
+  items: [
+    { title: "Overview", href: "/overview" },
+    { title: "Pages & Routing", href: "/pages-routing" },
+    { title: "Data Fetching", href: "/data-fetching" },
+    { title: "App Router", href: "/app-router" },
+    { title: "API Routes", href: "/api-routes" },
+    {
+      title: "Rendering",
+      href: "/rendering",
+      items: [
+        { title: "SSR vs SSG", href: "/ssr-vs-ssg" },
+        { title: "Client Components", href: "/client-components" },
+        { title: "Server Components", href: "/server-components" },
+      ],
+    },
+   { title: "Internationalization", href: "/i18n" },
+      { title: "Algolia Search", href: "/algolia-search", tag: "New" },
+      { title: "Themes", href: "/themes" },
+  ],
+}
+
 ];
 
 type Page = { title: string; href: string };

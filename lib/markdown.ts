@@ -81,9 +81,9 @@ export type BaseMdxFrontmatter = {
   description: string;
 };
 
-export async function getCompiledDocsForSlug(slug: string) {
+export async function getCompiledDocsForSlug(slug: string, name: string) {
   try {
-    const contentPath = getDocsContentPath(slug);
+    const contentPath = getDocsContentPath(slug, name);
     const rawMdx = await fs.readFile(contentPath, "utf-8");
     return await parseMdx<BaseMdxFrontmatter>(rawMdx);
   } catch (err) {
@@ -91,8 +91,8 @@ export async function getCompiledDocsForSlug(slug: string) {
   }
 }
 
-export async function getDocsTocs(slug: string) {
-  const contentPath = getDocsContentPath(slug);
+export async function getDocsTocs(slug: string, name: string) {
+  const contentPath = getDocsContentPath(slug, name);
   const rawMdx = await fs.readFile(contentPath, "utf-8");
   // captures between ## - #### can modify accordingly
   const headingsRegex = /^(#{2,4})\s(.+)$/gm;
@@ -124,8 +124,8 @@ function sluggify(text: string) {
   return slug.replace(/[^a-z0-9-]/g, "");
 }
 
-function getDocsContentPath(slug: string) {
-  return path.join(process.cwd(), "/contents/docs/", `${slug}/index.mdx`);
+function getDocsContentPath(slug: string, name: string) {
+  return path.join(process.cwd(), `/contents/${name}/`, `${slug}/index.mdx`);
 }
 
 function justGetFrontmatterFromMD<Frontmatter>(rawMd: string): Frontmatter {
@@ -246,9 +246,9 @@ export async function getBlogFrontmatter(slug: string) {
   }
 }
 
-export async function getDocFrontmatter(path: string) {
+export async function getDocFrontmatter(path: string, name: string) {
   try {
-    const contentPath = getDocsContentPath(path);
+    const contentPath = getDocsContentPath(path, name);
     const rawMdx = await fs.readFile(contentPath, "utf-8");
     return justGetFrontmatterFromMD<BlogMdxFrontmatter>(rawMdx);
   } catch {
