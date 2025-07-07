@@ -38,13 +38,13 @@ function File({ name, highlight, indicator }: FileType) {
     <div
       className={cn(
         "flex items-center gap-1.5 w-full hover:dark:bg-neutral-900 hover:bg-neutral-100 px-3 py-1 rounded-md relative",
-        highlight && "dark:text-blue-400 text-blue-500"
+        highlight && "dark:text-blue-400 text-blue-500",
       )}
     >
       {hasSupportedExtension(name) ? (
         <i
           className={`devicon-${getIconName(
-            name
+            name,
           )}-plain text-[17px] mr-[0.14rem]`}
         ></i>
       ) : (
@@ -60,7 +60,7 @@ function File({ name, highlight, indicator }: FileType) {
               indicator == "delete" &&
                 "dark:text-red-400 text-red-500 bg-red-400/10",
               indicator == "add" &&
-                "dark:text-green-400 text-green-500 bg-green-400/10"
+                "dark:text-green-400 text-green-500 bg-green-400/10",
             )}
           >
             {indicator == "delete" ? "remove" : "add"}
@@ -93,7 +93,7 @@ function Folder({
       <div
         className={cn(
           "cursor-pointer flex items-center gap-1.5 w-full hover:dark:bg-neutral-900 hover:bg-neutral-00 px-3 py-1 rounded-md",
-          highlight && "dark:text-blue-400 text-blue-500"
+          highlight && "dark:text-blue-400 text-blue-500",
         )}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -111,7 +111,7 @@ function Folder({
                 indicator == "delete" &&
                   "dark:text-red-400 text-red-500 bg-red-400/10",
                 indicator == "add" &&
-                  "dark:text-green-400 text-green-500 bg-green-400/10"
+                  "dark:text-green-400 text-green-500 bg-green-400/10",
               )}
             >
               {indicator == "delete" ? "remove" : "add"}

@@ -1,10 +1,9 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { GithubIcon, TwitterIcon, CommandIcon, BookAIcon } from "lucide-react";
+import { GithubIcon, TwitterIcon, BookAIcon } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
 import { SheetLeftbar } from "./leftbar";
-import { page_routes } from "@/lib/routes-config";
 import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
 
@@ -42,7 +41,7 @@ export function Navbar() {
     <nav className="w-full border-b h-16 sticky top-0 z-50 bg-background">
       <div className="sm:container mx-auto w-[95vw] h-full flex items-center sm:justify-between md:gap-2">
         <div className="flex items-center sm:gap-5 gap-2.5">
-          <SheetLeftbar/>
+          <SheetLeftbar />
           <div className="flex items-center gap-6">
             <div className="lg:flex hidden">
               <Logo />

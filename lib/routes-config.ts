@@ -47,32 +47,32 @@ export const ROUTES: EachRoute[] = [
         href: "/customize",
       },
     ],
-  },{
-  name: "zustand",
-  title: "Next.js Guide",
-  href: "/nextjs",
-  noLink: true,
-  items: [
-    { title: "Overview", href: "/overview" },
-    { title: "Pages & Routing", href: "/pages-routing" },
-    { title: "Data Fetching", href: "/data-fetching" },
-    { title: "App Router", href: "/app-router" },
-    { title: "API Routes", href: "/api-routes" },
-    {
-      title: "Rendering",
-      href: "/rendering",
-      items: [
-        { title: "SSR vs SSG", href: "/ssr-vs-ssg" },
-        { title: "Client Components", href: "/client-components" },
-        { title: "Server Components", href: "/server-components" },
-      ],
-    },
-   { title: "Internationalization", href: "/i18n" },
+  },
+  {
+    name: "zustand",
+    title: "Next.js Guide",
+    href: "/nextjs",
+    noLink: true,
+    items: [
+      { title: "Overview", href: "/overview" },
+      { title: "Pages & Routing", href: "/pages-routing" },
+      { title: "Data Fetching", href: "/data-fetching" },
+      { title: "App Router", href: "/app-router" },
+      { title: "API Routes", href: "/api-routes" },
+      {
+        title: "Rendering",
+        href: "/rendering",
+        items: [
+          { title: "SSR vs SSG", href: "/ssr-vs-ssg" },
+          { title: "Client Components", href: "/client-components" },
+          { title: "Server Components", href: "/server-components" },
+        ],
+      },
+      { title: "Internationalization", href: "/i18n" },
       { title: "Algolia Search", href: "/algolia-search", tag: "New" },
       { title: "Themes", href: "/themes" },
-  ],
-}
-
+    ],
+  },
 ];
 
 type Page = { title: string; href: string };

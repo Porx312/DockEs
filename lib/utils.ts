@@ -43,7 +43,7 @@ export function helperSearch(
 
 export function advanceSearch(query: string) {
   return ROUTES.map((node) =>
-    helperSearch(query, node, "", 1, query.length == 0 ? 2 : undefined)
+    helperSearch(query, node, "", 1, query.length == 0 ? 2 : undefined),
   ).flat();
 }
 

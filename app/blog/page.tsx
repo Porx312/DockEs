@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function BlogIndexPage() {
   const blogs = (await getAllBlogsFrontmatter()).sort(
-    (a, b) => stringToDate(b.date).getTime() - stringToDate(a.date).getTime()
+    (a, b) => stringToDate(b.date).getTime() - stringToDate(a.date).getTime(),
   );
   return (
     <div className="flex flex-col gap-1 sm:min-h-[91vh] min-h-[88vh] pt-2">

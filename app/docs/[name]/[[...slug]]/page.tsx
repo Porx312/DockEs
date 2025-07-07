@@ -7,12 +7,12 @@ import { getCompiledDocsForSlug, getDocFrontmatter } from "@/lib/markdown";
 import { Typography } from "@/components/typography";
 
 type PageProps = {
-  params: Promise<{ slug: string[], name : string }>;
+  params: Promise<{ slug: string[]; name: string }>;
 };
 
 export default async function DocsPage(props: PageProps) {
   const params = await props.params;
-  const { slug = [], name} = params;
+  const { slug = [], name } = params;
 
   const pathName = slug.join("/");
   const res = await getCompiledDocsForSlug(pathName, name);
@@ -37,7 +37,7 @@ export default async function DocsPage(props: PageProps) {
         </div>
       </div>
 
-      <Toc path={pathName}  name={name} />
+      <Toc path={pathName} name={name} />
     </div>
   );
 }

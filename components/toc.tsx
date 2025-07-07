@@ -2,7 +2,13 @@ import { getDocsTocs } from "@/lib/markdown";
 import TocObserver from "./toc-observer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export default async function Toc({ path, name}: { path: string, name: string }) {
+export default async function Toc({
+  path,
+  name,
+}: {
+  path: string;
+  name: string;
+}) {
   const tocs = await getDocsTocs(path, name);
 
   return (
