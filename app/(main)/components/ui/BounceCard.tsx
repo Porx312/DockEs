@@ -1,7 +1,6 @@
 'use client';
 import { useEffect } from "react";
 import { gsap } from "gsap";
-import { buttonVariants } from "@/components/ui/button";
 
 type BounceCardsProps = {
   className?: string;
