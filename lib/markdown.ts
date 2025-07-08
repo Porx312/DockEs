@@ -149,7 +149,7 @@ export async function getAllChilds(pathString: string) {
     page_routes_copy.map(async (it) => {
       const totalPath = path.join(
         process.cwd(),
-        `/contents/docs`,
+        `/contents/zustand/`,
         prevHref,
         it.href,
         "index.mdx",
@@ -157,7 +157,7 @@ export async function getAllChilds(pathString: string) {
       const raw = await fs.readFile(totalPath, "utf-8");
       return {
         ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
-        href: `/docs/docs/${prevHref}${it.href}`,
+        href: `/docs/zustand/${prevHref}${it.href}`,
       };
     }),
   );

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect } from "react";
 import { gsap } from "gsap";
 
@@ -31,7 +31,6 @@ export default function BounceCards({
   ],
   enableHover = false,
 }: BounceCardsProps) {
-
   useEffect(() => {
     gsap.fromTo(
       ".card",
@@ -41,7 +40,7 @@ export default function BounceCards({
         stagger: animationStagger,
         ease: easeType,
         delay: animationDelay,
-      }
+      },
     );
   }, [animationDelay, animationStagger, easeType]);
 
@@ -56,7 +55,10 @@ export default function BounceCards({
     }
   };
 
-  const getPushedTransform = (baseTransform: string, offsetX: number): string => {
+  const getPushedTransform = (
+    baseTransform: string,
+    offsetX: number,
+  ): string => {
     const translateRegex = /translate\(([-0-9.]+)px\)/;
     const match = baseTransform.match(translateRegex);
     if (match) {

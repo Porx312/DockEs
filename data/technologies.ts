@@ -1,27 +1,17 @@
 export const technologies = [
   {
-    name: "Next.js",
-    slug: "nextjs",
-    icon: "/icons/nextjs.png",
-    description: "Framework React para aplicaciones fullstack.",
-  },
-  {
-    name: "Prisma",
-    slug: "prisma",
-    icon: "/icons/Prisma.svg",
-    description: "ORM moderno para TypeScript y Node.js.",
-  },
-  {
     name: "React.js",
     slug: "/docs/docs/getting-started/introduction",
     icon: "/icons/React.png",
-    description: "Framework de estilos para construir UI rápidas.",
+    description:
+      "Librería de JavaScript para construir interfaces de usuario interactivas.",
   },
   {
-    name: "TypeScript",
-    slug: "/docs/zustand/nextjs/introduction",
-    icon: "/icons/TypeScript.png",
-    description: "Superset de JavaScript con tipado estático.",
+    name: "Zustand",
+    slug: "/docs/zustand/empezando/introduccion",
+    icon: "/icons/zustand.svg",
+    description:
+      "Pequeña librería de gestión de estado para aplicaciones React.",
   },
   // Puedes agregar más...
 ];

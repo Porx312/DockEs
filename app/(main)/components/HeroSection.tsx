@@ -9,7 +9,7 @@ const images = [
   "icons/Nest.js.png",
   "icons/TypeScript.png",
   "icons/Redis.png",
-  "icons/React.png",
+  "icons/zustand.svg",
 ];
 
 const transformStyles = [

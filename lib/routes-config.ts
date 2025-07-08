@@ -50,27 +50,23 @@ export const ROUTES: EachRoute[] = [
   },
   {
     name: "zustand",
-    title: "Next.js Guide",
-    href: "/nextjs",
+    title: "Guia de Zustand",
+    href: "/empezando",
     noLink: true,
     items: [
-      { title: "Overview", href: "/overview" },
-      { title: "Pages & Routing", href: "/pages-routing" },
-      { title: "Data Fetching", href: "/data-fetching" },
-      { title: "App Router", href: "/app-router" },
-      { title: "API Routes", href: "/api-routes" },
+      { title: "Introduction", href: "/introduccion" },
       {
-        title: "Rendering",
-        href: "/rendering",
+        title: "Guías",
+        href: "/guias",
         items: [
-          { title: "SSR vs SSG", href: "/ssr-vs-ssg" },
-          { title: "Client Components", href: "/client-components" },
-          { title: "Server Components", href: "/server-components" },
+          { title: "Tutorial Tic-Tac-Toe", href: "/tutorial-tic-tac-toe" },
+          { title: "Actualizando Estado", href: "/actualizando-estado" },
+          {
+            title: "Estado inmutable y fusión",
+            href: "/estado-inmutable-y-fusion",
+          },
         ],
       },
-      { title: "Internationalization", href: "/i18n" },
-      { title: "Algolia Search", href: "/algolia-search", tag: "New" },
-      { title: "Themes", href: "/themes" },
     ],
   },
 ];
