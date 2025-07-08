@@ -22,7 +22,6 @@ export default async function DocsPage(props: PageProps) {
     <div className="flex items-start gap-10">
       <div className="flex-[4.5] py-10 mx-auto">
         <div className="w-full mx-auto">
-          {name} xd
           <DocsBreadcrumb paths={slug} />
           <Typography>
             <h1 className="sm:text-3xl text-2xl !-mt-0.5">
@@ -32,7 +31,7 @@ export default async function DocsPage(props: PageProps) {
               {res.frontmatter.description}
             </p>
             <div>{res.content}</div>
-            <Pagination pathname={pathName} />
+            <Pagination pathname={pathName} name={name} />
           </Typography>
         </div>
       </div>

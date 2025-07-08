@@ -132,7 +132,7 @@ function justGetFrontmatterFromMD<Frontmatter>(rawMd: string): Frontmatter {
   return matter(rawMd).data as Frontmatter;
 }
 
-export async function getAllChilds(pathString: string) {
+export async function getAllChilds(pathString: string ) {
   const items = pathString.split("/").filter((it) => it != "");
   let page_routes_copy = ROUTES;
 
@@ -149,7 +149,7 @@ export async function getAllChilds(pathString: string) {
     page_routes_copy.map(async (it) => {
       const totalPath = path.join(
         process.cwd(),
-        "/contents/docs/",
+        `/contents/docs`,
         prevHref,
         it.href,
         "index.mdx",
@@ -157,7 +157,7 @@ export async function getAllChilds(pathString: string) {
       const raw = await fs.readFile(totalPath, "utf-8");
       return {
         ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
-        href: `/docs${prevHref}${it.href}`,
+        href: `/docs/docs/${prevHref}${it.href}`,
       };
     }),
   );

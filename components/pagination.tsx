@@ -3,7 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 
-export default function Pagination({ pathname }: { pathname: string }) {
+export default function Pagination({ pathname, name}: { pathname: string, name: string }) {
   const res = getPreviousNext(pathname);
 
   return (
@@ -16,7 +16,7 @@ export default function Pagination({ pathname }: { pathname: string }) {
               className:
                 "no-underline w-full flex flex-col sm:pl-7 pl-3 sm:py-10 py-8 !items-start text-xs sm:text-sm",
             })}
-            href={`/docs${res.prev.href}`}
+            href={`/docs/${name}/${res.prev.href}`}
           >
             <span className="flex items-center text-muted-foreground text-xs">
               <ChevronLeftIcon className="w-[1rem] h-[1rem] mr-1" />
@@ -34,7 +34,7 @@ export default function Pagination({ pathname }: { pathname: string }) {
               className:
                 "no-underline w-full flex flex-col sm:pr-7 pr-3 sm:py-10 py-8 !items-end text-xs sm:text-sm",
             })}
-            href={`/docs${res.next.href}`}
+            href={`/docs/${name}${res.next.href}`}
           >
             <span className="flex items-center text-muted-foreground text-xs">
               Next
