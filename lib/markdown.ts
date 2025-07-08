@@ -131,12 +131,12 @@ function getDocsContentPath(slug: string, name: string) {
 function justGetFrontmatterFromMD<Frontmatter>(rawMd: string): Frontmatter {
   return matter(rawMd).data as Frontmatter;
 }
-
+/* 
 export async function getAllChilds(pathString: string) {
+  console.log("Path String:",pathString);
   const items = pathString.split("/").filter((it) => it != "");
   let page_routes_copy = ROUTES;
-
-  let prevHref = "";
+    let prevHref = "";
   for (const it of items) {
     const found = page_routes_copy.find((innerIt) => innerIt.href == `/${it}`);
     if (!found) break;
@@ -149,7 +149,7 @@ export async function getAllChilds(pathString: string) {
     page_routes_copy.map(async (it) => {
       const totalPath = path.join(
         process.cwd(),
-        `/contents/zustand/`,
+        `/contents/${"zustand"}`,
         prevHref,
         it.href,
         "index.mdx",
@@ -158,6 +158,47 @@ export async function getAllChilds(pathString: string) {
       return {
         ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
         href: `/docs/zustand/${prevHref}${it.href}`,
+      };
+    }),
+  );
+} */
+
+export async function getAllChildsFromUrl(urlPath: string) {
+  const pathParts = urlPath.split("/").filter(Boolean);
+  if (pathParts.length < 1) return [];
+
+  const name = pathParts[0]; // e.g. "zustand"
+  const pathString = pathParts.slice(1).join("/"); // e.g. "empezando/guias"
+  const items = pathString.split("/").filter(Boolean);
+
+  let page_routes_copy = ROUTES;
+  let prevHref = "";
+
+  for (const it of items) {
+    const found = page_routes_copy.find((innerIt) => innerIt.href === `/${it}`);
+    if (!found) break;
+    prevHref += found.href;
+    page_routes_copy = found.items ?? [];
+  }
+
+  if (!prevHref) return [];
+
+  return await Promise.all(
+    page_routes_copy.map(async (it) => {
+      const totalPath = path.join(
+        process.cwd(),
+        "contents",
+        name,
+        prevHref,
+        it.href,
+        "index.mdx",
+      );
+
+      const raw = await fs.readFile(totalPath, "utf-8");
+
+      return {
+        ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
+        href: `/docs/${name}${prevHref}${it.href}`,
       };
     }),
   );

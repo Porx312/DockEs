@@ -4,7 +4,7 @@ import AnimatedIntro from "./ui/AnimateIntro";
 
 const images = [
   "icons/JavaScript.png",
-  "icons/nextjs.png",
+  "icons/nextjs.svg",
   "icons/Prisma.svg",
   "icons/Nest.js.png",
   "icons/TypeScript.png",

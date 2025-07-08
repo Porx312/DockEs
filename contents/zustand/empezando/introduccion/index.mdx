@@ -95,7 +95,7 @@ Zustand simplifica el manejo de estado global sin necesidad de configurar provee
   <StepperItem title="Paso 2: Creamos el código del store">
     Importamos la función `create` de Zustand y definimos el estado inicial junto con las funciones que nos permitirán modificarlo.
 
-    ```go:tsx
+    ```go:ts
     // src/store/store.ts
     import { create } from 'zustand';
 
@@ -114,7 +114,7 @@ Zustand simplifica el manejo de estado global sin necesidad de configurar provee
   <StepperItem title="Paso 3: Llamar funciones y estado">
     Ahora consumimos el estado y las acciones desde nuestros componentes.
 
-    ```go:ts
+    ```go:tsx
     // src/components/Bears.tsx
     import useStore from '../store/store';
 

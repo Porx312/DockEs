@@ -1,22 +1,50 @@
-import { BaseMdxFrontmatter, getAllChilds } from "@/lib/markdown";
-import Link from "next/link";
+"use client";
 
-export default async function Outlet({ path }: { path: string }) {
-  if (!path) throw new Error("path not provided");
-  const output = await getAllChilds(path);
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { BaseMdxFrontmatter } from "@/lib/markdown";
+
+type Child = BaseMdxFrontmatter & { href: string };
+
+export default function Outlet({ path }: { path: string }) {
+  const [children, setChildren] = useState<Child[]>([]);
+  const pathname = usePathname();
+
+  const match = pathname.match(/^\/docs\/([^/]+)/);
+  const name = match?.[1];
+
+  useEffect(() => {
+    if (!name || !path) return;
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`/api/docs/children?name=${name}&path=${path}`);
+        if (!res.ok) throw new Error("Failed to fetch children");
+        const data = await res.json();
+        setChildren(data);
+      } catch (err) {
+        console.error("Error loading children:", err);
+      }
+    };
+
+    fetchData();
+  }, [name, path]);
+
+  if (!name) return null;
 
   return (
     <div className="grid md:grid-cols-2 gap-5">
-      {output.map((child) => (
-        <ChildCard {...child} key={child.title} />
-      ))}
+      {children.length === 0 ? (
+        <p>Cargando contenido...</p>
+      ) : (
+        children.map((child) => <ChildCard {...child} key={child.title} />)
+      )}
     </div>
   );
 }
 
-type ChildCardProps = BaseMdxFrontmatter & { href: string };
-
-function ChildCard({ description, href, title }: ChildCardProps) {
+function ChildCard({ description, href, title }: Child) {
   return (
     <Link
       href={href}

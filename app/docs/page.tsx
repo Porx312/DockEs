@@ -4,10 +4,13 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { technologies } from "@/data/technologies";
+import clsx from "clsx";
+import { useTheme } from "next-themes";
 
 export default function ChooseTechnology() {
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
 
+  const { theme } = useTheme();
   useEffect(() => {
     gsap.fromTo(
       itemsRef.current,
@@ -48,10 +51,17 @@ export default function ChooseTechnology() {
             <Link href={`${tech.slug}`}>
               <div className="flex flex-col items-center justify-center space-y-4">
                 <img
-                  src={tech.icon}
+                  src={
+                    theme === "dark"
+                      ? tech.iconDark
+                      : tech.iconLight || tech.iconDark
+                  }
                   alt={tech.name}
-                  className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
+                  className={clsx(
+                    "w-14 h-14 object-contain transition-transform group-hover:scale-105",
+                  )}
                 />
+
                 <h3 className="text-xl font-semibold">{tech.name}</h3>
                 <p className="text-sm text-muted-foreground text-balance">
                   {tech.description}
