@@ -134,7 +134,7 @@ export default function BounceCards({
       {images.map((src, idx) => (
         <div
           key={idx}
-          className={`card card-${idx} absolute w-[120px]  overflow-hidden`}
+          className={`card card-${idx} absolute w-[140px]  overflow-hidden`}
           style={{
             transform: transformStyles[idx] || "none",
           }}

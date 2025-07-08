@@ -16,7 +16,6 @@ export const NAVLINKS = [
     title: "Blog",
     href: "/blog",
   },
- 
 ];
 
 const algolia_props = {

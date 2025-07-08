@@ -132,7 +132,7 @@ function justGetFrontmatterFromMD<Frontmatter>(rawMd: string): Frontmatter {
   return matter(rawMd).data as Frontmatter;
 }
 
-export async function getAllChilds(pathString: string ) {
+export async function getAllChilds(pathString: string) {
   const items = pathString.split("/").filter((it) => it != "");
   let page_routes_copy = ROUTES;
 

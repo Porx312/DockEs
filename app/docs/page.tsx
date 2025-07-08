@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import Link from 'next/link';
-import gsap from 'gsap';
-import { technologies } from '@/data/technologies';
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import gsap from "gsap";
+import { technologies } from "@/data/technologies";
 
 export default function ChooseTechnology() {
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -22,8 +22,8 @@ export default function ChooseTechnology() {
         scale: 1,
         duration: 1.2,
         stagger: 0.15,
-        ease: 'power4.out',
-      }
+        ease: "power4.out",
+      },
     );
   }, []);
 
@@ -38,9 +38,11 @@ export default function ChooseTechnology() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {technologies.map((tech, index) => (
-       <div
+          <div
             key={tech.slug}
-            ref={(el) => { itemsRef.current[index] = el; }}
+            ref={(el) => {
+              itemsRef.current[index] = el;
+            }}
             className="group border border-border rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out bg-card"
           >
             <Link href={`${tech.slug}`}>
@@ -51,11 +53,12 @@ export default function ChooseTechnology() {
                   className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
                 />
                 <h3 className="text-xl font-semibold">{tech.name}</h3>
-                <p className="text-sm text-muted-foreground text-balance">{tech.description}</p>
+                <p className="text-sm text-muted-foreground text-balance">
+                  {tech.description}
+                </p>
               </div>
             </Link>
           </div>
-
         ))}
       </div>
     </section>

@@ -4,13 +4,12 @@ import AnimatedIntro from "./ui/AnimateIntro";
 
 const images = [
   "icons/JavaScript.png",
-  "/icons/nextjs.png",
+  "icons/nextjs.png",
   "icons/Prisma.svg",
   "icons/Nest.js.png",
   "icons/TypeScript.png",
-  "/icons/Redis.png",
-  "/icons/React.png",
-
+  "icons/Redis.png",
+  "icons/React.png",
 ];
 
 const transformStyles = [
@@ -21,26 +20,27 @@ const transformStyles = [
   "rotate(-5deg) translate(90px, 120px) scale(0.8)",
   "rotate(12deg) translate(-10px, 120px) scale(0.85)",
   "rotate(-12deg) translate(0px, 10px) scale(.8)",
-]
+];
 
 const HeroSection = () => {
-  return    <div className="flex gap-[2px] py-14 flex-row   items-center content-center justify-center flex-wrap">
- <AnimatedIntro/>
-  <div className="w-[130px] h-auto grow shrink hidden md:block">
-
-<BounceCards
-  className="custom-bounceCards"
-  images={images}
-  containerWidth={500}
-  containerHeight={250}
-  animationDelay={.4}
-  animationStagger={0.08}
-  easeType="elastic.out(1, 0.5)"
-  transformStyles={transformStyles}
-  enableHover={false}
-/>
-  </div>
-</div>
+  return (
+    <div className="flex gap-[2px] py-14 flex-row   items-center content-center justify-center flex-wrap">
+      <AnimatedIntro />
+      <div className="w-[130px] h-auto grow shrink hidden md:block">
+        <BounceCards
+          className="custom-bounceCards"
+          images={images}
+          containerWidth={500}
+          containerHeight={250}
+          animationDelay={0.4}
+          animationStagger={0.08}
+          easeType="elastic.out(1, 0.5)"
+          transformStyles={transformStyles}
+          enableHover={false}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default HeroSection;
