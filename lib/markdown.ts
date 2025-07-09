@@ -18,7 +18,6 @@ import Note from "@/components/markdown/note";
 import { Stepper, StepperItem } from "@/components/markdown/stepper";
 import Image from "@/components/markdown/image";
 import Link from "@/components/markdown/link";
-import Outlet from "@/components/markdown/outlet";
 import Files from "@/components/markdown/files";
 import {
   Table,
@@ -28,9 +27,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import OutletWrapper from "@/components/markdown/docs-outlet-with-suspense";
 
 // add custom components
 const components = {
+  OutletWrapper,
   Tabs,
   TabsContent,
   TabsList,
@@ -41,7 +42,6 @@ const components = {
   StepperItem,
   img: Image,
   a: Link,
-  Outlet,
   Files,
   table: Table,
   thead: TableHeader,
@@ -131,79 +131,31 @@ function getDocsContentPath(slug: string, name: string) {
 function justGetFrontmatterFromMD<Frontmatter>(rawMd: string): Frontmatter {
   return matter(rawMd).data as Frontmatter;
 }
-/* 
-export async function getAllChilds(pathString: string) {
-  console.log("Path String:",pathString);
-  const items = pathString.split("/").filter((it) => it != "");
-  let page_routes_copy = ROUTES;
-    let prevHref = "";
-  for (const it of items) {
-    const found = page_routes_copy.find((innerIt) => innerIt.href == `/${it}`);
-    if (!found) break;
-    prevHref += found.href;
-    page_routes_copy = found.items ?? [];
-  }
-  if (!prevHref) return [];
 
-  return await Promise.all(
-    page_routes_copy.map(async (it) => {
-      const totalPath = path.join(
-        process.cwd(),
-        `/contents/${"zustand"}`,
-        prevHref,
-        it.href,
-        "index.mdx",
-      );
-      const raw = await fs.readFile(totalPath, "utf-8");
-      return {
-        ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
-        href: `/docs/zustand/${prevHref}${it.href}`,
-      };
-    }),
-  );
-} */
-
-export async function getAllChildsFromUrl(urlPath: string) {
-  const pathParts = urlPath.split("/").filter(Boolean);
-  if (pathParts.length < 1) return [];
-
-  const name = pathParts[0]; // e.g. "zustand"
-  const pathString = pathParts.slice(1).join("/"); // e.g. "empezando/guias"
-  const items = pathString.split("/").filter(Boolean);
-
-  let page_routes_copy = ROUTES;
-  let prevHref = "";
-
-  for (const it of items) {
-    const found = page_routes_copy.find((innerIt) => innerIt.href === `/${it}`);
-    if (!found) break;
-    prevHref += found.href;
-    page_routes_copy = found.items ?? [];
-  }
-
-  if (!prevHref) return [];
-
-  return await Promise.all(
-    page_routes_copy.map(async (it) => {
-      const totalPath = path.join(
-        process.cwd(),
-        "contents",
-        name,
-        prevHref,
-        it.href,
-        "index.mdx",
-      );
-
-      const raw = await fs.readFile(totalPath, "utf-8");
-
-      return {
-        ...justGetFrontmatterFromMD<BaseMdxFrontmatter>(raw),
-        href: `/docs/${name}${prevHref}${it.href}`,
-      };
-    }),
-  );
+// Utilidad para obtener el nombre del proyecto desde params
+export function getProjectNameFromParams(params: { slug: string[] }) {
+  return params.slug?.[0] || "";
 }
 
+// Utilidad para obtener la ruta del documento desde params
+export function getDocPathFromParams(params: { slug: string[] }) {
+  const pathParts = params.slug?.slice(1) || [];
+  return pathParts.length > 0 ? `/${pathParts.join("/")}` : "";
+}
+
+// Utilidad para validar si existe un directorio de documentación
+export async function validateDocsPath(
+  name: string,
+  docPath: string,
+): Promise<boolean> {
+  try {
+    const fullPath = path.join(process.cwd(), "contents", name, docPath);
+    await fs.access(fullPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 // for copying the code in pre
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const preProcess = () => (tree: any) => {

@@ -1,28 +1,32 @@
 export const technologies = [
   {
     name: "Next.js",
-    slug: "/docs/docs/getting-started/introduction",
+    comingSoon: true,
+    slug: "/docs/nextjs/empezando/guias",
     iconDark: "/icons/nextjs.svg",
     description:
       "Librería de React para construir interfaces de usuario interactivas.",
   },
   {
     name: "Zustand",
+    comingSoon: true,
     slug: "/docs/zustand/empezando/introduccion",
     iconDark: "/icons/zustand.svg",
     description:
       "Pequeña librería de gestión de estado para aplicaciones React.",
   },
-{
+  {
     name: "Prisma",
-    slug: "/docs/prisma/empezando/introduccion",
+    comingSoon: true,
+    slug: "/docs/prisma/empezando",
     iconLight: "/icons/Prisma.svg",
     iconDark: "/icons/prismad.svg",
     description:
       "ORM de próxima generación para Node.js y TypeScript con soporte para migraciones.",
   },
-  /* {
+  {
     name: "TypeScript",
+    comingSoon: true,
     slug: "/docs/typescript/empezando/introduccion",
     iconDark: "/icons/TypeScript.png",
     description:
@@ -30,6 +34,7 @@ export const technologies = [
   },
   {
     name: "Node.js",
+    comingSoon: true,
     slug: "/docs/nodejs/empezando/introduccion",
     iconDark: "/icons/nodejs.png",
     description:
@@ -37,6 +42,7 @@ export const technologies = [
   },
   {
     name: "Express",
+    comingSoon: true,
     slug: "/docs/express/empezando/instalacion",
     iconDark: "/icons/expressd.svg",
     iconLight: "/icons/express.png",
@@ -45,6 +51,7 @@ export const technologies = [
   },
   {
     name: "React",
+    comingSoon: true,
     slug: "/docs/react/empezando/introduccion",
     iconDark: "/icons/React.png",
     description:
@@ -52,6 +59,7 @@ export const technologies = [
   },
   {
     name: "Supabase",
+    comingSoon: true,
     slug: "/docs/supabase/empezando/introduccion",
     iconDark: "/icons/supabase.svg",
     description:
@@ -59,6 +67,7 @@ export const technologies = [
   },
   {
     name: "PostgreSQL",
+    comingSoon: true,
     slug: "/docs/postgresql/empezando/instalacion",
     iconDark: "/icons/postgresql.svg",
     description:
@@ -66,6 +75,7 @@ export const technologies = [
   },
   {
     name: "MongoDB",
+    comingSoon: true,
     slug: "/docs/mongodb/empezando/instalacion",
     iconDark: "/icons/mongodb.svg",
     description:
@@ -73,12 +83,14 @@ export const technologies = [
   },
   {
     name: "Drizzle ORM",
+    comingSoon: true,
     slug: "/docs/drizzle/empezando/introduccion",
     iconDark: "/icons/drizzle.svg",
     description: "ORM moderno y tipado para bases de datos SQL en TypeScript.",
   },
   {
     name: "Clerk",
+    comingSoon: true,
     slug: "/docs/clerk/empezando/introduccion",
     iconDark: "/icons/clerk.svg",
     iconLight: "/icons/clerkl.svg",
@@ -88,6 +100,7 @@ export const technologies = [
 
   {
     name: "Auth.js",
+    comingSoon: true,
     slug: "/docs/authjs/empezando/introduccion",
     iconDark: "/icons/auth.png",
     description:
@@ -95,6 +108,7 @@ export const technologies = [
   },
   {
     name: "JWT",
+    comingSoon: true,
     slug: "/docs/jwt/empezando/introduccion",
     iconDark: "/icons/jwt.svg",
     description:
@@ -102,12 +116,14 @@ export const technologies = [
   },
   {
     name: "Stripe",
+    comingSoon: true,
     slug: "/docs/stripe/empezando/introduccion",
     iconDark: "/icons/stripe.svg",
     description: "Plataforma de pagos para aplicaciones web y móviles.",
   },
   {
     name: "Socket.IO",
+    comingSoon: true,
     slug: "/docs/socketio/empezando/instalacion",
     iconDark: "/icons/socket.svg",
     iconLight: "/icons/socketl.svg",
@@ -116,9 +132,10 @@ export const technologies = [
   },
   {
     name: "NestJS",
+    comingSoon: true,
     slug: "/docs/nestjs/empezando/introduccion",
     iconDark: "/icons/Nest.js.png",
     description:
       "Framework progresivo para construir aplicaciones backend eficientes y escalables con Node.js.",
-  }, */ 
+  },
 ];
