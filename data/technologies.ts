@@ -1,11 +1,11 @@
 export const technologies = [
- /*  {
+  {
     name: "Next.js",
     slug: "/docs/docs/getting-started/introduction",
     iconDark: "/icons/nextjs.svg",
     description:
       "Librería de React para construir interfaces de usuario interactivas.",
-  }, */
+  },
   {
     name: "Zustand",
     slug: "/docs/zustand/empezando/introduccion",
@@ -13,7 +13,7 @@ export const technologies = [
     description:
       "Pequeña librería de gestión de estado para aplicaciones React.",
   },
-  /* {
+{
     name: "Prisma",
     slug: "/docs/prisma/empezando/introduccion",
     iconLight: "/icons/Prisma.svg",
@@ -21,7 +21,7 @@ export const technologies = [
     description:
       "ORM de próxima generación para Node.js y TypeScript con soporte para migraciones.",
   },
-  {
+  /* {
     name: "TypeScript",
     slug: "/docs/typescript/empezando/introduccion",
     iconDark: "/icons/TypeScript.png",
@@ -120,5 +120,5 @@ export const technologies = [
     iconDark: "/icons/Nest.js.png",
     description:
       "Framework progresivo para construir aplicaciones backend eficientes y escalables con Node.js.",
-  }, */
+  }, */ 
 ];
