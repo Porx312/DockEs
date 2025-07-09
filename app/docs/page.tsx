@@ -40,36 +40,38 @@ export default function ChooseTechnology() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        {technologies.map((tech, index) => (
-          <div
-            key={tech.slug}
-            ref={(el) => {
-              itemsRef.current[index] = el;
-            }}
-            className="group border border-border rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out bg-card"
-          >
-            <Link href={`${tech.slug}`}>
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <img
-                  src={
-                    theme === "dark"
-                      ? tech.iconDark
-                      : tech.iconLight || tech.iconDark
-                  }
-                  alt={tech.name}
-                  className={clsx(
-                    "w-14 h-14 object-contain transition-transform group-hover:scale-105",
-                  )}
-                />
+        {technologies.map((tech, index) =>
+          tech ? (
+            <div
+              key={tech.slug}
+              ref={(el) => {
+                itemsRef.current[index] = el;
+              }}
+              className="group border border-border rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out bg-card"
+            >
+              <Link href={`${tech.slug}`}>
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  <img
+                    src={
+                      theme === "dark"
+                        ? tech.iconDark
+                        : tech.iconLight || tech.iconDark
+                    }
+                    alt={tech.name}
+                    className={clsx(
+                      "w-14 h-14 object-contain transition-transform group-hover:scale-105",
+                    )}
+                  />
 
-                <h3 className="text-xl font-semibold">{tech.name}</h3>
-                <p className="text-sm text-muted-foreground text-balance">
-                  {tech.description}
-                </p>
-              </div>
-            </Link>
-          </div>
-        ))}
+                  <h3 className="text-xl font-semibold">{tech.name}</h3>
+                  <p className="text-sm text-muted-foreground text-balance">
+                    {tech.description}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          ) : null
+        )}
       </div>
     </section>
   );
