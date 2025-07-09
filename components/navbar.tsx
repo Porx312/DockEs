@@ -9,7 +9,7 @@ import AlgoliaSearch from "./algolia-search";
 
 export const NAVLINKS = [
   {
-    title: "Documentation",
+    title: "Documentacion",
     href: `/docs`,
   },
   {
@@ -67,7 +67,7 @@ export function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
       <BookAIcon className="w-6 h-6 text-muted-foreground" strokeWidth={2} />
-      <h2 className="text-md font-bold font-code">DockEs</h2>
+      <h2 className="text-md font-bold font-code">DocsJs</h2>
     </Link>
   );
 }
