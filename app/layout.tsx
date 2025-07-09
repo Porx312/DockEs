@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://dock-es.vercel.app/"),
   description:
     "DocsJs es un proyecto de documentación en español para Next.js, React y otras tecnologías web. Aquí encontrarás guías, tutoriales y recursos para mejorar tus habilidades de desarrollo web.",
-};
+  }
+  
+;
 
 export default function RootLayout({
   children,
