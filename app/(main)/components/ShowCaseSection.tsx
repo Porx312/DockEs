@@ -30,9 +30,9 @@ const ShowCaseSection = () => {
   return (
     <div
       ref={containerRef}
-      className="flex flex-col gap-6 items-center justify-center py-20 px-6 md:px-0 text-center max-w-5xl mx-auto"
+      className="flex flex-col gap-6 items-center justify-center py-10 px-0 md:px-6  text-center max-w-5xl mx-auto"
     >
-      <h2 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight">
+      <h2 className="text-5xl  md:text-7xl font-bold leading-tight tracking-tight">
         La mejor documentación técnica en Español
       </h2>
 

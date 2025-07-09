@@ -20,10 +20,10 @@ const monoFont = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DockEs - documentación en español",
+  title: "DocsJs - documentación en español",
   metadataBase: new URL("https://dock-es.vercel.app/"),
   description:
-    "DockEs es un proyecto de documentación en español para Next.js, React y otras tecnologías web. Aquí encontrarás guías, tutoriales y recursos para mejorar tus habilidades de desarrollo web.",
+    "DocsJs es un proyecto de documentación en español para Next.js, React y otras tecnologías web. Aquí encontrarás guías, tutoriales y recursos para mejorar tus habilidades de desarrollo web.",
 };
 
 export default function RootLayout({
