@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { GithubIcon, TwitterIcon, BookAIcon, AtSign } from "lucide-react";
+import { BookAIcon, AtSign } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";

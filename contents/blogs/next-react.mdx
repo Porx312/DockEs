@@ -11,3 +11,339 @@ cover: "https://img.freepik.com/premium-vector/many-monsters-various-colors-dood
 ---
 
 ## este es un articulo de prueba
+
+## codigo
+
+````md
+```javascript:main.js showLineNumbers {3-4}
+function isRocketAboutToCrash() {
+    // Check if the rocket is stable
+    if (!isStable()) {
+        NoCrash(); // Prevent the crash
+    }
+}
+```
+````
+
+```javascript:main.js showLineNumbers {3-4}
+function isRocketAboutToCrash() {
+    // Check if the rocket is stable
+    if (!isStable()) {
+        NoCrash(); // Prevent the crash
+    }
+}
+```
+
+###Note
+
+<Note type="note" title="Note">
+  This is a general note to convey information to the user.
+</Note>
+<Note type="danger" title="Danger">
+  This is a danger alert to notify the user of a critical issue.
+</Note>
+<Note type="warning" title="Warning">
+  This is a warning alert for issues that require attention.
+</Note>
+<Note type="success" title="Success">
+  This is a success message to inform the user of successful actions.
+</Note>
+
+```jsx
+<Note type="note" title="Note">
+  This is a general note to convey information to the user.
+</Note>
+<Note type="danger" title="Danger">
+  This is a danger alert to notify the user of a critical issue.
+</Note>
+<Note type="warning" title="Warning">
+  This is a warning alert for issues that require attention.
+</Note>
+<Note type="success" title="Success">
+  This is a success message to inform the user of successful actions.
+</Note>
+```
+
+## Preview
+
+##
+
+<Stepper>
+  <StepperItem title="Step 1: Clone the AriaDocs Repository">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum,
+    felis sed efficitur tincidunt, justo nulla viverra enim, et maximus nunc
+    dolor in lorem.
+  </StepperItem>
+  <StepperItem title="Step 2: Access the Project Directory">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin non neque ut
+    eros auctor accumsan. Mauris a nisl vitae magna ultricies aliquam.
+  </StepperItem>
+  <StepperItem title="Step 3: Install Required Dependencies">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ut
+    ipsum nec nulla ultricies porttitor et non justo.
+  </StepperItem>
+</Stepper>
+
+## Code
+
+```jsx
+// In markdown directly use this
+<Stepper>
+  <StepperItem title="Step 1: Clone the AriaDocs Repository">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum,
+    felis sed efficitur tincidunt, justo nulla viverra enim, et maximus nunc
+    dolor in lorem.
+  </StepperItem>
+  <StepperItem title="Step 2: Access the Project Directory">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin non neque ut
+    eros auctor accumsan. Mauris a nisl vitae magna ultricies aliquam.
+  </StepperItem>
+  <StepperItem title="Step 3: Install Required Dependencies">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ut
+    ipsum nec nulla ultricies porttitor et non justo.
+  </StepperItem>
+</Stepper>
+```
+
+## Preview
+
+<Tabs defaultValue="java" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="java">Java</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+  </TabsList>
+  <TabsContent value="java">
+    ```java
+    // HelloWorld.java
+    public class HelloWorld {
+        public static void main(String[] args) {
+            System.out.println("Hello, World!");
+        }
+    }
+    ```
+  </TabsContent>
+  <TabsContent value="typescript">
+    ```typescript
+    // helloWorld.ts
+    function helloWorld(): void {
+        console.log("Hello, World!");
+    }
+    helloWorld();
+    ```
+  </TabsContent>
+</Tabs>
+
+## Props
+
+| Prop           | Type     | Default | Description                                            |
+| -------------- | -------- | ------- | ------------------------------------------------------ |
+| `defaultValue` | `string` | `null`  | The value of the tab that is selected by default.      |
+| `className`    | `string` | `""`    | Additional CSS classes for styling the Tabs component. |
+
+## Code
+
+````jsx
+<Tabs defaultValue="java" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="java">Java</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+  </TabsList>
+  <TabsContent value="java">
+    ```java
+    // HelloWorld.java
+    public class HelloWorld {
+        public static void main(String[] args) {
+            System.out.println("Hello, World!");
+        }
+    }
+    ```</TabsContent>
+  <TabsContent value="typescript">
+    ```typescript
+    // helloWorld.ts
+    function helloWorld(): void {
+        console.log("Hello, World!");
+    }
+    helloWorld();
+    ```</TabsContent>
+</Tabs>
+````
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "app",
+      isOpen: true,
+      children: [
+        { type: "file", name: "page.tsx" },
+        { type: "file", name: "layout.tsx" },
+        {
+          type: "folder",
+          name: "blog",
+          children: [
+            { type: "file", name: "page.tsx" },
+            {
+              type: "folder",
+              name: "[slug]",
+              children: [{ type: "file", name: "page.tsx" }],
+            },
+          ],
+        },
+        {
+          type: "folder",
+          name: "docs",
+          children: [
+            { type: "file", name: "layout.tsx" },
+            { type: "file", name: "[[...slug]].tsx" },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### components
+
+This folder contains all reusable components used throughout the project. It’s structured to categorize components, making it easy to locate and manage UI elements, Markdown customizations, and navigation.
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "components",
+      isOpen: true,
+      children: [
+        {
+          type: "folder",
+          name: "ui",
+          isOpen: true,
+          children: [],
+        },
+        {
+          type: "folder",
+          name: "markdown",
+          isOpen: true,
+          children: [
+            { type: "file", name: "note.tsx" },
+            { type: "file", name: "image.tsx" },
+            { type: "file", name: "table.tsx" },
+          ],
+        },
+        { type: "file", name: "navbar.tsx" },
+      ],
+    },
+  ]}
+/>
+
+### styles
+
+This folder contains global and component-specific CSS files, allowing for project-wide styling consistency and customizations.
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "styles",
+      isOpen: true,
+      children: [
+        { type: "file", name: "globals.css" },
+        { type: "file", name: "syntax.css" },
+        { type: "file", name: "overrides.css" },
+      ],
+    },
+  ]}
+/>
+
+### contents
+
+This folder stores all Markdown content for the documentation and blog sections, with clear organization by content type. Each Markdown file represents a single piece of content, with frontmatter used for metadata.
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "contents",
+      isOpen: true,
+      children: [
+        {
+          type: "folder",
+          name: "docs",
+          isOpen: true,
+          children: [
+            { type: "file", name: "getting-started.md" },
+            { type: "file", name: "api-reference.md" },
+            {
+              type: "folder",
+              name: "tutorials",
+              isOpen: true,
+              children: [{ type: "file", name: "tutorial-1.md" }],
+            },
+          ],
+        },
+        {
+          type: "folder",
+          name: "blogs",
+          isOpen: true,
+          children: [
+            { type: "file", name: "intro-to-project.md" },
+            { type: "file", name: "dev-updates.md" },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### public
+
+This folder holds all static assets, such as images, videos, fonts, and icons. These files are directly accessible via URL, so it’s important to avoid sensitive or private content here.
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "public",
+      isOpen: true,
+      children: [
+        {
+          type: "folder",
+          name: "images",
+          isOpen: true,
+          children: [
+            { type: "file", name: "logo.png" },
+            { type: "file", name: "banner.jpg" },
+          ],
+        },
+        {
+          type: "folder",
+          name: "icons",
+          children: [],
+        },
+        {
+          type: "folder",
+          name: "videos",
+          children: [],
+        },
+      ],
+    },
+  ]}
+/>
+
+### lib
+
+This folder contains helper functions and utilities used across the application, such as Markdown parsing and routing logic. These utilities help keep the codebase clean and organized by separating out common functionality.
+
+<Files
+  items={[
+    {
+      type: "folder",
+      name: "lib",
+      isOpen: true,
+      children: [
+        { type: "file", name: "markdown.ts" },
+        { type: "file", name: "routes-config.ts" },
+        { type: "file", name: "utils.tsx" },
+      ],
+    },
+  ]}
+/>
