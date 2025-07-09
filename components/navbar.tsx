@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { GithubIcon, TwitterIcon, BookAIcon } from "lucide-react";
+import { GithubIcon, TwitterIcon, BookAIcon, AtSign } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
@@ -45,22 +45,14 @@ export function Navbar() {
           <div className="flex items-center justify-between sm:gap-2">
             <div className="flex ml-4 sm:ml-0">
               <Link
-                href="https://github.com/nisabmohd/NexDocs"
+                href="https://www.threads.com/@porxd3?hl=es"
+                type="_blank"
                 className={buttonVariants({
                   variant: "ghost",
                   size: "icon",
                 })}
               >
-                <GithubIcon className="h-[1.1rem] w-[1.1rem]" />
-              </Link>
-              <Link
-                href="#"
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "icon",
-                })}
-              >
-                <TwitterIcon className="h-[1.1rem] w-[1.1rem]" />
+                <AtSign className="h-[1.1rem] w-[1.1rem]" />
               </Link>
               <ModeToggle />
             </div>

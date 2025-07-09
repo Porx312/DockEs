@@ -1,0 +1,105 @@
+---
+title: Patrones recomendados para actualizar el estado en Zustand
+description: Descubre cómo manejar las actualizaciones del estado global en Zustand aplicando patrones inspirados en Flux, que garantizan un código limpio, predecible y fácil de mantene
+---
+
+## Prácticas inspiradas en Flux para Zustand
+
+Aunque **Zustand** es una biblioteca sin opiniones estrictas sobre estructura o patrones, se recomienda seguir ciertas prácticas para mantener el código limpio, mantenible y predecible. Estas sugerencias están inspiradas en patrones provenientes de **Flux** y **Redux**, por lo que si vienes de alguno de estos ecosistemas, te sentirás como en casa.
+
+Zustand, sin embargo, se diferencia en aspectos fundamentales, por lo que algunos términos pueden no alinearse exactamente con otras bibliotecas de gestión de estado.
+
+## Usa una sola tienda global
+
+La forma recomendada de estructurar tu estado es centralizarlo todo en una única **store global**. Incluso en aplicaciones grandes, Zustand permite dividir el estado en "slices" o secciones lógicas del estado dentro de la misma tienda:
+
+```go:js
+const useBoundStore = create((set) => ({
+  storeSliceA: { ... },
+  storeSliceB: { ... },
+  storeSliceC: { ... },
+}))
+```
+
+Esto ayuda a mantener la escalabilidad y la organización del código, sin perder la simplicidad que caracteriza a Zustand.
+
+## Siempre actualiza el estado usando `set` o `setState`
+
+Zustand proporciona la función `set` para actualizar el estado. Esta función asegura que los cambios se integren correctamente y que los componentes que dependen del estado sean notificados automáticamente.
+
+```go:js
+const useBoundStore = create((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}))
+```
+
+Usar directamente `set` (o `setState` si estás manejando acciones fuera del store) garantiza consistencia y evita problemas de sincronización.
+
+## Coloca las acciones directamente en la tienda
+
+A diferencia de Redux, Zustand **no requiere reducers ni acciones despachadas**. Puedes definir directamente funciones dentro de la tienda para manipular el estado:
+
+```go:js
+const useStore = create((set) => ({
+  value: 0,
+  increase: () => set((state) => ({ value: state.value + 1 })),
+  decrease: () => set((state) => ({ value: state.value - 1 })),
+}))
+```
+
+Este enfoque simplifica mucho el flujo de datos y reduce el boilerplate, sin sacrificar claridad ni control.
+
+Opcionalmente, puedes definir acciones fuera del store usando `setState`, lo cual es útil para manejar efectos secundarios o lógica compleja como llamadas HTTP.
+
+---
+
+## ¿Prefieres un estilo Redux?
+
+Si necesitas mantener una estructura basada en reducers y dispatch, puedes integrarlo tú mismo en Zustand:
+
+```go:js
+const types = { increase: 'INCREASE', decrease: 'DECREASE' }
+
+const reducer = (state, { type, by = 1 }) => {
+  switch (type) {
+    case types.increase:
+      return { grumpiness: state.grumpiness + by }
+    case types.decrease:
+      return { grumpiness: state.grumpiness - by }
+  }
+}
+
+const useGrumpyStore = create((set) => ({
+  grumpiness: 0,
+  dispatch: (args) => set((state) => reducer(state, args)),
+}))
+```
+
+También puedes utilizar el middleware `redux` de Zustand, que se encarga de conectar el reducer y configurar el estado inicial automáticamente:
+
+```go:js
+import { redux } from 'zustand/middleware'
+
+const useReduxStore = create(redux(reducer, initialState))
+```
+
+---
+
+## ¿Y si quiero manejar efectos secundarios?
+
+Zustand no impone una solución específica para manejar efectos como peticiones a API, pero puedes crear funciones auxiliares que llamen a `set` y manejen los efectos externos:
+
+```go:js
+const fetchData = async (set) => {
+  const data = await fetch('/api/data').then((res) => res.json())
+  set({ items: data })
+}
+
+const useStore = create((set) => ({
+  items: [],
+  loadItems: () => fetchData(set),
+}))
+```
+
+Este enfoque mantiene el store limpio y testable, mientras permite lógica externa desacoplada.

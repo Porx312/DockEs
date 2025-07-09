@@ -13,6 +13,15 @@ export const technologies = [
     description:
       "Pequeña librería de gestión de estado para aplicaciones React.",
   },
+  ,
+  {
+    name: "Prisma",
+    slug: "/docs/prisma/empezando/introduccion",
+    iconLight: "/icons/Prisma.svg",
+    iconDark: "/icons/prismad.svg",
+    description:
+      "ORM de próxima generación para Node.js y TypeScript con soporte para migraciones.",
+  },
   {
     name: "TypeScript",
     slug: "/docs/typescript/empezando/introduccion",
@@ -68,14 +77,6 @@ export const technologies = [
     slug: "/docs/drizzle/empezando/introduccion",
     iconDark: "/icons/drizzle.svg",
     description: "ORM moderno y tipado para bases de datos SQL en TypeScript.",
-  },
-  {
-    name: "Prisma",
-    slug: "/docs/prisma/empezando/instalacion",
-    iconLight: "/icons/Prisma.svg",
-    iconDark: "/icons/prismad.svg",
-    description:
-      "ORM de próxima generación para Node.js y TypeScript con soporte para migraciones.",
   },
   {
     name: "Clerk",

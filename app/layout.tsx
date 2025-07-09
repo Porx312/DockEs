@@ -20,10 +20,10 @@ const monoFont = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AriaDocs - Template",
-  metadataBase: new URL("https://ariadocs.vercel.app/"),
+  title: "DockEs - documentación en español",
+  metadataBase: new URL("https://dock-es.vercel.app/"),
   description:
-    "This comprehensive documentation template, crafted with Next.js and available as open-source, delivers a sleek and responsive design, tailored to meet all your project documentation requirements.",
+    "DockEs es un proyecto de documentación en español para Next.js, React y otras tecnologías web. Aquí encontrarás guías, tutoriales y recursos para mejorar tus habilidades de desarrollo web.",
 };
 
 export default function RootLayout({

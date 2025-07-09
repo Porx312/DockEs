@@ -35,7 +35,12 @@ export const ROUTES: EachRoute[] = [
           { title: "Note", href: "/note" },
           { title: "Code Block", href: "/code-block" },
           { title: "Image & Link", href: "/image-link" },
-          { title: "File System", href: "/file-system", tag: "New" },
+          {
+            title: "File System",
+            href: "/file-system",
+            tag: "New",
+            items: [{ title: "File System Overview", href: "/rere" }],
+          },
           { title: "Custom", href: "/custom" },
         ],
       },
@@ -59,11 +64,10 @@ export const ROUTES: EachRoute[] = [
         title: "Guías",
         href: "/guias",
         items: [
-          { title: "Tutorial Tic-Tac-Toe", href: "/tutorial-tic-tac-toe" },
           { title: "Actualizando Estado", href: "/actualizando-estado" },
           {
-            title: "Estado inmutable y fusión",
-            href: "/estado-inmutable-y-fusion",
+            title: "Prácticas inspiradas en Flux",
+            href: "/practicas-inspiradas-en-Flux",
           },
         ],
       },

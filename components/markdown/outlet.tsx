@@ -13,7 +13,7 @@ export default function Outlet({ path }: { path: string }) {
 
   const match = pathname.match(/^\/docs\/([^/]+)/);
   const name = match?.[1];
-
+  console.log("Outlet name:", name, "path:", path);
   useEffect(() => {
     if (!name || !path) return;
 
@@ -29,6 +29,10 @@ export default function Outlet({ path }: { path: string }) {
     };
 
     fetchData();
+
+    return () => {
+      setChildren([]); // Clear children on unmount
+    };
   }, [name, path]);
 
   if (!name) return null;

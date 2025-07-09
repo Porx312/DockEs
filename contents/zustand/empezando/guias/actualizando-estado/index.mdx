@@ -1,69 +1,185 @@
 ---
-title: Tabs
-description: This section previews the Tabs component.
+title: Actualización de estado en Zustand
+description: Aprende cómo actualizar el estado global con Zustand usando actualizaciones planas y profundas, con herramientas como Immer, optics-ts y Ramda.
 ---
 
-The `Tabs` component allows you to organize content into multiple sections, enabling users to switch between them easily. This is particularly useful for displaying related content in a compact manner.
+## Cómo actualizar el estado correctamente en Zustand (Flat & Nested Updates)
 
-## Preview
+Zustand es una librería minimalista y poderosa para manejar estado global en aplicaciones React. Aunque su API es muy simple, al trabajar con objetos anidados puede que te preguntes: ¿cómo actualizo mi estado correctamente?
 
-<Tabs defaultValue="java" className="pt-5 pb-1">
-  <TabsList>
-    <TabsTrigger value="java">Java</TabsTrigger>
-    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-  </TabsList>
-  <TabsContent value="java">
-    ```java
-    // HelloWorld.java
-    public class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, World!");
+Este artículo cubre:
+
+- 🔄 Actualizaciones planas (flat updates)
+- 🧩 Actualizaciones de objetos profundamente anidados (deep nested updates)
+- 🛠️ Alternativas: Immer, optics-ts, Ramda
+
+---
+
+## ✅ Actualización de estado: Lo básico (Flat Updates)
+
+Zustand provee una función `set` para modificar el estado global. Cuando trabajas con propiedades simples (no anidadas), actualizar es directo:
+
+### 📦 Ejemplo:
+
+```go:ts
+import { create } from 'zustand'
+
+type State = {
+  firstName: string
+  lastName: string
+}
+
+type Actions = {
+  updateFirstName: (firstName: string) => void
+  updateLastName: (lastName: string) => void
+}
+
+const usePersonStore = create<State & Actions>((set) => ({
+  firstName: '',
+  lastName: '',
+  updateFirstName: (firstName) => set({ firstName }),
+  updateLastName: (lastName) => set({ lastName }),
+}))
+```
+
+### 💡 Uso en React:
+
+```go:tsx
+function App() {
+  const firstName = usePersonStore((s) => s.firstName)
+  const updateFirstName = usePersonStore((s) => s.updateFirstName)
+
+  return (
+    <label>
+      First name:
+      <input
+        value={firstName}
+        onChange={(e) => updateFirstName(e.target.value)}
+      />
+    </label>
+  )
+}
+```
+
+Zustand hace **shallow merge** automáticamente, así que puedes modificar solo una parte del estado sin perder lo demás.
+
+---
+
+## 🧩 Actualizando estado anidado
+
+Cuando el estado es un objeto profundamente anidado, la actualización se complica.
+
+### 🎯 Estado de ejemplo:
+
+```go:ts
+type State = {
+  deep: {
+    nested: {
+      obj: {
+        count: number
+      }
+    }
+  }
+}
+```
+
+### ❌ Enfoque tradicional (spread manual):
+
+```go:ts
+normalInc: () =>
+  set((state) => ({
+    deep: {
+      ...state.deep,
+      nested: {
+        ...state.deep.nested,
+        obj: {
+          ...state.deep.nested.obj,
+          count: state.deep.nested.obj.count + 1
         }
+      }
     }
-    ```
-  </TabsContent>
-  <TabsContent value="typescript">
-    ```typescript
-    // helloWorld.ts
-    function helloWorld(): void {
-        console.log("Hello, World!");
-    }
-    helloWorld();
-    ```
-  </TabsContent>
-</Tabs>
+  })),
+```
 
-## Props
+🔻 Es verboso, propenso a errores y difícil de escalar.
 
-| Prop           | Type     | Default | Description                                            |
-| -------------- | -------- | ------- | ------------------------------------------------------ |
-| `defaultValue` | `string` | `null`  | The value of the tab that is selected by default.      |
-| `className`    | `string` | `""`    | Additional CSS classes for styling the Tabs component. |
+---
 
-## Code
+## 🛠️ Alternativas modernas para actualizar objetos anidados
 
-````jsx
-<Tabs defaultValue="java" className="pt-5 pb-1">
-  <TabsList>
-    <TabsTrigger value="java">Java</TabsTrigger>
-    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-  </TabsList>
-  <TabsContent value="java">
-    ```java
-    // HelloWorld.java
-    public class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, World!");
-        }
-    }
-    ```</TabsContent>
-  <TabsContent value="typescript">
-    ```typescript
-    // helloWorld.ts
-    function helloWorld(): void {
-        console.log("Hello, World!");
-    }
-    helloWorld();
-    ```</TabsContent>
-</Tabs>
-````
+### ✅ 1. **Immer**
+
+[Immer](https://immerjs.github.io/immer/) permite mutar el estado de forma _inmutable_, usando sintaxis mutable:
+
+```go:ts
+import { produce } from 'immer'
+
+immerInc: () =>
+  set(produce((state: State) => {
+    state.deep.nested.obj.count++
+  })),
+```
+
+✔️ Legible, limpio y fácil de mantener.
+
+---
+
+### ✅ 2. **optics-ts**
+
+[`optics-ts`](https://github.com/akheron/optics-ts) permite navegar objetos con _ópticas_:
+
+```go:ts
+import * as O from "optics-ts"
+
+opticsInc: () =>
+  set(
+    O.modify(
+      O.optic<State>().path("deep", "nested", "obj", "count")
+    )((c) => c + 1)
+  ),
+```
+
+✔️ Funciona bien con TypeScript y evita mutación o proxies.
+
+---
+
+### ✅ 3. **Ramda**
+
+[Ramda](https://ramdajs.com/) tiene una función `modifyPath`:
+
+```go:ts
+import * as R from "ramda"
+
+ramdaInc: () =>
+  set(
+    R.modifyPath(["deep", "nested", "obj", "count"], (c: number) => c + 1)
+  ),
+```
+
+✔️ Declarativo y funcional. Bueno si ya usas Ramda.
+
+---
+
+## 🧪 Comparación visual de alternativas
+
+| Método        | Ventajas               | Desventajas                   |
+| ------------- | ---------------------- | ----------------------------- |
+| Spread manual | Sin dependencias       | Verboso, difícil de mantener  |
+| **Immer**     | Legible, mutable-style | Usa proxies (a veces confuso) |
+| **optics-ts** | Typesafe, declarativo  | Nueva curva de aprendizaje    |
+| **Ramda**     | Funcional y limpio     | Necesita librería externa     |
+
+---
+
+## 🧬 Conclusión
+
+- Para **estado plano**, Zustand es directo y eficiente.
+- Para **estado anidado**, usa herramientas como **Immer**, **optics-ts** o **Ramda**.
+- Elige la alternativa que más se adapte a tu equipo o estilo de código.
+
+---
+
+### 🧪 Demo práctica
+
+Puedes ver todo esto funcionando aquí:
+👉 [Zustand + Immer + Optics + Ramda — Demo en CodeSandbox](https://codesandbox.io/s/zustand-normal-immer-optics-ramda-updating-ynn3o)
