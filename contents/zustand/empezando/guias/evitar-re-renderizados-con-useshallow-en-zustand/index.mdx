@@ -3,7 +3,6 @@ title: Evitar re-renderizados con useShallow en Zustand
 description: Cómo usar `useShallow` en Zustand para evitar re-renderizados innecesarios cuando el resultado de un selector no cambia realmente.
 ---
 
-
 Cuando te suscribes a un estado computado de un store, la forma recomendada es usar un **selector**. Zustand ejecutará el selector cada vez que el estado cambie y comparará su resultado con el valor anterior usando `Object.is`. Si hay diferencias, se dispara un re-renderizado.
 
 Sin embargo, hay casos donde el valor computado **no cambia realmente**, aunque el estado sí lo haga. Esto puede provocar **re-renderizados innecesarios**.
@@ -72,4 +71,3 @@ Ahora, aunque se actualice cualquier propiedad del estado, `BearNames` **solo se
 - Es especialmente útil cuando seleccionas arrays u objetos del estado.
 
 ---
-

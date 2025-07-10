@@ -10,7 +10,6 @@ type PageProps = {
   params: Promise<{ slug: string[]; name: string }>;
 };
 
-
 export default async function DocsPage(props: PageProps) {
   const params = await props.params;
   const { slug = [], name } = params;

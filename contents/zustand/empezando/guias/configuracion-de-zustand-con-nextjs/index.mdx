@@ -3,8 +3,6 @@ title: Configuración de Zustand con Next.js
 description: Cómo configurar Zustand en una aplicación Next.js usando Pages Router y App Router, con soporte para SSR, hidratación y routing en cliente.
 ---
 
-
-
 ## Configuración de Zustand con Next.js
 
 Next.js es un framework popular para aplicaciones React que incluye soporte para **renderizado en servidor (SSR)** y **enrutado híbrido (SPA + SSR)**. Usar Zustand en este entorno requiere algunas consideraciones especiales:
@@ -136,7 +134,7 @@ if (!storeRef.current) {
 
 ### 1. Pages Router
 
- Componente principal
+Componente principal
 
 ```go:tsx
 // src/components/pages/home-page.tsx
@@ -158,7 +156,7 @@ export const HomePage = () => {
 }
 ```
 
- _app.tsx (proveedor global)
+\_app.tsx (proveedor global)
 
 ```go:tsx
 // src/_app.tsx
@@ -213,7 +211,7 @@ export default function RootLayout({
 }
 ```
 
- Página del App Router
+Página del App Router
 
 ```go:tsx
 // src/app/page.tsx
@@ -254,4 +252,3 @@ export const HomePage = () => {
 - **Evita crear el store en componentes server-side**: Usa solo componentes cliente (`'use client'`) para interactuar con Zustand.
 - **Inicializa el store por solicitud**: Esto evita conflictos entre usuarios o sesiones.
 - **Hidratación correcta**: Asegúrate de que el estado inicial sea igual en servidor y cliente para evitar errores de hidratación.
-

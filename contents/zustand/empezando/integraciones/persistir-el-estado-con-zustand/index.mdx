@@ -3,7 +3,6 @@ title: Persistir el estado con Zustand
 description: Cómo usar el middleware `persist` de Zustand para guardar y restaurar el estado en almacenamiento local, con soporte para TypeScript, migraciones y almacenamientos personalizados.
 ---
 
-
 Zustand incluye un middleware llamado **`persist`**, que permite **guardar y restaurar el estado de tu aplicación** usando almacenamiento como `localStorage`, `sessionStorage`, `AsyncStorage` o incluso `IndexedDB`.
 
 ---
@@ -60,16 +59,16 @@ export const useBearStore = create<BearStore>()(
 
 ## Opciones del middleware `persist`
 
-| Opción | Descripción |
-|--------|-------------|
-| `name` | Nombre único usado como clave en el almacenamiento. Es obligatorio. |
-| `storage` | El motor de almacenamiento (por defecto es `localStorage`). |
-| `partialize` | Selecciona qué campos del estado quieres guardar. |
+| Opción               | Descripción                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `name`               | Nombre único usado como clave en el almacenamiento. Es obligatorio.           |
+| `storage`            | El motor de almacenamiento (por defecto es `localStorage`).                   |
+| `partialize`         | Selecciona qué campos del estado quieres guardar.                             |
 | `onRehydrateStorage` | Callback que se ejecuta cuando el estado se restaura desde el almacenamiento. |
-| `version` | Número de versión del estado. Útil para migraciones. |
-| `migrate` | Función para migrar datos antiguos a nuevas versiones. |
-| `merge` | Define cómo combinar el estado guardado con el actual. |
-| `skipHydration` | Salta la restauración automática del estado. |
+| `version`            | Número de versión del estado. Útil para migraciones.                          |
+| `migrate`            | Función para migrar datos antiguos a nuevas versiones.                        |
+| `merge`              | Define cómo combinar el estado guardado con el actual.                        |
+| `skipHydration`      | Salta la restauración automática del estado.                                  |
 
 ### Ejemplo de `partialize` (filtrar campos)
 

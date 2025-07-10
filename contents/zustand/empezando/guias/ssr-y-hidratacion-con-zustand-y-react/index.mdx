@@ -3,7 +3,6 @@ title: SSR y Hydration con Zustand y React
 description: Cómo configurar aplicaciones con Server Side Rendering y Hydration usando React y Zustand. Incluye ejemplos prácticos y advertencias importantes.
 ---
 
-
 ## Server Side Rendering (SSR)
 
 El **Server Side Rendering (SSR)** es una técnica que permite renderizar componentes de React en el servidor como cadenas HTML, enviarlas al navegador y luego "hidratar" ese contenido estático para convertirlo en una aplicación completamente interactiva.
@@ -70,19 +69,20 @@ import { App } from './app'
 const port = Number.parseInt(process.env.PORT || '3000', 10)
 const app = express()
 
-app.get('/', (_, res) => {
-  const { pipe } = ReactDOMServer.renderToPipeableStream(<App />, {
-    onShellReady() {
-      res.setHeader('content-type', 'text/html')
-      pipe(res)
-    },
-  })
+app.get('/', (\_, res) => {
+const { pipe } = ReactDOMServer.renderToPipeableStream(<App />, {
+onShellReady() {
+res.setHeader('content-type', 'text/html')
+pipe(res)
+},
+})
 })
 
 app.listen(port, () => {
-  console.log(`Servidor escuchando en puerto ${port}`)
+console.log(`Servidor escuchando en puerto ${port}`)
 })
-```
+
+````
     </TabsContent>
 </Tabs>
 
@@ -96,7 +96,7 @@ Compila y ejecuta:
 ```bash
 tsc --build
 node server.js
-```
+````
 
 ---
 

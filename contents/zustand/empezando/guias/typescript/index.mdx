@@ -153,7 +153,6 @@ const useBearStore = create(
 <details>
   <summary>Ten cuidado al usar `combine` con Zustand</summary>
 
-
 Zustand permite **inferir automáticamente el tipo del estado** cuando usas el middleware `combine`. Sin embargo, para lograrlo, se hace un pequeño "truco" en los tipos de los parámetros que recibes (`set`, `get`, etc.). Es importante entender cómo funciona esto y cuándo puede llevar a errores.
 
 🧠 ¿Qué significa eso de "mentir" en los tipos?

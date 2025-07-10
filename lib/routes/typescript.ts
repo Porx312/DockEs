@@ -1,37 +1,47 @@
 import { EachRoute } from "../routes-config";
 
-export const TS_ROUTES: EachRoute = 
+export const TS_ROUTES: EachRoute = {
+  name: "typescript",
+  title: "documentacion de TypeScript",
+  href: "/documentacion",
+  items: [
     {
-    name: "typescript",
-    title: "documentacion de TypeScript",
-    href: "/documentacion",
-    items: [
-      {
-        title: "empezando",
-        href: "/empezando",
-        items: [
-          { title: "Typescript como tu primer lenguaje", href: "/introduccion-typescript" },
-          { title: "TypeScript para Programadores de JavaScript", href: "/para-programadores-javascript" },
-          { title: "TypeScript para Programadores de Java o C#:", href: "/typescript-para-programadores-java-csharp" },
-          { title: " Herramientas de TypeScript en 5 minutos", href: "/herramientas-en-5-minutos" },
-        ],
-      },
-       {
-        title: "Manual Typescript  ",
-        href: "/manual",
-        items: [
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-          { title: "  ", href: " " },
-        
-        ],
-      },
-      /* {
+      title: "empezando",
+      href: "/empezando",
+      items: [
+        {
+          title: "Typescript como tu primer lenguaje",
+          href: "/introduccion-typescript",
+        },
+        {
+          title: "TypeScript para Programadores de JavaScript",
+          href: "/para-programadores-javascript",
+        },
+        {
+          title: "TypeScript para Programadores de Java o C#:",
+          href: "/typescript-para-programadores-java-csharp",
+        },
+        {
+          title: " Herramientas de TypeScript en 5 minutos",
+          href: "/herramientas-en-5-minutos",
+        },
+      ],
+    },
+    {
+      title: "Manual Typescript  ",
+      href: "/manual",
+      items: [
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+        { title: "  ", href: " " },
+      ],
+    },
+    /* {
         title: "Apis",
         href: "/apis",
         items: [
@@ -62,5 +72,5 @@ export const TS_ROUTES: EachRoute =
           { title: "subscribewithselector", href: "/subscribewithselector" },
         ],
       }, */
-    ],
-  }
+  ],
+};

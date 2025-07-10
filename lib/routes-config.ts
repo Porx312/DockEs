@@ -1,6 +1,10 @@
 // for page navigation & to sort on leftbar
-import {NEXTJS_ROUTES,PRISMA_ROUTES,TS_ROUTES,ZUSTAND_ROUTES} from './routes/index'
-
+import {
+  NEXTJS_ROUTES,
+  PRISMA_ROUTES,
+  TS_ROUTES,
+  ZUSTAND_ROUTES,
+} from "./routes/index";
 
 export type EachRoute = {
   name?: string; // name is used for the route segment in the URL
@@ -16,8 +20,6 @@ export const ROUTES: EachRoute[] = [
   ...(Array.isArray(NEXTJS_ROUTES) ? NEXTJS_ROUTES : [NEXTJS_ROUTES]),
   ...(Array.isArray(PRISMA_ROUTES) ? PRISMA_ROUTES : [PRISMA_ROUTES]),
   ...(Array.isArray(TS_ROUTES) ? TS_ROUTES : [TS_ROUTES]),
-
-  
 ];
 
 type Page = { title: string; href: string };

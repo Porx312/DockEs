@@ -2,11 +2,12 @@
 title: Llamar acciones fuera de un event handler en React pre-18
 description: Cómo evitar el efecto zombie child al usar Zustand en React versiones anteriores a la 18 cuando llamas acciones fuera de un evento de React.
 ---
+
 # Llamar acciones fuera de un event handler en React pre-18
 
 En versiones de **React anteriores a la 18**, si llamas a una acción de Zustand (como `setState` o una acción del store) **fuera de un manejador de eventos de React** (por ejemplo, en una llamada asíncrona como `setTimeout`, un callback de evento del DOM o una promesa), React **no agrupa las actualizaciones de estado automáticamente**. Esto puede causar el efecto conocido como **"zombie child"**, donde los componentes intentan renderizar datos que ya no están actualizados.
 
-##  Actualizacion sincrona y el efecto zombie child
+## Actualizacion sincrona y el efecto zombie child
 
 Cuando haces esto:
 
@@ -44,5 +45,3 @@ Esto asegura que cualquier actualización de estado se maneje de forma **asíncr
 ## Enlaces utiles
 
 - [Discusión sobre el tema en Zustand #302](https://github.com/pmndrs/zustand/issues/302)
-
-
