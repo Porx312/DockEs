@@ -16,7 +16,7 @@ export const technologies = [
   },
   {
     name: "Prisma",
-    comingSoon: false,
+    comingSoon: true,
     slug: "/docs/prisma/empezando",
     iconLight: "/icons/Prisma.svg",
     iconDark: "/icons/prismad.svg",
