@@ -1,0 +1,147 @@
+---
+title: SSR y Hydration con Zustand y React
+description: Cómo configurar aplicaciones con Server Side Rendering y Hydration usando React y Zustand. Incluye ejemplos prácticos y advertencias importantes.
+---
+
+
+## Server Side Rendering (SSR)
+
+El **Server Side Rendering (SSR)** es una técnica que permite renderizar componentes de React en el servidor como cadenas HTML, enviarlas al navegador y luego "hidratar" ese contenido estático para convertirlo en una aplicación completamente interactiva.
+
+### Herramientas necesarias:
+
+- `express`: Para crear un servidor web.
+- `react`: Para construir los componentes UI.
+- `react-dom/server`: Para renderizar componentes en el servidor.
+
+### Configuracion basica:
+
+<Tabs defaultValue="java" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="tsconfig">tsconfig.js</TabsTrigger>
+    <TabsTrigger value="typescript">app.tsx</TabsTrigger>
+    <TabsTrigger value="server">server.tsx</TabsTrigger>
+  </TabsList>
+  <TabsContent value="tsconfig">
+   
+```go:ts
+// tsconfig.json
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "esnext"
+  },
+  "include": ["**/*"]
+}
+```
+    </TabsContent>
+  <TabsContent value="typescript">
+   
+```go:tsx
+// app.tsx
+export const App = () => {
+  return (
+    <html>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>App SSR</title>
+      </head>
+      <body>
+        <div>Hello World!</div>
+      </body>
+    </html>
+  )
+}
+```
+    </TabsContent>
+     <TabsContent value="server">
+   
+```go:tsx
+// server.tsx
+import express from 'express'
+import React from 'react'
+import ReactDOMServer from 'react-dom/server'
+import { App } from './app'
+
+const port = Number.parseInt(process.env.PORT || '3000', 10)
+const app = express()
+
+app.get('/', (_, res) => {
+  const { pipe } = ReactDOMServer.renderToPipeableStream(<App />, {
+    onShellReady() {
+      res.setHeader('content-type', 'text/html')
+      pipe(res)
+    },
+  })
+})
+
+app.listen(port, () => {
+  console.log(`Servidor escuchando en puerto ${port}`)
+})
+```
+    </TabsContent>
+</Tabs>
+
+
+
+
+
+
+Compila y ejecuta:
+
+```bash
+tsc --build
+node server.js
+```
+
+---
+
+## Hydration
+
+La **hidratación** convierte el HTML estático del servidor en una aplicación interactiva en el cliente. En React 18+, se recomienda usar `hydrateRoot`.
+
+### Componente interactivo
+
+```go:tsx
+// main.tsx
+import ReactDOMClient from 'react-dom/client'
+import { App } from './app'
+
+ReactDOMClient.hydrateRoot(document, <App />)
+```
+
+### Servidor con scripts de cliente
+
+```go:tsx
+// server.tsx
+app.get('/', (_, res) => {
+  const { pipe } = ReactDOMServer.renderToPipeableStream(<App />, {
+    bootstrapScripts: ['/main.js'],
+    onShellReady() {
+      res.setHeader('content-type', 'text/html')
+      pipe(res)
+    },
+  })
+})
+```
+
+---
+
+## Advertencias sobre errores de hidratacion
+
+Es importante que el árbol de React que pasas a `hydrateRoot` genere exactamente el mismo HTML que se generó en el servidor. Algunas causas comunes de errores son:
+
+- Espacios extra o saltos de línea dentro del nodo raíz.
+- Usar condiciones como `typeof window !== 'undefined'` en la lógica de renderizado.
+- Usar APIs exclusivas del navegador como `window.matchMedia`.
+- Renderizar datos diferentes en el servidor y en el cliente.
+
+React puede recuperarse de algunos errores, pero debes corregirlos como cualquier otro bug. Pueden provocar desde lentitud hasta comportamientos incorrectos como eventos asociados a elementos equivocados.
+
+Más información: [hydrateRoot - Documentación oficial](https://react.dev/reference/react-dom/client/hydrateRoot)
+
+---

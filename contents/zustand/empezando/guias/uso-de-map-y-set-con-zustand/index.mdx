@@ -1,0 +1,60 @@
+---
+title: Uso de Map y Set con Zustand
+description: Cómo manejar estructuras como Map y Set en Zustand para garantizar que los cambios se reflejen correctamente en React.
+---
+
+
+
+## Como usar Map y Set correctamente
+
+Para asegurar que Zustand detecte los cambios, debes:
+
+1. **Guardar Map o Set dentro de un objeto**
+2. **Crear una nueva instancia** cuando hagas modificaciones
+3. **Llamar a `setState`** para notificar el cambio
+
+### Ejemplo basico
+
+```go:ts
+import { create } from 'zustand'
+
+const useFooBar = create(() => ({
+  foo: new Map(),
+  bar: new Set()
+}))
+```
+
+### Actualizar estado correctamente
+
+Cuando quieras modificar el contenido de `Map` o `Set`, crea una nueva instancia:
+
+```go:ts
+function doSomething() {
+  useFooBar.setState((prev) => ({
+    foo: new Map(prev.foo).set('newKey', 'newValue'),
+    bar: new Set(prev.bar).add('newKey')
+  }))
+}
+```
+
+Esto sigue las buenas prácticas de React y Zustand, garantizando que se dispare la actualización del componente.
+
+---
+
+## ¿Por que no funciona si solo modifico el Map/Set?
+
+Porque Zustand hace comparaciones superficiales (`shallow equality`) para detectar cambios. Si haces algo como:
+
+```go:ts
+useFooBar.getState().foo.set('newKey', 'newValue')
+```
+
+El objeto `Map` sigue siendo el mismo en memoria, así que Zustand **no detecta ningún cambio**, y tu interfaz no se actualiza.
+
+---
+
+## Codigo funcional en CodeSandbox
+
+Puedes ver un ejemplo funcionando aquí:  
+🔗 [Ejemplo con Map y Set en Zustand](https://codesandbox.io/s/late-https-bxz9qy)
+

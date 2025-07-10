@@ -1,0 +1,257 @@
+---
+title: Configuración de Zustand con Next.js
+description: Cómo configurar Zustand en una aplicación Next.js usando Pages Router y App Router, con soporte para SSR, hidratación y routing en cliente.
+---
+
+
+
+## Configuración de Zustand con Next.js
+
+Next.js es un framework popular para aplicaciones React que incluye soporte para **renderizado en servidor (SSR)** y **enrutado híbrido (SPA + SSR)**. Usar Zustand en este entorno requiere algunas consideraciones especiales:
+
+---
+
+## Desafios principales
+
+1. **Store por solicitud**: En servidores como Next.js, múltiples solicitudes pueden ser procesadas simultáneamente. El store debe crearse **por solicitud**, y no compartirse entre ellas.
+2. **Compatibilidad con SSR/Hydration**: Al renderizar en servidor y luego hidratar en cliente, el estado debe inicializarse igual en ambos lados para evitar errores de hidratación.
+3. **Soporte para routing en cliente (SPA)**: Next.js permite navegación en cliente. Si necesitas resetear el estado al cambiar de página, debes usar **React Context**.
+4. **Compatibilidad con App Router y caching**: Las nuevas versiones de Next.js (App Router) permiten caché agresivo del servidor. Zustand, al ser una variable global, es compatible con esto.
+
+---
+
+## Recomendaciones generales
+
+- **No uses stores globales**: Define los stores dinámicamente por solicitud.
+- **No leas/escribas en el store desde Server Components (RSCs)**: No son reactivos ni usan hooks.
+- **Usa Context para proveer el store a componentes cliente**.
+
+---
+
+## Crear un store por solicitud
+
+### Definicion del store
+
+```go:ts
+// src/stores/counter-store.ts
+import { createStore } from 'zustand/vanilla'
+
+export type CounterState = {
+  count: number
+}
+
+export type CounterActions = {
+  decrementCount: () => void
+  incrementCount: () => void
+}
+
+export type CounterStore = CounterState & CounterActions
+
+export const defaultInitState: CounterState = {
+  count: 0,
+}
+
+export const createCounterStore = (
+  initState: CounterState = defaultInitState,
+) => {
+  return createStore<CounterStore>()((set) => ({
+    ...initState,
+    decrementCount: () => set((state) => ({ count: state.count - 1 })),
+    incrementCount: () => set((state) => ({ count: state.count + 1 })),
+  }))
+}
+```
+
+---
+
+## Proveer el store usando React Context
+
+```go:tsx
+// src/providers/counter-store-provider.tsx
+'use client'
+import { type ReactNode, createContext, useRef, useContext } from 'react'
+import { useStore } from 'zustand'
+import { type CounterStore, createCounterStore } from '@/stores/counter-store'
+
+export type CounterStoreApi = ReturnType<typeof createCounterStore>
+
+export const CounterStoreContext = createContext<CounterStoreApi | undefined>(
+  undefined,
+)
+
+export interface CounterStoreProviderProps {
+  children: ReactNode
+}
+
+export const CounterStoreProvider = ({
+  children,
+}: CounterStoreProviderProps) => {
+  const storeRef = useRef<CounterStoreApi | null>(null)
+
+  if (!storeRef.current) {
+    storeRef.current = createCounterStore()
+  }
+
+  return (
+    <CounterStoreContext.Provider value={storeRef.current}>
+      {children}
+    </CounterStoreContext.Provider>
+  )
+}
+
+export const useCounterStore = <T,>(
+  selector: (store: CounterStore) => T,
+): T => {
+  const counterStoreContext = useContext(CounterStoreContext)
+  if (!counterStoreContext) {
+    throw new Error('useCounterStore debe usarse dentro de CounterStoreProvider')
+  }
+  return useStore(counterStoreContext, selector)
+}
+```
+
+---
+
+## Inicializacion del store con valores dinamicos
+
+Si necesitas inicializar el store con valores diferentes en cada solicitud:
+
+```go:ts
+// src/stores/counter-store.ts
+export const initCounterStore = (): CounterState => {
+  return { count: new Date().getFullYear() }
+}
+```
+
+```go:ts
+// src/providers/counter-store-provider.tsx
+if (!storeRef.current) {
+  storeRef.current = createCounterStore(initCounterStore())
+}
+```
+
+---
+
+## Uso en arquitecturas de Next.js
+
+### 1. Pages Router
+
+ Componente principal
+
+```go:tsx
+// src/components/pages/home-page.tsx
+import { useCounterStore } from '@/providers/counter-store-provider.ts'
+
+export const HomePage = () => {
+  const { count, incrementCount, decrementCount } = useCounterStore(
+    (state) => state,
+  )
+
+  return (
+    <div>
+      Contador: {count}
+      <hr />
+      <button onClick={incrementCount}>Incrementar</button>
+      <button onClick={decrementCount}>Decrementar</button>
+    </div>
+  )
+}
+```
+
+ _app.tsx (proveedor global)
+
+```go:tsx
+// src/_app.tsx
+import type { AppProps } from 'next/app'
+import { CounterStoreProvider } from '@/providers/counter-store-provider.tsx'
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <CounterStoreProvider>
+      <Component {...pageProps} />
+    </CounterStoreProvider>
+  )
+}
+```
+
+Página individual
+
+```go:tsx
+// src/pages/index.tsx
+import { HomePage } from '@/components/pages/home-page.tsx'
+import { CounterStoreProvider } from '@/providers/counter-store-provider.tsx'
+
+export default function Home() {
+  return (
+    <CounterStoreProvider>
+      <HomePage />
+    </CounterStoreProvider>
+  )
+}
+```
+
+---
+
+### 2. App Router (recomendado)
+
+Layout principal
+
+```go:tsx
+// src/app/layout.tsx
+import { CounterStoreProvider } from '@/providers/counter-store-provider'
+
+export default function RootLayout({
+  children,
+}: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body>
+        <CounterStoreProvider>{children}</CounterStoreProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+ Página del App Router
+
+```go:tsx
+// src/app/page.tsx
+import { HomePage } from '@/components/pages/home-page'
+
+export default function Home() {
+  return <HomePage />
+}
+```
+
+Componente cliente
+
+```go:tsx
+// src/components/pages/home-page.tsx
+'use client'
+import { useCounterStore } from '@/providers/counter-store-provider'
+
+export const HomePage = () => {
+  const { count, incrementCount, decrementCount } = useCounterStore(
+    (state) => state,
+  )
+
+  return (
+    <div>
+      Contador: {count}
+      <hr />
+      <button onClick={incrementCount}>Incrementar</button>
+      <button onClick={decrementCount}>Decrementar</button>
+    </div>
+  )
+}
+```
+
+---
+
+## Consideraciones finales
+
+- **Evita crear el store en componentes server-side**: Usa solo componentes cliente (`'use client'`) para interactuar con Zustand.
+- **Inicializa el store por solicitud**: Esto evita conflictos entre usuarios o sesiones.
+- **Hidratación correcta**: Asegúrate de que el estado inicial sea igual en servidor y cliente para evitar errores de hidratación.
+

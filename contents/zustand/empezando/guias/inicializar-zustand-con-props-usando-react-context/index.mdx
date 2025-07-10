@@ -1,0 +1,196 @@
+---
+title: Inicializar Zustand con props usando React Context
+description: Cómo usar Zustand con props dinámicas mediante React Context para inyección de dependencias y estado compartido.
+---
+
+## Crear el store con `createStore` y props
+
+Primero defines una interfaz para las props del store y otra para el estado completo:
+
+```go:ts
+import { createStore } from 'zustand'
+
+interface BearProps {
+  bears: number
+}
+
+interface BearState extends BearProps {
+  addBear: () => void
+}
+```
+
+Luego creas una función que genere el store, permitiendo pasar props iniciales:
+
+```go:ts
+type BearStore = ReturnType<typeof createBearStore>
+
+const createBearStore = (initProps?: Partial<BearProps>) => {
+  const DEFAULT_PROPS: BearProps = {
+    bears: 0,
+  }
+
+  return createStore<BearState>()((set) => ({
+    ...DEFAULT_PROPS,
+    ...initProps,
+    addBear: () => set((state) => ({ bears: state.bears + 1 })),
+  }))
+}
+```
+
+---
+
+## Usar React Context para compartir el store
+
+Crea un contexto para proveer el store a los componentes hijos:
+
+```go:ts
+import { createContext } from 'react'
+
+export const BearContext = createContext<BearStore | null>(null)
+```
+
+### Componente Provider
+
+Usa `useRef` para crear el store solo una vez:
+
+```go:ts
+import { useRef } from 'react'
+
+function App() {
+  const store = useRef(createBearStore()).current
+
+  return (
+    <BearContext.Provider value={store}>
+      <BasicConsumer />
+    </BearContext.Provider>
+  )
+}
+```
+
+### Componente Consumer basico
+
+Consume el store usando `useContext` y `useStore`:
+
+```go:ts
+import { useContext } from 'react'
+import { useStore } from 'zustand'
+
+function BasicConsumer() {
+  const store = useContext(BearContext)
+  if (!store) throw new Error('Missing BearContext.Provider in the tree')
+
+  const bears = useStore(store, (s) => s.bears)
+  const addBear = useStore(store, (s) => s.addBear)
+
+  return (
+    <>
+      <div>{bears} Bears.</div>
+      <button onClick={addBear}>Add bear</button>
+    </>
+  )
+}
+```
+
+---
+
+## Patrones comunes
+
+### Envoltorio del Provider con props
+
+Puedes encapsular la lógica del provider para aceptar props desde el componente padre:
+
+```go:ts
+import { useRef } from 'react'
+
+type BearProviderProps = React.PropsWithChildren<BearProps>
+
+function BearProvider({ children, ...props }: BearProviderProps) {
+  const storeRef = useRef<BearStore>()
+  if (!storeRef.current) {
+    storeRef.current = createBearStore(props)
+  }
+
+  return (
+    <BearContext.Provider value={storeRef.current}>
+      {children}
+    </BearContext.Provider>
+  )
+}
+```
+
+Uso:
+
+```go:tsx
+function App2() {
+  return (
+    <BearProvider bears={2}>
+      <HookConsumer />
+    </BearProvider>
+  )
+}
+```
+
+---
+
+### Hook personalizado para consumir el store
+
+Extrae la lógica del contexto en un hook reutilizable:
+
+```go:ts
+import { useContext } from 'react'
+import { useStore } from 'zustand'
+
+function useBearContext<T>(selector: (state: BearState) => T): T {
+  const store = useContext(BearContext)
+  if (!store) throw new Error('Missing BearContext.Provider in the tree')
+  return useStore(store, selector)
+}
+```
+
+Uso:
+
+```go:ts
+function CommonConsumer() {
+  const bears = useBearContext((s) => s.bears)
+  const addBear = useBearContext((s) => s.addBear)
+
+  return (
+    <>
+      <div>{bears} Bears.</div>
+      <button onClick={addBear}>Add bear</button>
+    </>
+  )
+}
+```
+
+---
+
+### Soporte opcional para comparacion personalizada
+
+Para mejorar rendimiento, puedes permitir usar una función de igualdad personalizada:
+
+```go:ts
+import { useContext } from 'react'
+import { useStoreWithEqualityFn } from 'zustand/traditional'
+
+function useBearContext<T>(
+  selector: (state: BearState) => T,
+  equalityFn?: (left: T, right: T) => boolean,
+): T {
+  const store = useContext(BearContext)
+  if (!store) throw new Error('Missing BearContext.Provider in the tree')
+  return useStoreWithEqualityFn(store, selector, equalityFn)
+}
+```
+
+---
+
+Este patrón es útil cuando necesitas:
+
+- Inyectar valores iniciales al store
+- Compartir el store entre múltiples componentes
+- Reutilizar lógica con hooks personalizados
+- Mejorar rendimiento con funciones de igualdad
+
+---
+

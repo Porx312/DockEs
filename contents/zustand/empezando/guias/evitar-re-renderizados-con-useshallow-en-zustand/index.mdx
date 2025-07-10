@@ -1,0 +1,75 @@
+---
+title: Evitar re-renderizados con useShallow en Zustand
+description: Cómo usar `useShallow` en Zustand para evitar re-renderizados innecesarios cuando el resultado de un selector no cambia realmente.
+---
+
+
+Cuando te suscribes a un estado computado de un store, la forma recomendada es usar un **selector**. Zustand ejecutará el selector cada vez que el estado cambie y comparará su resultado con el valor anterior usando `Object.is`. Si hay diferencias, se dispara un re-renderizado.
+
+Sin embargo, hay casos donde el valor computado **no cambia realmente**, aunque el estado sí lo haga. Esto puede provocar **re-renderizados innecesarios**.
+
+Para evitarlo, puedes usar `useShallow` de Zustand.
+
+---
+
+## Ejemplo sin useShallow
+
+Tenemos un store que asocia comidas a cada oso:
+
+```go:ts
+import { create } from 'zustand'
+
+const useMeals = create(() => ({
+  papaBear: 'large porridge-pot',
+  mamaBear: 'middle-size porridge pot',
+  littleBear: 'A little, small, wee pot',
+}))
+
+export const BearNames = () => {
+  const names = useMeals((state) => Object.keys(state))
+  return <div>{names.join(', ')}</div>
+}
+```
+
+Si actualizamos solo el valor de `papaBear`:
+
+```go:ts
+useMeals.setState({ papaBear: 'a large pizza' })
+```
+
+El componente `BearNames` **se vuelve a renderizar**, aunque `names` sigue siendo el mismo (`["papaBear", "mamaBear", "littleBear"]`). Esto ocurre porque Zustand no hace una comparación profunda ni superficial por defecto.
+
+---
+
+## Usar useShallow
+
+Importa `useShallow` para hacer una comparación **superficial (shallow)** del resultado del selector:
+
+```go:ts
+import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+
+const useMeals = create(() => ({
+  papaBear: 'large porridge-pot',
+  mamaBear: 'middle-size porridge pot',
+  littleBear: 'A little, small, wee pot',
+}))
+
+export const BearNames = () => {
+  const names = useMeals(useShallow((state) => Object.keys(state)))
+  return <div>{names.join(', ')}</div>
+}
+```
+
+Ahora, aunque se actualice cualquier propiedad del estado, `BearNames` **solo se re-renderiza si el resultado del selector cambia realmente**.
+
+---
+
+## Beneficios de usar useShallow
+
+- Reduce re-renderizados innecesarios.
+- Mejora el rendimiento en componentes sensibles al cambio de estado.
+- Es especialmente útil cuando seleccionas arrays u objetos del estado.
+
+---
+

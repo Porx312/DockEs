@@ -1,0 +1,89 @@
+---
+title: Como reiniciar el estado en Zustand
+description: Guía sobre cómo reiniciar el estado de un store o múltiples stores usando Zustand y TypeScript.
+---
+
+
+## Reiniciar un solo store
+
+Puedes crear una acción `reset` dentro de tu store que restablezca todos los valores al estado inicial.
+
+```go:ts
+import { create } from 'zustand'
+
+// Define tipos para el estado y las acciones
+type State = {
+  salmon: number
+  tuna: number
+}
+
+type Actions = {
+  addSalmon: (qty: number) => void
+  addTuna: (qty: number) => void
+  reset: () => void
+}
+
+// Estado inicial
+const initialState: State = {
+  salmon: 0,
+  tuna: 0,
+}
+
+// Crear store
+const useSlice = create<State & Actions>()((set, get) => ({
+  ...initialState,
+  addSalmon: (qty: number) => {
+    set({ salmon: get().salmon + qty })
+  },
+  addTuna: (qty: number) => {
+    set({ tuna: get().tuna + qty })
+  },
+  reset: () => {
+    set(initialState)
+  },
+}))
+```
+
+Este patrón permite tener un control claro del estado inicial y ofrece una forma limpia de reiniciarlo llamando a `useSlice.getState().reset()`.
+
+---
+
+## Reiniciar multiples stores a la vez
+
+Si tienes varios stores y quieres reiniciarlos todos al mismo tiempo (por ejemplo, al cerrar sesión), puedes usar una función global como esta:
+
+```ts
+import type { StateCreator } from 'zustand'
+import { create as actualCreate } from 'zustand'
+
+const storeResetFns = new Set<() => void>()
+
+export const resetAllStores = () => {
+  storeResetFns.forEach((resetFn) => {
+    resetFn()
+  })
+}
+
+export const create = (<T>() => {
+  return (stateCreator: StateCreator<T>) => {
+    const store = actualCreate(stateCreator)
+    const initialState = store.getInitialState()
+    storeResetFns.add(() => {
+      store.setState(initialState, true)
+    })
+    return store
+  }
+}) as typeof actualCreate
+```
+
+Ahora puedes llamar `resetAllStores()` desde cualquier parte de tu aplicación para reiniciar todos tus stores.
+
+---
+
+## Enlaces utiles
+
+- [Ejemplo básico en CodeSandbox](https://codesandbox.io/s/zustand-how-to-reset-state-basic-demo-rrqyon)
+- [Ejemplo avanzado en CodeSandbox](https://codesandbox.io/s/zustand-how-to-reset-state-advanced-demo-gtu0qe)
+- [Ejemplo con Immer](https://codesandbox.io/s/how-to-reset-state-advance-immer-demo-nyet3f)
+
+---

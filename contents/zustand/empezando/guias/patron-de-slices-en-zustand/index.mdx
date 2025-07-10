@@ -1,0 +1,177 @@
+---
+title: Patron de Slices en Zustand
+description: Como dividir un store grande en partes modulares usando Zustand para mejorar la organización y mantenibilidad del estado.
+---
+
+## Dividir el store en slices pequeños
+
+A medida que tu aplicación crece y añades más funcionalidad, tu store puede volverse grande y difícil de mantener.
+
+Una buena práctica es **dividir el store principal en partes más pequeñas (slices)**. Esto mejora la modularidad y facilita el mantenimiento.
+
+---
+
+## Crear slices individuales
+
+Ejemplo de un slice para `fishes`:
+
+```ts
+// fishSlice.ts
+export const createFishSlice = (set) => ({
+  fishes: 0,
+  addFish: () => set((state) => ({ fishes: state.fishes + 1 })),
+})
+```
+
+Ejemplo de un slice para `bears`:
+
+```ts
+// bearSlice.ts
+export const createBearSlice = (set) => ({
+  bears: 0,
+  addBear: () => set((state) => ({ bears: state.bears + 1 })),
+  eatFish: () => set((state) => ({ fishes: state.fishes - 1 })),
+})
+```
+
+---
+
+## Combinar los slices en un store unico
+
+Puedes combinar los slices usando Zustand:
+
+```ts
+// useBoundStore.ts
+import { create } from 'zustand'
+import { createBearSlice } from './bearSlice'
+import { createFishSlice } from './fishSlice'
+
+export const useBoundStore = create((...a) => ({
+  ...createBearSlice(...a),
+  ...createFishSlice(...a),
+}))
+```
+
+---
+
+## Usar el store combinado en componentes React
+
+```tsx
+// App.tsx
+import { useBoundStore } from './stores/useBoundStore'
+
+function App() {
+  const bears = useBoundStore((state) => state.bears)
+  const fishes = useBoundStore((state) => state.fishes)
+  const addBear = useBoundStore((state) => state.addBear)
+
+  return (
+    <div>
+      <h2>Numero de osos: {bears}</h2>
+      <h2>Numero de peces: {fishes}</h2>
+      <button onClick={addBear}>Anadir un oso</button>
+    </div>
+  )
+}
+
+export default App
+```
+
+---
+
+## Actualizar multiples slices a la vez
+
+Puedes crear una acción que actualice varios slices al mismo tiempo:
+
+```ts
+// bearFishSlice.ts
+export const createBearFishSlice = (set, get) => ({
+  addBearAndFish: () => {
+    get().addBear()
+    get().addFish()
+  },
+})
+```
+
+Y combinarlo con el resto:
+
+```ts
+// useBoundStore.ts
+import { create } from 'zustand'
+import { createBearSlice } from './bearSlice'
+import { createFishSlice } from './fishSlice'
+import { createBearFishSlice } from './bearFishSlice'
+
+export const useBoundStore = create((...a) => ({
+  ...createBearSlice(...a),
+  ...createFishSlice(...a),
+  ...createBearFishSlice(...a),
+}))
+```
+
+---
+
+##  middlewares al store combinado
+
+Puedes usar middlewares como `persist` directamente en el store combinado:
+
+```ts
+// useBoundStore.ts
+import { create } from 'zustand'
+import { createBearSlice } from './bearSlice'
+import { createFishSlice } from './fishSlice'
+import { persist } from 'zustand/middleware'
+
+export const useBoundStore = create(
+  persist(
+    (...a) => ({
+      ...createBearSlice(...a),
+      ...createFishSlice(...a),
+    }),
+    { name: 'bound-store' },
+  ),
+)
+```
+
+> Importante:
+- **Aplica los middlewares solo en el store combinado**.
+- Aplicarlos dentro de cada slice puede causar comportamientos inesperados.
+
+---
+
+## Uso con TypeScript
+
+Para usar este patrón con soporte de tipos, puedes definir interfaces y usar `StateCreator`.
+
+Ejemplo avanzado:
+
+```ts
+import { create, StateCreator } from 'zustand'
+
+interface BearState {
+  bears: number
+  addBear: () => void
+}
+
+interface FishState {
+  fishes: number
+  addFish: () => void
+}
+
+const createBearSlice: StateCreator<BearState> = (set) => ({
+  bears: 0,
+  addBear: () => set((state) => ({ bears: state.bears + 1 })),
+})
+
+const createFishSlice: StateCreator<FishState> = (set) => ({
+  fishes: 0,
+  addFish: () => set((state) => ({ fishes: state.fishes + 1 })),
+})
+
+export const useBoundStore = create<BearState & FishState>()((...a) => ({
+  ...createBearSlice(...a),
+  ...createFishSlice(...a),
+}))
+```
+
+---
