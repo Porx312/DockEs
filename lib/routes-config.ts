@@ -1,5 +1,5 @@
 // for page navigation & to sort on leftbar
-import {NEXTJS_ROUTES,PRISMA_ROUTES,ZUSTAND_ROUTES} from './routes/index'
+import {NEXTJS_ROUTES,PRISMA_ROUTES,TS_ROUTES,ZUSTAND_ROUTES} from './routes/index'
 
 
 export type EachRoute = {
@@ -15,6 +15,7 @@ export const ROUTES: EachRoute[] = [
   ...(Array.isArray(ZUSTAND_ROUTES) ? ZUSTAND_ROUTES : [ZUSTAND_ROUTES]),
   ...(Array.isArray(NEXTJS_ROUTES) ? NEXTJS_ROUTES : [NEXTJS_ROUTES]),
   ...(Array.isArray(PRISMA_ROUTES) ? PRISMA_ROUTES : [PRISMA_ROUTES]),
+  ...(Array.isArray(TS_ROUTES) ? TS_ROUTES : [TS_ROUTES]),
 
   
 ];

@@ -1,0 +1,122 @@
+---
+title: TypeScript Qué es, cómo funciona y por qué deberías aprenderlo
+description: Una guía clara y mejorada sobre cómo TypeScript amplía JavaScript, sus ventajas, su comportamiento en tiempo de ejecución, y por qué es esencial comprender JavaScript para dominar TypeScript.
+---
+
+## Felicitaciones por elegir TypeScript como uno de tus primeros lenguajes — ¡ya estás tomando buenas decisiones!
+
+Probablemente ya hayas escuchado que TypeScript es una "variante" o "sabor" de JavaScript. La relación entre TypeScript (TS) y JavaScript (JS) es bastante única entre los lenguajes modernos, y entender esta conexión te ayudará a comprender cómo TypeScript extiende las capacidades de JavaScript.
+
+---
+
+### ¿Que es JavaScript? Un poco de historia
+
+JavaScript, también conocido como ECMAScript, comenzó como un lenguaje de scripting simple para navegadores web. Inicialmente, se diseñó para insertar pequeños fragmentos de código en las páginas web, y escribir más de unas pocas líneas era poco común. Por eso, los navegadores antiguos ejecutaban JavaScript lentamente.
+
+Con el tiempo, JavaScript ganó popularidad, y los desarrolladores empezaron a usarlo para crear experiencias interactivas más complejas. En respuesta, los navegadores mejoraron sus motores de ejecución (como la compilación dinámica) y ampliaron las APIs disponibles, lo que impulsó aún más el uso del lenguaje.
+
+Hoy en día, JavaScript se usa no solo en navegadores, sino también en servidores con herramientas como Node.js. Gracias a su naturaleza multiplataforma, muchos desarrolladores lo utilizan en todo su stack tecnológico.
+
+En resumen: JavaScript nació como un lenguaje sencillo y se transformó en una herramienta poderosa capaz de manejar aplicaciones de millones de líneas de código. Sin embargo, esta evolución también trajo consigo algunos comportamientos confusos:
+
+```javascript
+if ("" == 0) {
+  // ¡Verdadero! ¿Pero por qué?
+}
+
+if (1 < x < 3) {
+  // También es verdadero para *cualquier* valor de x.
+}
+```
+
+O incluso errores difíciles de detectar:
+
+```javascript
+const obj = { width: 10, height: 15 };
+// ¿Por qué esto da NaN?
+const area = obj.width * obj.heigth;
+```
+
+En muchos lenguajes, estos errores se detectarían en tiempo de compilación. En JavaScript, suelen pasar desapercibidos hasta que el código falla en ejecución.
+
+---
+
+### Comprobacion de tipos en tiempo de compilación
+
+Aquí es donde entra TypeScript. Este lenguaje analiza tu código antes de ejecutarlo, verificando que los tipos de datos sean usados correctamente. Esto se conoce como **comprobación de tipos estática**.
+
+Veamos el ejemplo anterior corregido por TypeScript:
+
+```go:ts
+const obj = { width: 10, height: 15 };
+const area = obj.width * obj.heigth;
+// Error: La propiedad 'heigth' no existe. ¿Quisiste decir 'height'?
+```
+
+TypeScript detecta este error antes de que tu código se ejecute, lo cual es invaluable en aplicaciones grandes.
+
+---
+
+###  Un superconjunto tipado de JavaScript
+
+#### **Sintaxis compatible**
+
+TypeScript es un superconjunto de JavaScript, lo que significa que cualquier código válido de JavaScript es también válido en TypeScript. Puedes copiar y pegar tu código JS en un archivo TS sin preocuparte por errores de sintaxis.
+
+#### **Sistema de tipos**
+
+Sin embargo, TypeScript añade un sistema de tipos. Esto implica que, aunque un código como `console.log(4 / [])` es válido en JavaScript (imprime `Infinity`), TypeScript lo marca como un posible error:
+
+```go:ts
+console.log(4 / []);
+// Error: El lado derecho debe ser un número, bigint, enum o tipo 'any'.
+```
+
+Esto permite detectar errores antes de que se conviertan en problemas graves en producción.
+
+---
+
+### Comportamiento en tiempo de ejecución
+
+TypeScript **no cambia el comportamiento** en tiempo de ejecución de JavaScript. Por ejemplo:
+
+```go:ts
+console.log(1 / 0); // Imprime Infinity, igual que en JS
+```
+
+Esto significa que tu código se comportará igual al ejecutarse, incluso si TypeScript señala advertencias o errores.
+
+---
+
+### ¿Que sucede con los tipos al compilar?
+
+Cuando el compilador de TypeScript termina de analizar tu código, **elimina toda la información de tipos** y genera código JavaScript puro. Es decir, el sistema de tipos **no existe en tiempo de ejecución**.
+
+Tampoco necesitas aprender ningún framework adicional para usar TypeScript. No hay librerías especiales, y puedes seguir usando las mismas herramientas que usas con JavaScript.
+
+---
+
+### ¿Debería aprender JavaScript o TypeScript?
+
+Esta es una pregunta común. La respuesta es clara: **no puedes aprender TypeScript sin aprender JavaScript**.
+
+Todo lo que aprendas sobre JavaScript te servirá para TypeScript, ya que comparten la misma base. La mayoría de los recursos disponibles están orientados a JavaScript, y son completamente válidos para aprender TypeScript también.
+
+Por ejemplo, si buscas cómo ordenar una lista en TypeScript, puedes buscarlo directamente en JavaScript, ya que se hace de la misma manera.
+
+---
+
+### Proximos pasos
+
+Ahora que tienes una idea clara de cómo funciona TypeScript, te recomendamos:
+
+* Aprender los fundamentos de JavaScript:
+
+  * [Recursos de JavaScript por Microsoft](https://developer.microsoft.com/en-us/javascript/)
+  * [Guía de JavaScript en MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide)
+
+* Leer la guía completa de TypeScript desde el principio
+
+* Explorar ejemplos prácticos en el [Playground oficial de TypeScript](https://www.typescriptlang.org/play)
+
+---

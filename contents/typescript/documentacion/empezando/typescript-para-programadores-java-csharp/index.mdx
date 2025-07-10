@@ -1,0 +1,130 @@
+---
+title: TypeScript para Programadores de Java o C#
+description: Una guía esencial para desarrolladores de Java y C# que comienzan con TypeScript. Descubre cómo las diferencias entre sistemas de tipos, clases, y estructuras en TypeScript pueden ayudarte a evitar errores comunes y aprovechar al máximo esta poderosa herramienta de tipado estático.
+
+---
+## TypeScript para Programadores de Java/C\#
+
+TypeScript es una opción popular entre los programadores que provienen de lenguajes con tipado estático como C# o Java.
+
+El sistema de tipos de TypeScript ofrece muchos de los mismos beneficios: mejor autocompletado, detección temprana de errores y una comunicación más clara entre distintas partes del programa. Sin embargo, aunque TypeScript tiene similitudes con C# y Java, es importante entender cómo difieren JavaScript (y por tanto TypeScript) de los lenguajes orientados a objetos tradicionales. Comprender estas diferencias te ayudará a escribir mejor código y evitar errores comunes al migrar directamente desde Java o C#.
+
+---
+
+### Aprender JavaScript junto con TypeScript
+
+Si ya estás familiarizado con JavaScript, pero vienes principalmente de Java o C#, esta guía te ayudará a aclarar conceptos erróneos frecuentes. Algunos aspectos del tipado en TypeScript son muy distintos a los de Java o C#, y tenerlos en cuenta es clave al aprender.
+
+Si eres nuevo en JavaScript, te recomendamos aprender un poco del lenguaje sin usar tipos al principio, para entender su comportamiento en tiempo de ejecución. Recuerda que TypeScript no modifica cómo se ejecuta tu código: tendrás que aprender cómo funciona JavaScript para que tu código realmente haga algo.
+
+También es fundamental saber que TypeScript comparte el mismo entorno de ejecución que JavaScript. Por eso, cualquier recurso sobre comportamiento en tiempo de ejecución (convertir strings a números, mostrar alertas, leer archivos, etc.) aplica igualmente a TypeScript. ¡No te limites solo a recursos específicos de TypeScript!
+
+---
+
+### Repensando las Clases
+
+Java y C# son lenguajes OOP “obligatorios”, donde la clase es la unidad básica de organización de código y también de ejecución. Sin embargo, no todos los problemas requieren este enfoque.
+
+#### Funciones y Datos Libres
+
+En JavaScript, las funciones pueden existir fuera de clases y los datos se pueden manejar sin estructuras predefinidas. Esta flexibilidad es una de sus mayores fortalezas. Las funciones “libres” (no asociadas a clases) operando sobre datos son el modelo más común en JavaScript.
+
+#### Clases Estaticas
+
+Conceptos como singletons o clases estáticas en C#/Java son innecesarios en TypeScript, dado su modelo más dinámico.
+
+#### Programación Orientada a Objetos en TypeScript
+
+Si lo prefieres, puedes seguir usando clases. Algunos problemas se modelan bien con jerarquías OOP, y TypeScript ofrece soporte completo: herencia, interfaces, métodos estáticos, etc.
+
+---
+
+### Repensando los Tipos
+
+El modelo de tipos en TypeScript es estructural, no nominal. Aquí algunas diferencias clave:
+
+#### Tipos Nominales y Reificados
+
+En Java y C#, un valor tiene exactamente un tipo definido. Este tipo está presente en tiempo de ejecución y puedes consultarlo (con `getType()` o `getClass()`). No puedes intercambiar clases similares sin que haya herencia o interfaces explícitas.
+
+Este enfoque es nominal y reificado.
+
+#### Tipos como Conjuntos
+
+En TypeScript, los tipos son mejor entendidos como **conjuntos de valores**. Un valor puede pertenecer a múltiples tipos al mismo tiempo. Por ejemplo, en Java es complicado representar un valor que sea `string` o `int`. En TypeScript, se resuelve fácilmente con un **tipo unión**:
+
+```go:ts
+string | number
+```
+
+Este enfoque permite operaciones naturales que serían difíciles en otros lenguajes.
+
+#### Tipado Estructural y Borrado de Tipos
+
+En TypeScript, no importa si un objeto fue declarado con una clase o no; si su estructura coincide con lo esperado, es válido:
+
+```go:ts
+interface Punto {
+  x: number;
+  y: number;
+}
+interface Nombrado {
+  name: string;
+}
+
+const obj = { x: 0, y: 0, name: "Origen" };
+logPunto(obj);
+logNombre(obj);
+```
+
+Aquí, `obj` es válido para ambas interfaces, sin necesidad de herencia o clases.
+
+---
+
+### Consecuencias del Tipado Estructural
+
+Dos sorpresas comunes para programadores OOP:
+
+#### Tipos Vacios
+
+```go:ts
+class Vacio {}
+function fn(arg: Vacio) {}
+fn({ k: 10 }); // ¡No da error!
+```
+
+Como `Vacio` no tiene propiedades, cualquier objeto puede cumplir con su estructura.
+
+#### Tipos Identicos
+
+```go:ts
+class Auto {
+  conducir() {}
+}
+class Golfista {
+  conducir() {}
+}
+let w: Auto = new Golfista(); // No da error
+```
+
+Ambas clases tienen la misma estructura, así que TypeScript las considera compatibles.
+
+---
+
+### Reflexion
+
+En C# puedes inspeccionar tipos genéricos en tiempo de ejecución. En TypeScript no es posible, ya que el sistema de tipos **se borra completamente** durante la compilación. Operadores como `typeof` o `instanceof` trabajan sobre los valores reales, no sobre tipos definidos en TypeScript.
+
+```go:ts
+typeof new Auto(); // "object", no "Auto"
+```
+
+---
+
+### Proximos Pasos
+
+Esta fue una introducción a cómo TypeScript difiere de Java y C#:
+
+* Lee el Manual completo de TypeScript.
+* Explora los ejemplos en el [Playground](https://www.typescriptlang.org/play).
+

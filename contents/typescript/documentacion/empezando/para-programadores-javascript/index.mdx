@@ -1,0 +1,211 @@
+---
+title: TypeScript para Programadores de JavaScript
+description: Una introducción práctica a TypeScript para desarrolladores familiarizados con JavaScript. Aprende cómo TypeScript amplía el lenguaje JavaScript con tipado estático, inferencia de tipos, interfaces, genéricos y un sistema de tipos estructural, todo sin abandonar tus conocimientos actuales.
+
+---
+
+TypeScript guarda una relación inusual con JavaScript. TypeScript ofrece todas las características del lenguaje JavaScript y agrega una **capa adicional de verificación de tipos**.
+
+Por ejemplo, JavaScript proporciona tipos primitivos como `string` y `number`, pero no verifica que los uses de forma consistente. TypeScript sí lo hace.
+
+Esto significa que tu código JavaScript ya funcional también es un código válido en TypeScript. El **principal beneficio de TypeScript** es que puede detectar comportamientos inesperados en tu código, reduciendo las probabilidades de errores.
+
+Esta guía ofrece una visión general del sistema de tipos de TypeScript.
+
+---
+
+## Inferencia de Tipos
+
+TypeScript entiende cómo funciona JavaScript y puede **inferir tipos automáticamente** en muchos casos.
+
+```go:ts
+let helloWorld = "Hola Mundo";
+// Se infiere como: let helloWorld: string
+```
+
+Gracias a su conocimiento del lenguaje, TypeScript puede deducir tipos sin que tengas que escribir anotaciones adicionales. Así sabe que `helloWorld` es un `string`.
+
+Si has usado Visual Studio Code, es probable que hayas visto autocompletado y ayuda contextual: eso es posible gracias a TypeScript funcionando en segundo plano.
+
+---
+
+## Definicion de Tipos
+
+En JavaScript puedes usar muchos patrones de diseño, aunque algunos dificultan la inferencia automática de tipos. Para esos casos, TypeScript te permite **declarar explícitamente los tipos** que deberían usarse.
+
+```go:ts
+const user = {
+  name: "Hayes",
+  id: 0,
+};
+```
+
+Puedes describir la forma del objeto con una `interface`:
+
+```go:ts
+interface Usuario {
+  name: string;
+  id: number;
+}
+
+const user: Usuario = {
+  name: "Hayes",
+  id: 0,
+};
+```
+
+Si el objeto no coincide con la interfaz, TypeScript mostrará un error:
+
+```go:ts
+const user: Usuario = {
+  username: "Hayes", // ❌ Error: propiedad no reconocida
+  id: 0,
+};
+```
+
+---
+
+## Clases y Programacion Orientada a Objetos
+
+TypeScript también admite clases e interfaces de forma similar a JavaScript moderno:
+
+```go:ts
+interface Usuario {
+  name: string;
+  id: number;
+}
+
+class CuentaUsuario {
+  name: string;
+  id: number;
+
+  constructor(name: string, id: number) {
+    this.name = name;
+    this.id = id;
+  }
+}
+
+const user: Usuario = new CuentaUsuario("Murphy", 1);
+```
+
+También puedes usar interfaces para anotar parámetros y valores de retorno de funciones:
+
+```go:ts
+function eliminarUsuario(user: Usuario) { /* ... */ }
+
+function obtenerAdmin(): Usuario {
+  // ...
+}
+```
+
+---
+
+## Tipos Primitivos
+
+Además de los tipos estándar de JavaScript (`boolean`, `number`, `string`, etc.), TypeScript añade:
+
+* `any`: cualquier tipo (sin restricciones)
+* `unknown`: tipo desconocido que requiere verificación
+* `never`: representa un valor que nunca ocurre
+* `void`: funciones que no devuelven valor
+
+---
+
+## Interfaces vs Tipos (`type`)
+
+Puedes crear tipos personalizados de dos maneras:
+
+* `interface`: para describir formas de objetos (preferido)
+* `type`: útil cuando necesitas uniones, intersecciones o alias complejos
+
+---
+
+## Composicion de Tipos
+
+### 🔀 Uniones (`|`)
+
+Puedes declarar que un valor puede ser uno de varios tipos:
+
+```go:ts
+type EstadoVentana = "abierta" | "cerrada" | "minimizada";
+
+function obtenerLongitud(obj: string | string[]) {
+  return obj.length;
+}
+```
+
+### 🔍 Comprobación de Tipo en Tiempo de Ejecución
+
+Usa `typeof` o `Array.isArray` para distinguir tipos:
+
+| Tipo   | Predicado                   |
+| ------ | --------------------------- |
+| string | `typeof valor === "string"` |
+| number | `typeof valor === "number"` |
+| array  | `Array.isArray(valor)`      |
+
+```go:ts
+function envolverEnArray(obj: string | string[]) {
+  if (typeof obj === "string") {
+    return [obj];
+  }
+  return obj;
+}
+```
+
+---
+
+## Genericos
+
+Los genéricos permiten definir tipos reutilizables:
+
+```go:ts
+type ArrayDeStrings = Array<string>;
+
+interface Mochila<Tipo> {
+  agregar: (obj: Tipo) => void;
+  obtener: () => Tipo;
+}
+
+declare const mochila: Mochila<string>;
+
+const objeto = mochila.obtener();
+mochila.agregar(23); // ❌ Error: se esperaba string
+```
+
+---
+
+## Sistema de Tipado Estructural
+
+Uno de los principios clave de TypeScript es que **compara tipos por su forma** y no por su nombre o jerarquía.
+
+```go:ts
+interface Punto {
+  x: number;
+  y: number;
+}
+
+function mostrarPunto(p: Punto) {
+  console.log(`${p.x}, ${p.y}`);
+}
+
+const punto = { x: 12, y: 26 };
+mostrarPunto(punto); // ✅ OK
+
+const puntoExtra = { x: 12, y: 26, z: 100 };
+mostrarPunto(puntoExtra); // ✅ OK: tiene forma compatible
+
+const color = { hex: "#0000FF" };
+mostrarPunto(color); // ❌ Error: faltan x e y
+```
+
+Esto también aplica a clases:
+
+```go:ts
+class PuntoVirtual {
+  constructor(public x: number, public y: number) {}
+}
+
+const nuevoPunto = new PuntoVirtual(10, 50);
+mostrarPunto(nuevoPunto); // ✅ OK
+```

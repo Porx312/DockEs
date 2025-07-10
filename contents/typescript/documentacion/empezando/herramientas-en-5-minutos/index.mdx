@@ -1,0 +1,160 @@
+---
+title:  Herramientas de TypeScript en 5 minutos
+description: Aprende a configurar TypeScript rápidamente, compilar tu primer archivo `.ts`, trabajar con anotaciones de tipo, interfaces, clases, y ejecutar una aplicación web simple con TypeScript.
+---
+#### 🚀 Empezando con TypeScript
+
+Vamos a crear una aplicación web simple usando TypeScript. En solo unos minutos, compilarás tu primer archivo `.ts`, utilizarás anotaciones de tipo y ejecutarás la aplicación en tu navegador.
+
+---
+
+### 📦 Instalando TypeScript
+
+Hay dos formas principales de añadir TypeScript a tu proyecto:
+
+1. **Con npm (el gestor de paquetes de Node.js):**
+
+   ```bash
+   npm install -g typescript
+   ```
+
+2. **Con plugins de Visual Studio:**
+   Visual Studio 2017 y Visual Studio 2015 Update 3 ya incluyen soporte para TypeScript, pero no el compilador (`tsc`). Si no lo instalaste durante la instalación de Visual Studio, puedes hacerlo manualmente.
+
+---
+
+### 📁 Compilando tu primer archivo `.ts`
+
+Crea un archivo llamado `greeter.ts` y escribe este código:
+
+```go:ts
+function greeter(person) {
+  return "Hola, " + person;
+}
+
+let user = "Jane User";
+
+document.body.textContent = greeter(user);
+```
+
+Para compilarlo, ejecuta en la terminal:
+
+```bash
+tsc greeter.ts
+```
+
+Esto generará un archivo `greeter.js` equivalente en JavaScript.
+
+---
+
+### ✅ Añadiendo anotaciones de tipo
+
+Vamos a mejorar el código con anotaciones de tipo:
+
+```go:ts
+function greeter(person: string) {
+  return "Hola, " + person;
+}
+
+let user = "Jane User";
+
+document.body.textContent = greeter(user);
+```
+
+Estas anotaciones ayudan a TypeScript a detectar errores en tiempo de desarrollo. Por ejemplo, si pasas un arreglo en vez de un string:
+
+```go:ts
+let user = [0, 1, 2];
+```
+
+Verás un error:
+
+```
+TS2345: Argument of type 'number[]' is not assignable to parameter of type 'string'.
+```
+
+Aún así, TypeScript generará el archivo `.js`, aunque te advierte que el código podría no funcionar correctamente.
+
+---
+
+### 🧩 Interfaces
+
+Ahora, agregamos una interfaz para describir objetos que tengan `firstName` y `lastName`:
+
+```go:ts
+interface Person {
+  firstName: string;
+  lastName: string;
+}
+
+function greeter(person: Person) {
+  return "Hola, " + person.firstName + " " + person.lastName;
+}
+
+let user = { firstName: "Jane", lastName: "User" };
+
+document.body.textContent = greeter(user);
+```
+
+Las interfaces permiten validar la estructura de los objetos sin necesidad de usar `implements`.
+
+---
+
+### 🧱 Clases en TypeScript
+
+Extiende el ejemplo anterior usando clases:
+
+```go:ts
+class Student {
+  fullName: string;
+
+  constructor(
+    public firstName: string,
+    public middleInitial: string,
+    public lastName: string
+  ) {
+    this.fullName = `${firstName} ${middleInitial} ${lastName}`;
+  }
+}
+
+interface Person {
+  firstName: string;
+  lastName: string;
+}
+
+function greeter(person: Person) {
+  return "Hola, " + person.firstName + " " + person.lastName;
+}
+
+let user = new Student("Jane", "M.", "User");
+
+document.body.textContent = greeter(user);
+```
+
+Compila de nuevo:
+
+```bash
+tsc greeter.ts
+```
+
+El código JavaScript generado es equivalente, ya que TypeScript transpila las clases a prototipos tradicionales de JavaScript.
+
+---
+
+### 🌐 Ejecutando tu app TypeScript
+
+Crea un archivo `greeter.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TypeScript Greeter</title>
+  </head>
+  <body>
+    <script src="greeter.js"></script>
+  </body>
+</html>
+```
+
+Ábrelo en tu navegador para ver el saludo generado por TypeScript.

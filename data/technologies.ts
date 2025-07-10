@@ -25,8 +25,7 @@ export const technologies = [
   },
   {
     name: "TypeScript",
-    comingSoon: true,
-    slug: "/docs/typescript/empezando/introduccion",
+    slug: "/docs/typescript/documentacion",
     iconDark: "/icons/TypeScript.png",
     description:
       "Superset de JavaScript que añade tipado estático al lenguaje.",

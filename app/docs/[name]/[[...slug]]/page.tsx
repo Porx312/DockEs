@@ -10,6 +10,7 @@ type PageProps = {
   params: Promise<{ slug: string[]; name: string }>;
 };
 
+
 export default async function DocsPage(props: PageProps) {
   const params = await props.params;
   const { slug = [], name } = params;
@@ -49,9 +50,17 @@ export async function generateMetadata(props: PageProps) {
   const res = await getDocFrontmatter(pathName, name);
   if (!res) return {};
   const { title, description } = res;
+
+  // Construct canonical URL
+  const baseUrl = "https://docsjs.com/docs";
+  const canonicalUrl = [baseUrl, name, ...slug].filter(Boolean).join("/");
+
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
   };
 }
 
