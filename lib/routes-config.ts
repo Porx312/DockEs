@@ -67,9 +67,9 @@ export const ROUTES: EachRoute[] = [
         title: "Integraciones",
         href: "/integraciones",
         items: [
-          { title: "immer-middleware", href: "/immer-middleware" },
-          { title: "librerias-de-terceros", href: "/librerias-de-terceros" },
-          { title: "persisting-store-data", href: "/persisting-store-data" },
+          { title: "middleware Immer con Zustand", href: "/usar-middleware-immer-con-zustand" },
+          { title: "Librerias de terceros para Zustand", href: "/librerias-de-terceros" },
+          { title: "Persistir el estado con Zustand", href: "/persistir-el-estado-con-zustand" },
         ],
       },
       {

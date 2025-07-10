@@ -1,0 +1,132 @@
+---
+title: Usar el middleware Immer con Zustand
+description: Cómo usar el middleware `immer` con Zustand para actualizar estados de forma mutable manteniendo la inmutabilidad interna.
+---
+
+# Usar el Middleware Immer con Zustand
+
+
+El **middleware `immer`** permite escribir actualizaciones de estado como si estuvieras mutando el estado directamente, pero sin modificar el estado original. Esto facilita trabajar con estructuras de datos inmutables de manera más intuitiva.
+
+---
+
+## Instalación
+
+Primero, instala `immer` como dependencia:
+
+```go:bash
+npm install immer
+```
+
+---
+
+## Uso basico
+
+### 1. Definir tipos de estado y acciones
+
+```go:ts
+import { create } from 'zustand'
+import { immer } from 'zustand/middleware/immer'
+
+type State = {
+  count: number
+}
+
+type Actions = {
+  increment: (qty: number) => void
+  decrement: (qty: number) => void
+}
+```
+
+### 2. Crear el store con `immer`
+
+```go:ts
+export const useCountStore = create<State & Actions>()(
+  immer((set) => ({
+    count: 0,
+    increment: (qty: number) =>
+      set((state) => {
+        state.count += qty // ✅ mutación segura gracias a Immer
+      }),
+    decrement: (qty: number) =>
+      set((state) => {
+        state.count -= qty // ✅ también funciona así
+      }),
+  })),
+)
+```
+
+Este patrón es especialmente útil para actualizar objetos o arrays anidados sin preocuparte por la inmutabilidad.
+
+---
+
+## Ejemplo con estado complejo
+
+Imagina un store que maneja una lista de tareas (`todos`):
+
+```go:ts
+interface Todo {
+  id: string
+  title: string
+  done: boolean
+}
+
+type State = {
+  todos: Record<string, Todo>
+}
+
+type Actions = {
+  toggleTodo: (todoId: string) => void
+}
+```
+
+### Crear el store con `immer`
+
+```go:ts
+export const useTodoStore = create<State & Actions>()(
+  immer((set) => ({
+    todos: {
+      '82471c5f-4207-4b1d-abcb-b98547e01a3e': {
+        id: '82471c5f-4207-4b1d-abcb-b98547e01a3e',
+        title: 'Aprender Zustand',
+        done: false,
+      },
+      '354ee16c-bfdd-44d3-afa9-e93679bda367': {
+        id: '354ee16c-bfdd-44d3-afa9-e93679bda367',
+        title: 'Aprender Jotai',
+        done: false,
+      },
+    },
+    toggleTodo: (todoId: string) =>
+      set((state) => {
+        state.todos[todoId].done = !state.todos[todoId].done
+      }),
+  })),
+)
+```
+
+Con Immer, puedes usar notación simple como `state.todos[id].done = true` en lugar de crear copias manuales del objeto.
+
+---
+
+## Consideraciones importantes
+
+### Las suscripciones no se activan
+
+Si usas objetos personalizados (como clases), asegúrate de marcarlos como "immerables":
+
+```go:ts
+class MyState {
+  value = 0
+  [immerable] = true // ✅ necesario para que funcione correctamente
+}
+```
+
+Sin esto, Immer no podrá hacer una copia inmutable del objeto, lo que puede evitar que Zustand detecte cambios reales y no active las suscripciones.
+
+---
+
+## Demostraciones
+
+- [Ejemplo básico en CodeSandbox](https://codesandbox.io/p/sandbox/zustand-updating-draft-states-basic-demo-forked-96mkdw)
+- [Ejemplo avanzado en CodeSandbox](https://codesandbox.io/p/sandbox/zustand-updating-draft-states-advanced-demo-forked-phkzzg)

@@ -1,0 +1,244 @@
+---
+title: Persistir el estado con Zustand
+description: Cómo usar el middleware `persist` de Zustand para guardar y restaurar el estado en almacenamiento local, con soporte para TypeScript, migraciones y almacenamientos personalizados.
+---
+
+
+Zustand incluye un middleware llamado **`persist`**, que permite **guardar y restaurar el estado de tu aplicación** usando almacenamiento como `localStorage`, `sessionStorage`, `AsyncStorage` o incluso `IndexedDB`.
+
+---
+
+## Ejemplo basico
+
+```go:ts
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+
+export const useBearStore = create(
+  persist(
+    (set, get) => ({
+      bears: 0,
+      addABear: () => set({ bears: get().bears + 1 }),
+    }),
+    {
+      name: 'food-storage', // nombre único para guardar en el almacenamiento
+      storage: createJSONStorage(() => sessionStorage), // por defecto usa localStorage
+    },
+  ),
+)
+```
+
+Este ejemplo crea un store que almacena la cantidad de osos (`bears`) y permite aumentarla.
+
+---
+
+## Soporte para TypeScript
+
+Puedes tipar fácilmente el estado:
+
+```go:ts
+type BearStore = {
+  bears: number
+  addABear: () => void
+}
+
+export const useBearStore = create<BearStore>()(
+  persist(
+    (set, get) => ({
+      bears: 0,
+      addABear: () => set({ bears: get().bears + 1 }),
+    }),
+    {
+      name: 'food-storage',
+      storage: createJSONStorage(() => sessionStorage),
+    },
+  ),
+)
+```
+
+---
+
+## Opciones del middleware `persist`
+
+| Opción | Descripción |
+|--------|-------------|
+| `name` | Nombre único usado como clave en el almacenamiento. Es obligatorio. |
+| `storage` | El motor de almacenamiento (por defecto es `localStorage`). |
+| `partialize` | Selecciona qué campos del estado quieres guardar. |
+| `onRehydrateStorage` | Callback que se ejecuta cuando el estado se restaura desde el almacenamiento. |
+| `version` | Número de versión del estado. Útil para migraciones. |
+| `migrate` | Función para migrar datos antiguos a nuevas versiones. |
+| `merge` | Define cómo combinar el estado guardado con el actual. |
+| `skipHydration` | Salta la restauración automática del estado. |
+
+### Ejemplo de `partialize` (filtrar campos)
+
+```go:ts
+partialize: (state) =>
+  Object.fromEntries(
+    Object.entries(state).filter(([key]) => !['foo'].includes(key)),
+  )
+```
+
+Esto **omite el campo `foo`** al guardar el estado.
+
+---
+
+## Uso avanzado
+
+### Migraciones con `migrate`
+
+Si cambias el nombre de una propiedad o estructura del estado, puedes migrar los datos antiguos:
+
+```go:ts
+version: 1,
+migrate: (persistedState, version) => {
+  if (version === 0) {
+    persistedState.newField = persistedState.oldField
+    delete persistedState.oldField
+  }
+  return persistedState
+}
+```
+
+### Personalizar como se combinan los estados
+
+```go:ts
+merge: (persistedState, currentState) =>
+  deepMerge(currentState, persistedState)
+```
+
+Útil si usas objetos anidados y necesitas hacer un merge profundo.
+
+---
+
+## API del middleware `persist`
+
+- `getOptions()` - Obtiene las opciones actuales.
+- `setOptions()` - Cambia las opciones del middleware.
+- `clearStorage()` - Limpia todo el estado guardado.
+- `rehydrate()` - Recarga manualmente el estado desde el almacenamiento.
+- `hasHydrated()` - Comprueba si el estado ya fue restaurado.
+
+Ejemplo:
+
+```go:ts
+useBoundStore.persist.clearStorage()
+```
+
+---
+
+## Usar un almacenamiento personalizado
+
+Puedes usar cualquier almacenamiento implementando la interfaz `StateStorage`:
+
+```go:ts
+import { StateStorage } from 'zustand/middleware'
+
+const storage: StateStorage = {
+  getItem: async (name) => {
+    return await getFromCustomStorage(name)
+  },
+  setItem: async (name, value) => {
+    await saveToCustomStorage(name, value)
+  },
+  removeItem: async (name) => {
+    await removeFromCustomStorage(name)
+  },
+}
+```
+
+Y usarlo así:
+
+```go:ts
+storage: createJSONStorage(() => storage)
+```
+
+---
+
+## Problemas comunes con Next.js y SSR
+
+Cuando usas `persist` en aplicaciones con **Server Side Rendering (como Next.js)**, puede haber diferencias entre el servidor y el cliente. Esto causa errores de hidratación.
+
+### Solucion: espera hasta que el estado este listo
+
+Crea un hook personalizado:
+
+```go:ts
+// useStore.ts
+import { useState, useEffect } from 'react'
+
+const useStore = <T, F>(
+  store: (callback: (state: T) => unknown) => unknown,
+  callback: (state: T) => F,
+): F | undefined => {
+  const result = store(callback) as F
+  const [data, setData] = useState<F>()
+
+  useEffect(() => {
+    setData(result)
+  }, [result])
+
+  return data
+}
+
+export default useStore
+```
+
+Y úsalo en tus componentes:
+
+```go:ts
+import useStore from './useStore'
+import { useBearStore } from './stores/useBearStore'
+
+const bears = useStore(useBearStore, (state) => state.bears)
+```
+
+---
+
+## Guardar tipos complejos (Map, Set, Date, etc.)
+
+JSON no soporta tipos como `Map`, `Set` o `Date`. Para usarlos, debes serializarlos antes de guardarlos.
+
+Con `superjson` puedes hacer esto fácilmente:
+
+```go:ts
+import superjson from 'superjson'
+
+const storage = {
+  getItem: async (name) => {
+    const str = localStorage.getItem(name)
+    return str ? superjson.parse(str) : null
+  },
+  setItem: async (name, value) => {
+    const json = superjson.stringify(value)
+    localStorage.setItem(name, json)
+  },
+}
+```
+
+Ahora puedes guardar objetos complejos sin problemas.
+
+---
+
+## Escuchar eventos de almacenamiento
+
+Si quieres sincronizar cambios entre pestañas:
+
+```go:ts
+const withStorageDOMEvents = (store) => {
+  const handler = (e: StorageEvent) => {
+    if (e.key === store.persist.getOptions().name && e.newValue) {
+      store.persist.rehydrate()
+    }
+  }
+
+  window.addEventListener('storage', handler)
+  return () => window.removeEventListener('storage', handler)
+}
+
+const useBoundStore = create(persist(...))
+withStorageDOMEvents(useBoundStore)
+```
+
+---
