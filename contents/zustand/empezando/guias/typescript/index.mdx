@@ -1,185 +1,641 @@
 ---
-title: typescript
-description: Aprende cómo actualizar el estado global con Zustand usando actualizaciones planas y profundas, con herramientas como Immer, optics-ts y Ramda.
+  title: Guía de Zustand con TypeScript
+  description: Aprende a actualizar el estado global con Zustand utilizando actualizaciones planas y profundas con herramientas como Immer, optics-ts y Ramda.
 ---
 
-## Cómo actualizar el estado correctamente en Zustand (Flat & Nested Updates)
+# Guía de TypeScript con Zustand
 
-Zustand es una librería minimalista y poderosa para manejar estado global en aplicaciones React. Aunque su API es muy simple, al trabajar con objetos anidados puede que te preguntes: ¿cómo actualizo mi estado correctamente?
+## Uso basico
 
-Este artículo cubre:
-
-- 🔄 Actualizaciones planas (flat updates)
-- 🧩 Actualizaciones de objetos profundamente anidados (deep nested updates)
-- 🛠️ Alternativas: Immer, optics-ts, Ramda
-
----
-
-## ✅ Actualización de estado: Lo básico (Flat Updates)
-
-Zustand provee una función `set` para modificar el estado global. Cuando trabajas con propiedades simples (no anidadas), actualizar es directo:
-
-### 📦 Ejemplo:
+La principal diferencia al usar Zustand con **TypeScript** es que, en lugar de simplemente escribir `create(...)`, debes usar la sintaxis `create<T>()((set) => ...)`. Esta notación incluye paréntesis adicionales y el uso explícito del tipo genérico `T` para anotar el estado. Por ejemplo:
 
 ```go:ts
 import { create } from 'zustand'
 
-type State = {
-  firstName: string
-  lastName: string
+interface BearState {
+  bears: number
+  increase: (by: number) => void
 }
 
-type Actions = {
-  updateFirstName: (firstName: string) => void
-  updateLastName: (lastName: string) => void
-}
-
-const usePersonStore = create<State & Actions>((set) => ({
-  firstName: '',
-  lastName: '',
-  updateFirstName: (firstName) => set({ firstName }),
-  updateLastName: (lastName) => set({ lastName }),
+const useBearStore = create<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
 }))
 ```
 
-### 💡 Uso en React:
+---
 
-```go:tsx
-function App() {
-  const firstName = usePersonStore((s) => s.firstName)
-  const updateFirstName = usePersonStore((s) => s.updateFirstName)
+<details>
+  <summary>¿Por qué no se puede inferir automáticamente el tipo desde el estado inicial?</summary>
+ > TL;DR: Porque el genérico del estado (`T`) es **invariante**.
 
-  return (
-    <label>
-      First name:
-      <input
-        value={firstName}
-        onChange={(e) => updateFirstName(e.target.value)}
-      />
-    </label>
-  )
+Cuando usas una función como esta:
+
+```go:ts
+declare const create: <T>(f: (get: () => T) => T) => T
+```
+
+Y tratas de crear un store así:
+
+```go:ts
+const x = create((get) => ({
+  foo: 0,
+  bar: () => get(),
+}))
+```
+
+TypeScript **no puede inferir** el tipo de `x` correctamente. En su lugar, lo infiere como `unknown`. Esto sucede porque el parámetro genérico `T` aparece tanto como **entrada** (en `(get: () => T) => ...`) como **salida** (`=> T`). Eso lo hace invariante, y TypeScript no puede resolver este tipo sin ayuda explícita.
+
+Un ejemplo más simple sería:
+
+```go:ts
+const createFoo = {} as <T>(f: (t: T) => T) => T
+const x = createFoo((_) => 'hello')
+```
+
+Aquí también, `x` será `unknown`, aunque esperaríamos `string`.
+
+- Mas sobre la inferencia de tipos en TypeScript
+
+Este problema ocurre porque **es imposible implementar** funciones cuyo tipo dependa de una invarianza como la mostrada. Para ilustrarlo:
+
+```go:ts
+const createFoo = (f) => f(/* ? */)
+```
+
+¿Cómo le pasamos un valor a `f` si no sabemos qué tipo espera? Y sin llamar `f`, no podemos saber qué devuelve. Es un bucle lógico imposible de resolver.
+
+Esto aplica igualmente a `create` en Zustand. De hecho, Zustand **no puede implementar completamente** el tipo que promete. Aquí hay una prueba de ello:
+
+```go:ts
+const useBoundStore = create<{ foo: number }>()((_, get) => ({
+  foo: get().foo, // Error en tiempo de ejecución: Cannot read properties of undefined
+}))
+```
+
+El código compila, pero falla en tiempo de ejecución porque `get()` aún no tiene un estado definido. Zustand **hace una promesa que no puede cumplir**: `get()` siempre devuelve `T`, cuando en realidad inicialmente devuelve `undefined`.
+
+En teoría, podríamos tipar `get` como `() => T | undefined`, pero eso sería incómodo e incluso incorrecto, ya que eventualmente sí devuelve `T`.
+
+Lo ideal sería algo como:
+
+```go:ts
+(() => T) & WhenSync<(() => undefined)>
+```
+
+Pero esto no existe actualmente en TypeScript.
+
+</details>
+
+<details>
+  <summary>¿Por qué la sintaxis curried `create<T>()(...)`?</summary>
+  
+ 
+ TL;DR: Es una solución para [microsoft/TypeScript#10571](https://github.com/microsoft/TypeScript/issues/10571)
+
+Imagina esta situación:
+
+```go:ts
+declare const withError: <T, E>(
+  p: Promise<T>,
+) => Promise<[error: undefined, value: T] | [error: E, value: undefined]>
+declare const doSomething: () => Promise<string>
+
+const main = async () => {
+  let [error, value] = await withError(doSomething())
 }
 ```
 
-Zustand hace **shallow merge** automáticamente, así que puedes modificar solo una parte del estado sin perder lo demás.
+Aquí, `T` se infiere como `string`, pero `E` se infiere como `unknown`. Si queremos anotar `E` como `{ message: string }`, tenemos que especificar ambos tipos:
+
+```go:ts
+withError<string, { message: string }>(doSomething())
+```
+
+Esto es poco práctico. La solución es usar una versión **currificada**:
+
+```go:ts
+declare const withError: {
+  <E>(): <T>(
+    p: Promise<T>,
+  ) => Promise<[error: undefined, value: T] | [error: E, value: undefined]>
+  <T, E>(
+    p: Promise<T>,
+  ): Promise<[error: undefined, value: T] | [error: E, value: undefined]>
+}
+```
+
+Ahora puedes hacer:
+
+```go:ts
+withError<{ message: string }>()(doSomething())
+```
+
+Así, `T` se sigue infiriendo y solo tienes que anotar `E`.
+
+Zustand usa esta misma estrategia para permitirte anotar el tipo de estado (`T`) mientras dejas que otros tipos se infieran automáticamente.
+
+</details>
+
+Si quieres evitar anotar manualmente los tipos, puedes usar el middleware `combine`, que permite **inferir el tipo del estado** automáticamente:
+
+```go:ts
+import { create } from 'zustand'
+import { combine } from 'zustand/middleware'
+
+const useBearStore = create(
+  combine({ bears: 0 }, (set) => ({
+    increase: (by: number) => set((state) => ({ bears: state.bears + by })),
+  })),
+)
+```
+
+<details>
+  <summary>Ten cuidado al usar `combine` con Zustand</summary>
+
+
+Zustand permite **inferir automáticamente el tipo del estado** cuando usas el middleware `combine`. Sin embargo, para lograrlo, se hace un pequeño "truco" en los tipos de los parámetros que recibes (`set`, `get`, etc.). Es importante entender cómo funciona esto y cuándo puede llevar a errores.
+
+🧠 ¿Qué significa eso de "mentir" en los tipos?
+
+Cuando usas `combine`, el estado final no es solo el primer objeto que pasas, sino una **mezcla (shallow merge)** entre:
+
+- El estado inicial (primer parámetro)
+- Y el objeto devuelto por la función reductora (segundo parámetro)
+
+Por ejemplo:
+
+```go:ts
+create(
+  combine({ bears: 0 }, (set) => ({
+    increase: (by: number) => set((state) => ({ bears: state.bears + by })),
+  }))
+)
+```
+
+Aquí:
+
+- `{ bears: 0 }` es el estado inicial.
+- La función devuelve `{ increase: ... }`.
+
+El estado completo es `{ bears: number, increase: (by: number) => void }`.
+
+Sin embargo, dentro del callback, `get()` se tipa como `() => { bears: number }`, lo cual **no representa completamente** el estado real. Esto es una simplificación que permite la inferencia automática de tipos.
+
+⚠️ No es un error grave, pero sí hay que tener cuidado
+
+Técnicamente no es una "mentira", porque `{ bears: number }` es **subtipo** de `{ bears: number, increase: ... }`. En la mayoría de los casos, esto no causa problemas.
+
+Pero hay **algunas situaciones** donde puedes encontrarte con comportamientos inesperados:
+
+1.  Usar `set(state, true)` con `replace: true`
+
+Ejemplo:
+
+```go:ts
+set({ bears: 0 }, true)
+```
+
+Esto **reemplaza todo el estado**, incluyendo las acciones como `increase`. Aunque compila, **elimina parte del estado** y rompe la funcionalidad.
+
+2. Usar `Object.keys(get())`
+
+Si haces:
+
+```go:ts
+Object.keys(get()) // ["bears", "increase"]
+```
+
+Aunque el tipo sugiere que `get()` devuelve `{ bears: number }`, en realidad también tiene `increase`. Puedes llevarte una sorpresa si no estás atento.
+
+⚖️ ¿Es seguro usar `combine`?
+
+Sí, **en la mayoría de los casos es completamente seguro y muy conveniente**, ya que evita tener que escribir manualmente la interfaz del estado. Pero debes conocer sus limitaciones y usarlo con criterio.
+
+💡 Recomendación: Usa `ExtractState` si necesitas el tipo fuera del store
+
+Si quieres extraer el tipo del estado del store para usarlo en otros lugares, puedes usar el helper `ExtractState`:
+
+```go:ts
+import { create, ExtractState } from 'zustand'
+import { combine } from 'zustand/middleware'
+
+const useBearStore = create(
+  combine({ bears: 0 }, (set) => ({
+    increase: (by: number) => set((state) => ({ bears: state.bears + by })),
+  }))
+)
+
+type BearState = ExtractState<typeof useBearStore>
+```
+
+Ahora puedes usar `BearState` para tipar otras funciones o componentes que trabajen con ese estado.
+
+✅ Cuándo NO usar la versión currificada `create<T>()(...)`
+
+No necesitas usar la sintaxis `create<T>()(...)` cuando usas middlewares como `combine` o `redux`, ya que **el estado se crea explícitamente dentro del middleware** y TypeScript puede inferirlo correctamente.
+
+Usa la forma directa:
+
+```go:ts
+create(combine(...))
+```
+
+En lugar de:
+
+```go:ts
+create<SomeState>()(combine(...)) // ❌ redundante con combine
+```
+
+</details>
+
+# Usar middlewares
+
+No necesitas hacer nada especial para usar middlewares con TypeScript.
+
+```go:ts
+import { create } from 'zustand'
+import { devtools, persist } from 'zustand/middleware'
+
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+}
+
+const useBearStore = create<BearState>()(
+  devtools(
+    persist(
+      (set) => ({
+        bears: 0,
+        increase: (by) => set((state) => ({ bears: state.bears + by })),
+      }),
+      { name: 'bearStore' },
+    ),
+  ),
+)
+```
+
+Solo asegúrate de usar los middlewares directamente dentro de `create` para que la inferencia contextual funcione correctamente. Si encapsulas los middlewares en una función como `myMiddlewares`, puede requerir tipos más avanzados.
+
+```go:ts
+import { create } from 'zustand'
+import { devtools, persist } from 'zustand/middleware'
+
+const myMiddlewares = (f) => devtools(persist(f, { name: 'bearStore' }))
+
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+}
+
+const useBearStore = create<BearState>()(
+  myMiddlewares((set) => ({
+    bears: 0,
+    increase: (by) => set((state) => ({ bears: state.bears + by })),
+  })),
+)
+```
+
+También, recomendamos usar el middleware `devtools` al final. Por ejemplo, si usas `immer`, hazlo así:
+
+```go:ts
+devtools(immer(...))
+```
+
+Y no así:
+
+```go:ts
+immer(devtools(...))
+```
+
+Esto es porque `devtools` modifica `setState` y agrega un parámetro `type`. Si otro middleware lo modifica antes, puedes perder esa información. Usarlo al final evita este problema.
+
+# Crear middlewares y casos avanzados
+
+Imagina que tienes que escribir un middleware como este:
+
+```go:ts
+import { create } from 'zustand'
+
+const foo = (f, bar) => (set, get, store) => {
+  store.foo = bar
+  return f(set, get, store)
+}
+
+const useBearStore = create(foo(() => ({ bears: 0 }), 'hello'))
+console.log(useBearStore.foo.toUpperCase())
+```
+
+Zustand permite que los middlewares **muten el store**, pero ¿cómo se refleja esa mutación a nivel de tipos? Es decir, ¿cómo tipar `foo` para que el código compile?
+
+En la mayoría de los lenguajes estáticamente tipados, esto sería imposible. Pero gracias a TypeScript, Zustand ofrece algo llamado **"higher-kinded mutator"** que permite este tipo de mutaciones.
+
+Si trabajas con middlewares complejos o usas el tipo `StateCreator`, debes entender este detalle. Puedes ver más en [#710](https://github.com/pmndrs/zustand/pull/710).
 
 ---
 
-## 🧩 Actualizando estado anidado
+# Manejar banderas `replace` dinámicas
 
-Cuando el estado es un objeto profundamente anidado, la actualización se complica.
+Si el valor de `replace` se decide en tiempo de ejecución (no es conocido en compilación), puedes tener errores de tipo.
 
-### 🎯 Estado de ejemplo:
+Solución: Usa `Parameters<typeof setState>`
+
+Ejemplo:
 
 ```go:ts
-type State = {
-  deep: {
-    nested: {
-      obj: {
-        count: number
-      }
-    }
+const replaceFlag = Math.random() > 0.5
+const args = [{ bears: 5 }, replaceFlag] as Parameters<
+  typeof useBearStore.setState
+>
+useBearStore.setState(...args)
+```
+
+Esto le dice a TypeScript que `args` tiene el mismo tipo que los parámetros de `setState`.
+
+Ejemplo completo:
+
+```go:ts
+import { create } from 'zustand'
+
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+}
+
+const useBearStore = create<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+}))
+
+const replaceFlag = Math.random() > 0.5
+const args = [{ bears: 5 }, replaceFlag] as Parameters<
+  typeof useBearStore.setState
+>
+useBearStore.setState(...args)
+```
+
+# Recetas comunes para Zustand + TypeScript
+
+## Middleware que **no cambia** el tipo del store
+
+Ejemplo de un middleware `logger`:
+
+```go:ts
+import { create, StateCreator, StoreMutatorIdentifier } from 'zustand'
+
+type Logger = <
+  T,
+  Mps extends [StoreMutatorIdentifier, unknown][] = [],
+  Mcs extends [StoreMutatorIdentifier, unknown][] = [],
+>(
+  f: StateCreator<T, Mps, Mcs>,
+  name?: string,
+) => StateCreator<T, Mps, Mcs>
+
+const logger = <T>(
+  f: StateCreator<T, [], []>,
+  name?: string,
+): StateCreator<T, [], []> => (set, get, store) => {
+  const loggedSet: typeof set = (...a) => {
+    set(...a)
+    console.log(...(name ? [`${name}:`] : []), get())
+  }
+
+  const setState = store.setState
+  store.setState = (...a) => {
+    setState(...a)
+    console.log(...(name ? [`${name}:`] : []), store.getState())
+  }
+
+  return f(loggedSet, get, store)
+}
+
+export { logger }
+```
+
+Uso:
+
+```go:ts
+const useBearStore = create<BearState>()(
+  logger((set) => ({
+    bears: 0,
+    increase: (by) => set((state) => ({ bears: state.bears + by })),
+  })),
+  'bear-store',
+)
+```
+
+---
+
+## Middleware que **cambia** el tipo del store
+
+Ejemplo de un middleware `foo` que agrega una propiedad al store:
+
+```go:ts
+import {
+  create,
+  StateCreator,
+  StoreMutatorIdentifier,
+  Mutate,
+  StoreApi,
+} from 'zustand'
+
+declare module 'zustand' {
+  interface StoreMutators<S, A> {
+    foo: { foo: A }
   }
 }
+
+type Foo = <
+  T,
+  A,
+  Mps extends [StoreMutatorIdentifier, unknown][] = [],
+  Mcs extends [StoreMutatorIdentifier, unknown][] = [],
+>(
+  f: StateCreator<T, [...Mps, ['foo', A]], Mcs>,
+  bar: A,
+) => StateCreator<T, Mps, [['foo', A], ...Mcs]>
+)
+
+const foo = <T, A>(
+  f: StateCreator<T, [], []>,
+  bar: A,
+): StateCreator<T, [], []> => (set, get, _store) => {
+  const store = _store as Mutate<StoreApi<T>, [['foo', A]]>
+  store.foo = bar
+  return f(set, get, _store)
+}
+
+export { foo }
 ```
 
-### ❌ Enfoque tradicional (spread manual):
+Uso:
 
 ```go:ts
-normalInc: () =>
-  set((state) => ({
-    deep: {
-      ...state.deep,
-      nested: {
-        ...state.deep.nested,
-        obj: {
-          ...state.deep.nested.obj,
-          count: state.deep.nested.obj.count + 1
-        }
-      }
-    }
-  })),
+const useBearStore = create(foo(() => ({ bears: 0 }), 'hello'))
+console.log(useBearStore.foo.toUpperCase()) // funciona ✅
 ```
-
-🔻 Es verboso, propenso a errores y difícil de escalar.
 
 ---
 
-## 🛠️ Alternativas modernas para actualizar objetos anidados
+## `create` sin la sintaxis currificada
 
-### ✅ 1. **Immer**
-
-[Immer](https://immerjs.github.io/immer/) permite mutar el estado de forma _inmutable_, usando sintaxis mutable:
+Si no quieres usar `create<T>()(...)`, puedes pasar los tipos directamente:
 
 ```go:ts
-import { produce } from 'immer'
+import { create } from 'zustand'
+import { devtools, persist } from 'zustand/middleware'
 
-immerInc: () =>
-  set(produce((state: State) => {
-    state.deep.nested.obj.count++
-  })),
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+}
+
+const useBearStore = create<
+  BearState,
+  [
+    ['zustand/persist', BearState],
+    ['zustand/devtools', never]
+  ]
+>(devtools(persist((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+}), { name: 'bearStore' })))
 ```
 
-✔️ Legible, limpio y fácil de mantener.
+⚠️ Nota: Esto actúa más como una **afirmación de tipo** que como una anotación real. No recomendado a menos que sea necesario.
 
 ---
 
-### ✅ 2. **optics-ts**
+## Patron de slices
 
-[`optics-ts`](https://github.com/akheron/optics-ts) permite navegar objetos con _ópticas_:
+Divide tu store en partes reutilizables:
 
 ```go:ts
-import * as O from "optics-ts"
+import { create, StateCreator } from 'zustand'
 
-opticsInc: () =>
-  set(
-    O.modify(
-      O.optic<State>().path("deep", "nested", "obj", "count")
-    )((c) => c + 1)
-  ),
+interface BearSlice {
+  bears: number
+  addBear: () => void
+  eatFish: () => void
+}
+
+interface FishSlice {
+  fishes: number
+  addFish: () => void
+}
+
+interface SharedSlice {
+  addBoth: () => void
+  getBoth: () => number
+}
+
+const createBearSlice: StateCreator<
+  BearSlice & FishSlice,
+  [],
+  [],
+  BearSlice
+> = (set) => ({
+  bears: 0,
+  addBear: () => set((state) => ({ bears: state.bears + 1 })),
+  eatFish: () => set((state) => ({ fishes: state.fishes - 1 })),
+})
+
+const createFishSlice: StateCreator<
+  BearSlice & FishSlice,
+  [],
+  [],
+  FishSlice
+> = (set) => ({
+  fishes: 0,
+  addFish: () => set((state) => ({ fishes: state.fishes + 1 })),
+})
+
+const createSharedSlice: StateCreator<
+  BearSlice & FishSlice,
+  [],
+  [],
+  SharedSlice
+> = (set, get) => ({
+  addBoth: () => {
+    get().addBear()
+    get().addFish()
+  },
+  getBoth: () => get().bears + get().fishes,
+})
+
+const useBoundStore = create<BearSlice & FishSlice & SharedSlice>()((...a) => ({
+  ...createBearSlice(...a),
+  ...createFishSlice(...a),
+  ...createSharedSlice(...a),
+}))
 ```
-
-✔️ Funciona bien con TypeScript y evita mutación o proxies.
 
 ---
 
-### ✅ 3. **Ramda**
+## Hook `useStore` tipado para stores "vanilla"
 
-[Ramda](https://ramdajs.com/) tiene una función `modifyPath`:
+Para usar Zustand con `createStore` y tener un hook personalizado:
 
 ```go:ts
-import * as R from "ramda"
+import { useStore } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 
-ramdaInc: () =>
-  set(
-    R.modifyPath(["deep", "nested", "obj", "count"], (c: number) => c + 1)
-  ),
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+}
+
+const bearStore = createStore<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+}))
+
+function useBearStore(): BearState
+function useBearStore<T>(selector: (state: BearState) => T): T
+function useBearStore<T>(selector?: (state: BearState) => T) {
+  return useStore(bearStore, selector!)
+}
 ```
 
-✔️ Declarativo y funcional. Bueno si ya usas Ramda.
+## Funcion generica para crear hooks tipados
+
+Evita repetir código si usas varios stores vanilla:
+
+```go:ts
+import { useStore, StoreApi } from 'zustand'
+import { createStore } from 'zustand/vanilla'
+
+const createBoundedUseStore = ((store) => (selector) =>
+  useStore(store, selector)) as <S extends StoreApi<unknown>>(
+  store: S,
+) => {
+  (): ExtractState<S>
+  <T>(selector: (state: ExtractState<S>) => T): T
+}
+
+type ExtractState<S> = S extends { getState: () => infer X } ? X : never
+
+// Uso
+const bearStore = createStore<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+}))
+
+const useBearStore = createBoundedUseStore(bearStore)
+```
 
 ---
 
-## 🧪 Comparación visual de alternativas
+## Referencia de middlewares y sus mutadores
 
-| Método        | Ventajas               | Desventajas                   |
-| ------------- | ---------------------- | ----------------------------- |
-| Spread manual | Sin dependencias       | Verboso, difícil de mantener  |
-| **Immer**     | Legible, mutable-style | Usa proxies (a veces confuso) |
-| **optics-ts** | Typesafe, declarativo  | Nueva curva de aprendizaje    |
-| **Ramda**     | Funcional y limpio     | Necesita librería externa     |
+| Middleware              | Mutador                                    |
+| ----------------------- | ------------------------------------------ |
+| `devtools`              | `['zustand/devtools', never]`              |
+| `persist`               | `['zustand/persist', YourPersistedState]`  |
+| `immer`                 | `['zustand/immer', never]`                 |
+| `subscribeWithSelector` | `['zustand/subscribeWithSelector', never]` |
+| `redux`                 | `['zustand/redux', YourAction]`            |
+| `combine`               | Sin mutador (no modifica el store)         |
 
----
-
-## 🧬 Conclusión
-
-- Para **estado plano**, Zustand es directo y eficiente.
-- Para **estado anidado**, usa herramientas como **Immer**, **optics-ts** o **Ramda**.
-- Elige la alternativa que más se adapte a tu equipo o estilo de código.
-
----
-
-### 🧪 Demo práctica
-
-Puedes ver todo esto funcionando aquí:
-👉 [Zustand + Immer + Optics + Ramda — Demo en CodeSandbox](https://codesandbox.io/s/zustand-normal-immer-optics-ramda-updating-ynn3o)
+👉 `YourPersistedState` es el tipo del estado guardado. Si usas `partialize`, debe ser su retorno. Si no, usa `Partial<State>` o `unknown`.

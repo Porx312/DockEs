@@ -26,16 +26,19 @@ export const ROUTES: EachRoute[] = [
             title: "Prácticas inspiradas en Flux",
             href: "/practicas-inspiradas-en-Flux",
           },
-          { title: "flux-inspired-practice", href: "/flux-inspired-practice" },
           {
-            title: "auto-generating-selectors",
-            href: "/auto-generating-selectors",
+            title: "estado inmutable y merging",
+            href: "/estado-inmutable-y-merging",
           },
           {
-            title: "practice-with-no-store-actions",
-            href: "/practice-with-no-store-actions",
+            title: "Auto Generacion De Selectores",
+            href: "/auto-generacion-de-selectores",
           },
-          { title: "typescript", href: "/typescript" },
+          {
+            title: "Practica Sin Acciones En El Store",
+            href: "/practica-sin-acciones-en-el-store",
+          },
+          { title: "Zustand + TypeScript", href: "/typescript" },
           { title: "testing", href: "/testing" },
           {
             title: "event-handler-in-pre-react-18",

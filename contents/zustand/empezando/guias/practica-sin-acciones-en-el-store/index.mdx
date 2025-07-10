@@ -1,0 +1,49 @@
+---
+title: Actualizaciones de estado en Zustand sin acciones en el store
+description: Conoce una alternativa a la colocación tradicional en Zustand definir acciones fuera del store. Mejora el code splitting y elimina la necesidad de hooks para actualizar el estado.
+---
+
+## Práctica sin acciones dentro del store en Zustand
+
+La práctica recomendada en Zustand es **colocar las acciones y el estado dentro del mismo store**, es decir, mantenerlos juntos y encapsulados.
+
+### ✅ Ejemplo recomendado con colocación de acciones
+
+```go:ts
+export const useBoundStore = create((set) => ({
+  count: 0,
+  text: 'hello',
+  inc: () => set((state) => ({ count: state.count + 1 })),
+  setText: (text) => set({ text }),
+}))
+```
+
+Este enfoque crea un store **autocontenible**, donde los datos y las acciones están centralizados en un solo lugar.
+
+## 🚀 Enfoque alternativo: acciones externas al store
+
+Otra forma válida de usar Zustand es **definir las acciones fuera del store**, a nivel de módulo.
+
+```go:ts
+export const useBoundStore = create(() => ({
+  count: 0,
+  text: 'hello',
+}))
+
+export const inc = () =>
+  useBoundStore.setState((state) => ({ count: state.count + 1 }))
+
+export const setText = (text) => useBoundStore.setState({ text })
+```
+
+### 🎯 Ventajas de este enfoque
+
+- ✅ No necesitas un hook (`useBoundStore`) para llamar a una acción.
+- ✅ Facilita el **code splitting** (carga de código por partes).
+- ✅ Mejora la organización modular del código.
+
+### ⚖️ Consideraciones
+
+Aunque este patrón no presenta desventajas funcionales, **algunos desarrolladores prefieren la colocación** porque ofrece una estructura **más encapsulada y cohesionada**, especialmente útil en aplicaciones complejas o colaborativas.
+
+Ambos enfoques son válidos. La elección depende de tu preferencia, el tamaño del proyecto y tus necesidades de arquitectura.

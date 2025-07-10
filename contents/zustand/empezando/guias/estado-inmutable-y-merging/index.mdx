@@ -1,0 +1,64 @@
+---
+title: Zustand y estado inmutable actualizaciones, objetos anidados y reemplazo de estado
+description: Aprende cómo gestionar el estado inmutable en Zustand, cómo actualizar objetos anidados y cuándo usar el flag replace para sobrescribir el estado. Mejores prácticas con ejemplos claros.
+---
+
+## Estado inmutable y merging en Zustand
+
+Al igual que con `useState` de React, en **Zustand** también es necesario actualizar el estado de forma **inmutable**.
+
+### Ejemplo típico de actualización de estado
+
+```go:js
+import { create } from 'zustand'
+
+const useCountStore = create((set) => ({
+  count: 0,
+  inc: () => set((state) => ({ count: state.count + 1 })),
+}))
+```
+
+La función `set` se utiliza para actualizar el estado dentro de la store.
+Como el estado es inmutable, lo correcto sería hacer algo como:
+
+```go:js
+set((state) => ({ ...state, count: state.count + 1 }))
+```
+
+Sin embargo, como este patrón es muy común, **Zustand fusiona automáticamente el estado**, por lo que puedes omitir `...state`:
+
+```go:js
+set((state) => ({ count: state.count + 1 }))
+```
+
+---
+
+### Objetos anidados
+
+La función `set` en Zustand **solo realiza la fusión en un nivel** del estado.
+Si trabajas con **objetos anidados**, deberás hacer la fusión manualmente usando el operador spread (`...`):
+
+```go:js
+import { create } from 'zustand'
+
+const useCountStore = create((set) => ({
+  nested: { count: 0 },
+  inc: () =>
+    set((state) => ({
+      nested: { ...state.nested, count: state.nested.count + 1 },
+    })),
+}))
+```
+
+🔍 **Recomendación:**
+Para casos más complejos, puedes usar bibliotecas que te ayuden a manejar actualizaciones inmutables. Consulta recursos sobre cómo actualizar valores de estado anidados.
+
+### Usar el flag `replace` para sobrescribir el estado
+
+Si necesitas desactivar el comportamiento de fusión del estado, puedes usar el parámetro `replace` en la función `set`:
+
+```js
+set((state) => newState, true);
+```
+
+Esto reemplazará completamente el estado en lugar de fusionarlo.

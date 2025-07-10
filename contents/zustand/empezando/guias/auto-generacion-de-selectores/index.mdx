@@ -1,0 +1,144 @@
+---
+title: Cómo generar selectores automáticamente en stores React y Vanilla con zustand
+description: Descubre cómo generar automáticamente selectores en Zustand para acceder fácilmente a propiedades y acciones. Compatible con stores React y Vanilla. Incluye ejemplos prácticos y librerías recomendadas.
+---
+
+## Auto generación de selectores en Zustand
+
+Cuando trabajas con Zustand, se recomienda usar **selectores** para acceder tanto a las propiedades como a las acciones del estado.
+Por ejemplo, normalmente accederías a un valor así:
+
+```go:js
+const bears = useBearStore((state) => state.bears)
+```
+
+Sin embargo, escribir estos selectores manualmente puede volverse repetitivo.
+Para evitarlo, puedes generar **selectores automáticamente** con una función personalizada.
+
+### Función `createSelectors` para stores en React
+
+```go:ts
+import { StoreApi, UseBoundStore } from 'zustand'
+
+type WithSelectors<S> = S extends { getState: () => infer T }
+  ? S & { use: { [K in keyof T]: () => T[K] } }
+  : never
+
+const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
+  _store: S,
+) => {
+  const store = _store as WithSelectors<typeof _store>
+  store.use = {}
+  for (const k of Object.keys(store.getState())) {
+    ;(store.use as any)[k] = () => store((s) => s[k as keyof typeof s])
+  }
+
+  return store
+}
+```
+
+### Ejemplo de store con estado y acciones
+
+```go:ts
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+  increment: () => void
+}
+
+const useBearStoreBase = create<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+  increment: () => set((state) => ({ bears: state.bears + 1 })),
+}))
+```
+
+Aplica la función `createSelectors`:
+
+```go:ts
+const useBearStore = createSelectors(useBearStoreBase)
+```
+
+### Usando los selectores generados automáticamente
+
+```go:ts
+// obtener propiedad
+const bears = useBearStore.use.bears()
+
+// obtener acción
+const increment = useBearStore.use.increment()
+```
+
+## Para stores Vanilla (sin React)
+
+Si estás usando una **vanilla store**, puedes utilizar esta variante de `createSelectors`:
+
+```go:ts
+import { StoreApi, useStore } from 'zustand'
+
+type WithSelectors<S> = S extends { getState: () => infer T }
+  ? S & { use: { [K in keyof T]: () => T[K] } }
+  : never
+
+const createSelectors = <S extends StoreApi<object>>(_store: S) => {
+  const store = _store as WithSelectors<typeof _store>
+  store.use = {}
+  for (const k of Object.keys(store.getState())) {
+    ;(store.use as any)[k] = () =>
+      useStore(_store, (s) => s[k as keyof typeof s])
+  }
+
+  return store
+}
+```
+
+---
+
+### Ejemplo con `createStore`
+
+```go:ts
+import { createStore } from 'zustand'
+
+interface BearState {
+  bears: number
+  increase: (by: number) => void
+  increment: () => void
+}
+
+const store = createStore<BearState>()((set) => ({
+  bears: 0,
+  increase: (by) => set((state) => ({ bears: state.bears + by })),
+  increment: () => set((state) => ({ bears: state.bears + 1 })),
+}))
+```
+
+Aplica los selectores:
+
+```go:ts
+const useBearStore = createSelectors(store)
+```
+
+Uso:
+
+```go:ts
+// obtener propiedad
+const bears = useBearStore.use.bears()
+
+// obtener acción
+const increment = useBearStore.use.increment()
+```
+
+---
+
+## Demo en vivo
+
+Puedes ver un ejemplo funcional de este patrón en [codesambox](https://codesandbox.io/p/sandbox/zustand-auto-generate-selectors-forked-rl8v5e)
+
+## Librerías de terceros recomendadas
+
+Si prefieres una solución ya implementada, puedes explorar estas librerías:
+
+- [`auto-zustand-selectors-hook`](https://github.com/pmndrs/zustand/discussions/619)
+- [`react-hooks-global-state`](https://www.npmjs.com/package/react-hooks-global-state)
+- [`zustood`](https://www.npmjs.com/package/zustood)
+- [`@davstack/store`](https://www.npmjs.com/package/@davstack/store)

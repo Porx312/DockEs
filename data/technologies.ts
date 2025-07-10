@@ -9,7 +9,6 @@ export const technologies = [
   },
   {
     name: "Zustand",
-    comingSoon: true,
     slug: "/docs/zustand/empezando/introduccion",
     iconDark: "/icons/zustand.svg",
     description:
