@@ -72,7 +72,7 @@ export const ROUTES: EachRoute[] = [
           { title: "Persistir el estado con Zustand", href: "/persistir-el-estado-con-zustand" },
         ],
       },
-      {
+      /* {
         title: "Apis",
         href: "/apis",
         items: [
@@ -102,7 +102,7 @@ export const ROUTES: EachRoute[] = [
           { title: "redux", href: "/redux" },
           { title: "subscribewithselector", href: "/subscribewithselector" },
         ],
-      },
+      }, */
     ],
   },
   {
