@@ -1,4 +1,3 @@
 module.exports = {
-  siteUrl: "https://docsjs.com",
-  generateRobotsTxt: true,
+  siteUrl: 'https://docsjs.com',
 };
