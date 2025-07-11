@@ -1,0 +1,73 @@
+---
+title: Operador typeof en TypeScript
+description: Aprende a usar el operador typeof en TypeScript para referirte al tipo de una variable o función y cómo usarlo junto con tipos predefinidos como ReturnType.
+---
+
+JavaScript ya tiene un operador `typeof` que se usa en expresiones para obtener el tipo primitivo de un valor en tiempo de ejecución:
+
+```js
+// Imprime "string"
+console.log(typeof "Hello world");
+```
+
+---
+
+TypeScript añade un operador `typeof` que puede usarse en contexto de tipos para referirse al tipo de una variable o propiedad ya declarada:
+
+```ts
+let s = "hello";
+let n: typeof s;  // n es de tipo string
+```
+
+Aunque esto no aporta mucho para tipos básicos, cuando se combina con otros operadores de tipos, `typeof` permite expresar patrones complejos de forma sencilla.
+
+---
+
+Por ejemplo, el tipo predefinido `ReturnType<T>` toma un tipo función y devuelve el tipo de su valor de retorno:
+
+```ts
+type Predicate = (x: unknown) => boolean;
+type K = ReturnType<Predicate>;  // K es boolean
+```
+
+Si intentas usar `ReturnType` directamente sobre un nombre de función, TypeScript lanza un error instructivo:
+
+```ts
+function f() {
+  return { x: 10, y: 3 };
+}
+type P = ReturnType<f>;  
+// Error: 'f' es un valor, no un tipo. ¿Querías decir 'typeof f'?
+```
+
+Para referirnos al tipo que tiene la función `f` como valor, usamos `typeof`:
+
+```ts
+function f() {
+  return { x: 10, y: 3 };
+}
+type P = ReturnType<typeof f>;
+// P es { x: number; y: number }
+```
+
+---
+
+### Limitaciones
+
+TypeScript solo permite usar `typeof` en contexto de tipos sobre identificadores (nombres de variables o propiedades). No se puede usar en expresiones arbitrarias para evitar confusión con código ejecutable:
+
+```ts
+// Incorrecto — esto intentaría evaluar la llamada y no es válido en tipos
+let shouldContinue: typeof msgbox("¿Seguro que quieres continuar?");
+// Error de sintaxis
+```
+
+---
+
+### Resumen
+
+* `typeof` en tipos permite obtener el tipo de una variable o función ya declarada.
+* Es fundamental para trabajar con tipos derivados, como `ReturnType`.
+* Solo se puede usar sobre identificadores o propiedades, no expresiones complejas.
+
+

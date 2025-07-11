@@ -1,0 +1,285 @@
+---
+title: Más sobre funciones en TypeScript
+description: Descubre cómo describir funciones en TypeScript usando tipos de funciones, firmas de llamada y construcción, y aprende a crear funciones genéricas que mantienen la relación entre tipos de entrada y salida para un código más seguro y reutilizable.
+---
+## Expresiones de Tipo Funcion
+
+* Se usan para describir funciones, con sintaxis similar a las funciones flecha.
+* Ejemplo:
+
+```go:ts
+function greeter(fn: (a: string) => void) {
+  fn("Hello, World");
+}
+function printToConsole(s: string) {
+  console.log(s);
+}
+greeter(printToConsole);
+```
+
+* `(a: string) => void` significa: función con un parámetro `a` de tipo string que no retorna nada (`void`).
+* El nombre del parámetro es obligatorio para que TypeScript infiera bien el tipo. `(string) => void` es diferente (parámetro llamado `string` de tipo `any`).
+
+---
+
+## Alias para Tipos Funcion
+
+Puedes usar alias para simplificar:
+
+```go:ts
+type GreetFunction = (a: string) => void;
+function greeter(fn: GreetFunction) {
+  fn("Hola");
+}
+```
+
+---
+
+## Firmas de Llamada (Callable Types con Propiedades)
+
+Las funciones pueden tener propiedades, para describirlas con propiedades y ser llamables:
+
+```go:ts
+type DescribableFunction = {
+  description: string;
+  (someArg: number): boolean;
+};
+
+function doSomething(fn: DescribableFunction) {
+  console.log(fn.description + " returned " + fn(6));
+}
+
+function myFunc(someArg: number) {
+  return someArg > 3;
+}
+myFunc.description = "default description";
+doSomething(myFunc);
+```
+
+---
+
+## Firmas de Construccion (Constructors)
+
+Las funciones también pueden usarse con `new`. Para describir constructores:
+
+```go:ts
+type SomeConstructor = {
+  new (s: string): SomeObject;
+};
+function fn(ctor: SomeConstructor) {
+  return new ctor("hello");
+}
+```
+
+Combinar llamada y construcción:
+
+```go:ts
+interface CallOrConstruct {
+  (n?: number): string;
+  new (s: string): Date;
+}
+function fn(ctor: CallOrConstruct) {
+  console.log(ctor(10));
+  console.log(new ctor("10"));
+}
+fn(Date);
+```
+
+---
+
+## Funciones Genericas
+
+Conectan tipos de entrada y salida.
+
+```go:ts
+function firstElement<Type>(arr: Type[]): Type | undefined {
+  return arr[0];
+}
+
+const s = firstElement(["a", "b", "c"]); // string
+const n = firstElement([1, 2, 3]);       // number
+```
+
+---
+
+## Inferencia de Tipos Genericos
+
+TypeScript infiere `Type` automáticamente según argumentos.
+
+Ejemplo con varios genéricos:
+
+```go:ts
+function map<Input, Output>(arr: Input[], func: (arg: Input) => Output): Output[] {
+  return arr.map(func);
+}
+
+const parsed = map(["1", "2", "3"], (n) => parseInt(n)); // number[]
+```
+
+---
+
+## Restricciones con `extends`
+
+Limita tipos permitidos:
+
+```go:ts
+function longest<Type extends { length: number }>(a: Type, b: Type): Type {
+  return a.length >= b.length ? a : b;
+}
+
+longest([1, 2], [1, 2, 3]); // Ok
+longest("alice", "bob");    // Ok
+longest(10, 100);           // Error
+```
+
+---
+
+## Trabajando con Valores Restringidos
+
+No puedes retornar un objeto solo con la propiedad `length` cuando el tipo esperado es más específico:
+
+```go:ts
+function minimumLength<Type extends { length: number }>(
+  obj: Type,
+  minimum: number
+): Type {
+  if (obj.length >= minimum) {
+    return obj;
+  } else {
+    return { length: minimum }; // Error
+  }
+}
+```
+
+Porque `{ length: number }` no es necesariamente del mismo tipo que `Type`.
+
+---
+
+## Especificar Argumentos de Tipo Manualmente
+
+Cuando TypeScript no puede inferir o quieres forzar un tipo:
+
+```go:ts
+function combine<Type>(arr1: Type[], arr2: Type[]): Type[] {
+  return arr1.concat(arr2);
+}
+
+// Error:
+combine([1, 2, 3], ["hello"]);
+
+// Correcto:
+combine<string | number>([1, 2, 3], ["hello"]);
+```
+
+---
+
+## Buenas Practicas con Genericos
+
+1. **Baja los parámetros de tipo** (usar menos restricciones, facilitar inferencia).
+
+2. **Usa pocos parámetros de tipo** (evita parámetros extra que no aportan).
+
+3. **Parámetros genéricos deben usarse más de una vez** (si solo aparece una vez, probablemente no es necesario).
+
+---
+
+## Parametros Opcionales y Valores por Defecto
+
+* Parámetros opcionales con `?` implican que el tipo es unión con `undefined`.
+
+```go:ts
+function f(x?: number) { }
+f();
+f(10);
+```
+
+* Valores por defecto:
+
+```go:ts
+function f(x = 10) { }
+f();
+f(20);
+```
+
+---
+
+## Sobrecargas de Funciones
+
+Permiten múltiples firmas para una función.
+
+```go:ts
+function makeDate(timestamp: number): Date;
+function makeDate(m: number, d: number, y: number): Date;
+function makeDate(mOrTimestamp: number, d?: number, y?: number): Date {
+  if (d !== undefined && y !== undefined) {
+    return new Date(y, mOrTimestamp, d);
+  } else {
+    return new Date(mOrTimestamp);
+  }
+}
+```
+
+Solo se permiten llamadas que coincidan con las firmas de sobrecarga.
+
+---
+
+## Declarar `this` en funciones
+
+Para tipos seguros del `this` en callbacks:
+
+```go:ts
+interface User {
+  admin: boolean;
+}
+
+interface DB {
+  filterUsers(filter: (this: User) => boolean): User[];
+}
+
+const db: DB = getDB();
+const admins = db.filterUsers(function(this: User) {
+  return this.admin;
+});
+```
+
+---
+
+## Parametros Rest y Spread
+
+* Parámetros rest:
+
+```go:ts
+function multiply(n: number, ...m: number[]) {
+  return m.map(x => n * x);
+}
+
+multiply(10, 1, 2, 3); // [10, 20, 30]
+```
+
+* Spread para pasar elementos como argumentos:
+
+```go:ts
+const args = [8, 5] as const;
+Math.atan2(...args);
+```
+
+---
+
+## Desestructuracion en Parametros
+
+```go:ts
+function sum({ a, b, c }: { a: number; b: number; c: number }) {
+  console.log(a + b + c);
+}
+
+sum({ a: 1, b: 2, c: 3 });
+```
+
+---
+
+## Tipos Especiales en Funciones
+
+* `void`: función sin valor de retorno.
+* `never`: función que nunca retorna (lanza error o termina proceso).
+* `unknown`: tipo seguro que requiere chequeo previo para usar.
+* Evitar `Function` genérico, usar tipos específicos.

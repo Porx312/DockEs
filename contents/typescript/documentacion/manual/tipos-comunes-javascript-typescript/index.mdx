@@ -1,0 +1,511 @@
+---
+title: Tipos comunes en JavaScript y TypeScript
+description: Aprende sobre los tipos básicos más usados en JavaScript y cómo describirlos correctamente en TypeScript para mejorar tu código y evitar errores comunes.
+---
+### Los tipos primitivos: string, number y boolean
+
+JavaScript tiene tres tipos primitivos muy usados: **string**, **number** y **boolean**. Cada uno tiene un tipo equivalente en TypeScript con el mismo nombre.
+
+Estos nombres coinciden con lo que devuelve el operador `typeof` de JavaScript:
+
+* **string** representa valores de texto, como `"Hola mundo"`.
+* **number** representa números, como `42`. JavaScript no diferencia entre enteros o decimales; todos son `number`.
+* **boolean** representa los valores `true` o `false`.
+
+Nota: los tipos con mayúscula inicial `String`, `Number` y `Boolean` existen, pero son tipos especiales raramente usados. Siempre usa `string`, `number` o `boolean`.
+
+---
+
+### Arrays
+
+Para indicar el tipo de un arreglo como `[1, 2, 3]`, puedes usar la sintaxis `number[]`. Esto funciona para cualquier tipo (por ejemplo, `string[]` para un arreglo de cadenas).
+
+También puedes verlo como `Array<number>`, que significa lo mismo. Veremos más sobre la sintaxis `T<U>` cuando hablemos de genéricos.
+
+Ojo: `[number]` no es un arreglo, sino un tipo de tupla, que trataremos aparte.
+
+---
+
+### any
+
+TypeScript tiene un tipo especial llamado `any` que puedes usar cuando no quieres que un valor cause errores de chequeo de tipos.
+
+Si una variable es de tipo `any`, puedes acceder a cualquier propiedad, llamarla como función, asignarla a cualquier tipo, o lo que sea sintácticamente válido:
+
+```ts
+let obj: any = { x: 0 };
+obj.foo();
+obj();
+obj.bar = 100;
+obj = "hola";
+const n: number = obj;
+```
+
+Usar `any` desactiva el chequeo de tipos y asume que sabes lo que haces. Es útil para evitar escribir tipos largos cuando sabes que el código está bien.
+
+---
+
+### noImplicitAny
+
+Si no especificas un tipo y TypeScript no puede inferirlo, por defecto usará `any`. Pero es mejor evitarlo porque `any` no se chequea.
+
+Usa la opción del compilador `noImplicitAny` para marcar como error cualquier uso implícito de `any`.
+
+---
+
+### Anotaciones de tipo en variables
+
+Al declarar variables con `const`, `let` o `var`, puedes agregar una anotación de tipo explícita:
+
+```ts
+let miNombre: string = "Alicia";
+```
+
+Pero generalmente no es necesario. TypeScript infiere los tipos automáticamente:
+
+```ts
+let miNombre = "Alicia"; // inferred as string
+```
+
+Intenta usar menos anotaciones al empezar y deja que TypeScript infiera.
+
+---
+
+### Funciones
+
+Las funciones son la forma principal de manejar datos en JavaScript. TypeScript permite especificar tipos para los parámetros y el valor de retorno.
+
+#### Anotaciones en parametros
+
+Puedes anotar cada parámetro con su tipo, después del nombre:
+
+```ts
+function saludar(nombre: string) {
+  console.log("Hola, " + nombre.toUpperCase() + "!");
+}
+```
+
+Así, si llamas a la función con un argumento incorrecto, TypeScript marcará error:
+
+```ts
+saludar(42); // Error: number no es string
+```
+
+Aunque no pongas anotaciones, TypeScript verifica que pases la cantidad correcta de argumentos.
+
+#### Anotaciones en el retorno
+
+También puedes anotar el tipo de retorno después de la lista de parámetros:
+
+```ts
+function numeroFavorito(): number {
+  return 26;
+}
+```
+
+Generalmente no es necesario porque TypeScript infiere el tipo de retorno.
+
+---
+
+### Funciones que retornan promesas
+
+Para funciones que retornan promesas, anota el tipo usando `Promise<T>`:
+
+```ts
+async function numeroFavorito(): Promise<number> {
+  return 26;
+}
+```
+
+---
+
+### Funciones anonimas
+
+Las funciones anónimas reciben tipos automáticos en sus parámetros, según el contexto:
+
+```ts
+const nombres = ["Alicia", "Bob", "Eva"];
+
+nombres.forEach(function (s) {
+  console.log(s.toUpperCase());
+});
+
+nombres.forEach((s) => {
+  console.log(s.toUpperCase());
+});
+```
+
+TypeScript infiere que `s` es `string` porque `nombres` es un arreglo de strings y `forEach` recibe una función que maneja esos elementos.
+
+Esto se llama **tipado contextual** y ayuda a reducir anotaciones innecesarias.
+
+---
+
+### Tipos de objetos
+
+Además de los primitivos, el tipo más común es el de objetos, que son valores con propiedades.
+
+Para definir un tipo de objeto, listamos sus propiedades y sus tipos:
+
+```ts
+function imprimirCoordenada(pt: { x: number; y: number }) {
+  console.log("Coordenada X: " + pt.x);
+  console.log("Coordenada Y: " + pt.y);
+}
+
+imprimirCoordenada({ x: 3, y: 7 });
+```
+
+Puedes usar `,` o `;` para separar propiedades y el último separador es opcional.
+
+Si no defines un tipo para una propiedad, se asume `any`.
+
+---
+
+### Propiedades opcionales
+
+Puedes hacer que algunas propiedades sean opcionales agregando `?` después del nombre:
+
+```ts
+function imprimirNombre(obj: { first: string; last?: string }) {
+  // ...
+}
+
+imprimirNombre({ first: "Bob" });
+imprimirNombre({ first: "Alicia", last: "Alisson" });
+```
+
+Si una propiedad opcional no existe, su valor será `undefined`. Por eso, si la usas, debes verificar que no sea `undefined`:
+
+```ts
+function imprimirNombre(obj: { first: string; last?: string }) {
+  // Esto genera error porque last puede ser undefined
+  // console.log(obj.last.toUpperCase());
+
+  if (obj.last !== undefined) {
+    console.log(obj.last.toUpperCase());
+  }
+
+  // Alternativa segura con sintaxis moderna:
+  console.log(obj.last?.toUpperCase());
+}
+```
+
+
+## Tipos Union
+
+El sistema de tipos de TypeScript te permite construir nuevos tipos a partir de tipos existentes usando una gran variedad de operadores. Ahora que sabemos cómo escribir algunos tipos, es momento de comenzar a combinarlos de maneras interesantes.
+
+## Definir un Tipo Union
+
+Un tipo unión es un tipo formado por dos o más tipos, y representa valores que pueden ser de cualquiera de esos tipos. A cada uno de estos tipos se les llama miembros de la unión.
+
+Por ejemplo, una función que puede operar con números o cadenas de texto:
+
+```go:ts
+function imprimirId(id: number | string) {
+  console.log("Tu ID es: " + id);
+}
+// Correcto
+imprimirId(101);
+// Correcto
+imprimirId("202");
+// Error
+imprimirId({ miID: 22342 });
+// Argumento de tipo '{ miID: number; }' no es asignable al parámetro de tipo 'string | number'.
+```
+
+### Nota
+
+El separador `|` puede usarse incluso antes del primer miembro, por lo que también puedes escribir:
+
+```go:ts
+function imprimirTextoONumeroOBool(
+  valor: 
+    | string
+    | number
+    | boolean
+) {
+  console.log(valor);
+}
+```
+
+## Trabajando con Tipos Union
+
+Es fácil pasar un valor que coincida con un tipo unión: simplemente debe coincidir con alguno de los miembros. Pero si tienes un valor con tipo unión, ¿cómo trabajas con él?
+
+TypeScript solo permite operaciones válidas para **todos** los miembros del tipo unión. Por ejemplo, para `string | number`, no puedes usar métodos que solo existen en `string`:
+
+```go:ts
+function imprimirId(id: number | string) {
+  console.log(id.toUpperCase());
+  // Error: La propiedad 'toUpperCase' no existe en el tipo 'string | number'.
+}
+```
+
+### Solucion: Narrowing (Refinamiento de tipo)
+
+La solución es refinar el tipo con código, igual que en JavaScript sin anotaciones:
+
+```go:ts
+function imprimirId(id: number | string) {
+  if (typeof id === "string") {
+    // Aquí id es de tipo 'string'
+    console.log(id.toUpperCase());
+  } else {
+    // Aquí id es de tipo 'number'
+    console.log(id);
+  }
+}
+```
+
+Otro ejemplo con `Array.isArray`:
+
+```go:ts
+function darBienvenida(x: string[] | string) {
+  if (Array.isArray(x)) {
+    // x es string[]
+    console.log("Hola, " + x.join(" y "));
+  } else {
+    // x es string
+    console.log("Bienvenido viajero solitario " + x);
+  }
+}
+```
+
+### Propiedades comunes
+
+Si todos los miembros de la unión tienen una propiedad común, puedes usarla sin necesidad de refinar:
+
+```go:ts
+function obtenerPrimerosTres(x: number[] | string) {
+  return x.slice(0, 3);
+}
+```
+
+---
+
+## Alias de Tipo
+
+Un alias de tipo es un nombre para cualquier tipo. La sintaxis es:
+
+```go:ts
+type Punto = {
+  x: number;
+  y: number;
+};
+
+function imprimirCoordenada(pt: Punto) {
+  console.log("Valor x: " + pt.x);
+  console.log("Valor y: " + pt.y);
+}
+
+imprimirCoordenada({ x: 100, y: 100 });
+```
+
+Puedes usar alias para cualquier tipo, incluso para uniones:
+
+```go:ts
+type ID = number | string;
+```
+
+**Importante:** Los alias son solo nombres, no crean tipos nuevos ni distintos.
+
+---
+
+## Interfaces
+
+Otra forma de nombrar tipos de objeto:
+
+```go:ts
+interface Punto {
+  x: number;
+  y: number;
+}
+
+function imprimirCoordenada(pt: Punto) {
+  console.log("Valor x: " + pt.x);
+  console.log("Valor y: " + pt.y);
+}
+
+imprimirCoordenada({ x: 100, y: 100 });
+```
+
+TypeScript es un sistema de tipos estructurales, lo que significa que solo le importa la forma (estructura) del valor.
+
+---
+
+## Diferencias entre Alias de Tipo e Interfaces
+
+| Característica                        | Interface      | Tipo Alias                                   |
+| ------------------------------------- | -------------- | -------------------------------------------- |
+| Puede extender otra interfaz          | Sí (`extends`) | Sí, usando intersecciones (&)                |
+| Se puede reabrir para agregar campos  | Sí             | No                                           |
+| Solo para describir objetos           | Sí             | No (puede nombrar uniones, primitivas, etc.) |
+| Mejores para extender múltiples tipos | No             | Sí                                           |
+| Se nombran en mensajes de error       | Sí             | Puede que no siempre                         |
+
+En general, usa **interface** hasta que necesites características específicas de los alias de tipo.
+
+---
+
+## Aserciones de Tipo (Type Assertions)
+
+A veces sabes más sobre un tipo que TypeScript. Por ejemplo, al usar `document.getElementById`, sabes que el elemento es un `<canvas>`, pero TypeScript solo sabe que es un `HTMLElement`.
+
+Puedes usar una aserción para especificar el tipo:
+
+```go:ts
+const miCanvas = document.getElementById("mi_canvas") as HTMLCanvasElement;
+```
+
+O usando la sintaxis de ángulo (no para archivos `.tsx`):
+
+```go:ts
+const miCanvas = <HTMLCanvasElement>document.getElementById("mi_canvas");
+```
+
+**Advertencia:** Las aserciones no generan comprobación en tiempo de ejecución. Si te equivocas, puede dar error en runtime.
+
+---
+
+## Tipos Literales
+
+Además de tipos generales como `string` y `number`, puedes usar tipos literales con valores específicos.
+
+Por ejemplo:
+
+```go:ts
+let saludo: "hola" = "hola";
+// saludo = "adiós"; // Error: no es asignable a "hola"
+```
+
+Esto puede parecer poco útil solo, pero combinándolo en uniones es muy poderoso:
+
+```go:ts
+function alinearTexto(texto: string, alineacion: "izquierda" | "derecha" | "centrado") {
+  // ...
+}
+alinearTexto("Hola mundo", "izquierda");  // OK
+alinearTexto("Hola mundo", "centro");     // Error: "centro" no es parte del tipo
+```
+
+Lo mismo con números:
+
+```go:ts
+function comparar(a: string, b: string): -1 | 0 | 1 {
+  return a === b ? 0 : a > b ? 1 : -1;
+}
+```
+
+---
+
+## Inferencia Literal
+
+Cuando inicializas objetos, TypeScript asume que sus propiedades pueden cambiar, y por eso infiere tipos generales.
+
+Ejemplo:
+
+```go:ts
+const req = { url: "https://ejemplo.com", metodo: "GET" };
+handleRequest(req.url, req.metodo); // Error porque método es inferido como string, no como "GET"
+```
+
+### Soluciones:
+
+1. Usar aserción en la propiedad:
+
+```go:ts
+const req = { url: "https://ejemplo.com", metodo: "GET" as "GET" };
+```
+
+2. Usar aserción en la llamada:
+
+```go:ts
+handleRequest(req.url, req.metodo as "GET");
+```
+
+3. Usar `as const` para hacer que todas las propiedades sean literales:
+
+```go:ts
+const req = { url: "https://ejemplo.com", metodo: "GET" } as const;
+handleRequest(req.url, req.metodo);
+```
+
+## null y undefined
+
+JavaScript tiene dos valores primitivos usados para indicar que un valor está ausente o no ha sido inicializado: **null** y **undefined**.
+
+TypeScript tiene dos tipos correspondientes con los mismos nombres. Cómo se comportan estos tipos depende de si tienes activada la opción `strictNullChecks` o no.
+
+### strictNullChecks desactivado
+
+Con `strictNullChecks` desactivado, los valores que podrían ser `null` o `undefined` se pueden usar normalmente, y tanto `null` como `undefined` se pueden asignar a una propiedad de **cualquier** tipo. Esto es similar a cómo funcionan lenguajes sin chequeos estrictos de null (como C# o Java).
+
+Este comportamiento puede causar muchos errores, por lo que se recomienda activar `strictNullChecks` siempre que sea posible en tu código.
+
+### strictNullChecks activado
+
+Con `strictNullChecks` activado, si un valor puede ser `null` o `undefined`, debes verificar que **no** sea ninguno de esos antes de usar métodos o propiedades de ese valor. Es similar a comprobar si una propiedad opcional está definida:
+
+```ts
+function hacerAlgo(x: string | null) {
+  if (x === null) {
+    // no hacer nada
+  } else {
+    console.log("Hola, " + x.toUpperCase());
+  }
+}
+```
+
+### Operador de Asercion Non-null 
+
+TypeScript tiene una sintaxis especial para decirle que un valor **no es** `null` ni `undefined` sin hacer una comprobación explícita. Colocar `!` después de una expresión es una aserción que indica que el valor no es nulo ni indefinido:
+
+```ts
+function vivePeligrosamente(x?: number | null) {
+  // No da error aunque x podría ser null o undefined
+  console.log(x!.toFixed());
+}
+```
+
+Esta aserción **no cambia el comportamiento en tiempo de ejecución**, así que úsala solo cuando estés seguro de que el valor **no puede ser** `null` ni `undefined`.
+
+---
+
+## Enums
+
+Los **enums** son una característica que TypeScript agrega a JavaScript para describir valores que pueden ser uno de un conjunto de constantes con nombre. A diferencia de otras características de TypeScript, los enums existen también en tiempo de ejecución, no solo en el sistema de tipos.
+
+Aunque es útil conocerlos, se recomienda usarlos con precaución y solo si realmente se necesitan.
+
+---
+
+## Primitivos Menos Comunes
+
+Además de `string`, `number`, `boolean`, `null` y `undefined`, JavaScript tiene otros tipos primitivos que también están en el sistema de tipos de TypeScript.
+
+### bigint
+
+Desde ES2020, JavaScript tiene el tipo `BigInt` para números enteros muy grandes:
+
+```ts
+// Crear un bigint usando la función BigInt
+const cien: bigint = BigInt(100);
+
+// Crear un bigint con la sintaxis literal
+const otroCien: bigint = 100n;
+```
+
+### symbol
+
+El tipo `symbol` crea referencias únicas globalmente usando la función `Symbol()`:
+
+```ts
+const nombre1 = Symbol("nombre");
+const nombre2 = Symbol("nombre");
+
+if (nombre1 === nombre2) {
+  // Esto nunca sucederá porque cada símbolo es único
+}
+```

@@ -1,0 +1,264 @@
+---
+title: Módulos en TypeScript
+description: Aprende cómo TypeScript maneja la modularización del código usando ES Modules y CommonJS. Descubre las diferencias entre scripts y módulos, la sintaxis import/export, la interoperabilidad con CommonJS, las estrategias de resolución de módulos, y cómo configurar la salida del compilador para distintos entornos.
+---
+
+
+### 🔍 Introducción
+
+JavaScript ha tenido históricamente varias formas de modularizar el código. Desde su creación en 2012, TypeScript ha dado soporte a muchas de estas, pero hoy en día, la comunidad ha adoptado como estándar **ES Modules** (o **Módulos ES6**), también conocidos por la sintaxis `import/export`.
+
+Los módulos ES fueron añadidos oficialmente a JavaScript en 2015 y, desde 2020, cuentan con soporte amplio en navegadores y entornos como Node.js.
+
+El manual de TypeScript se enfoca en:
+
+* **ES Modules**
+* **CommonJS** (precursor popular de los módulos ES)
+
+> Para otros patrones de módulos, consulta la sección de referencia [Modules](https://www.typescriptlang.org/docs/handbook/modules.html).
+
+---
+
+### 📁 ¿Qué es un módulo en JavaScript y TypeScript?
+
+Un archivo que contiene una **instrucción `import` o `export` de nivel superior** es tratado como un **módulo**.
+
+* Si no contiene ninguna de estas, se trata como un **script**, cuyos contenidos se consideran **globales**.
+
+> ✅ Módulos tienen su propio **ámbito**, por lo que variables, funciones o clases definidas en un módulo no son accesibles desde fuera, a menos que se **exporten** explícitamente.
+
+---
+
+### ❗ Archivos no módulo (scripts)
+
+* Un archivo sin `import`/`export` es tratado como **script global**.
+* Se espera que uses múltiples etiquetas `<script>` o la opción `outFile` del compilador para combinar los archivos.
+
+✅ Si quieres que un archivo se trate como módulo aunque no exporte nada, puedes usar:
+
+```ts
+export {};
+```
+
+---
+
+## 🚀 Sintaxis de Módulos en TypeScript
+
+### ✅ Exportación por defecto
+
+```ts
+// hello.ts
+export default function helloWorld() {
+  console.log("Hello, world!");
+}
+```
+
+```ts
+// app.ts
+import helloWorld from "./hello.js";
+helloWorld();
+```
+
+---
+
+### ✅ Exportaciones nombradas
+
+```ts
+// maths.ts
+export const pi = 3.14;
+export let squareTwo = 1.41;
+export function absolute(num: number) {
+  return num < 0 ? -num : num;
+}
+```
+
+```ts
+// app.ts
+import { pi, absolute } from "./maths.js";
+```
+
+---
+
+### ✅ Alias de importación
+
+```ts
+import { pi as π } from "./maths.js";
+```
+
+---
+
+### ✅ Importación combinada
+
+```ts
+// maths.ts
+export const pi = 3.14;
+export default class RNG {}
+
+// app.ts
+import RNG, { pi as π } from "./maths.js";
+```
+
+---
+
+### ✅ Importar todo como un namespace
+
+```ts
+import * as math from "./maths.js";
+console.log(math.pi);
+```
+
+---
+
+### ✅ Importación sin asignación
+
+```ts
+import "./side-effects.js";
+```
+
+> Útil para ejecutar módulos que solo tienen efectos secundarios.
+
+---
+
+## 🧾 Tipos en Módulos (ES Modules)
+
+Puedes importar y exportar tipos como valores:
+
+```ts
+// animal.ts
+export type Cat = { breed: string; yearOfBirth: number };
+export interface Dog { breeds: string[]; yearOfBirth: number };
+```
+
+```ts
+// app.ts
+import { Cat, Dog } from "./animal.js";
+type Animal = Cat | Dog;
+```
+
+---
+
+### `import type` – solo importa tipos
+
+```ts
+import type { Cat, Dog } from "./animal.js";
+```
+
+✅ Evita que el compilador incluya esos imports en el código JavaScript final.
+
+---
+
+### Importaciones inline con `type`
+
+```ts
+import { createCatName, type Cat, type Dog } from "./animal.js";
+```
+
+---
+
+## 🔄 Interoperabilidad con CommonJS
+
+### CommonJS: Exportaciones
+
+```ts
+function absolute(num) {
+  return num < 0 ? -num : num;
+}
+
+module.exports = {
+  pi: 3.14,
+  absolute
+};
+```
+
+### CommonJS: Importaciones
+
+```ts
+const maths = require("./maths");
+console.log(maths.pi);
+
+const { absolute } = require("./maths");
+```
+
+### Interop: `esModuleInterop`
+
+Permite que `import` funcione con módulos CommonJS de forma más fluida.
+
+---
+
+## 🧭 Resolución de módulos
+
+TypeScript tiene dos estrategias de resolución:
+
+* **Classic**: (heredado, usado si `module` no es `commonjs`)
+* **Node**: imita cómo Node.js resuelve módulos
+
+Configuraciones útiles:
+
+* `moduleResolution`
+* `baseUrl`
+* `paths`
+* `rootDirs`
+
+---
+
+## 🏗️ Salida de módulos
+
+Controlada por dos opciones en `tsconfig.json`:
+
+| Opción   | Descripción                                                         |
+| -------- | ------------------------------------------------------------------- |
+| `target` | Transpila a un estándar de JavaScript compatible                    |
+| `module` | Determina el sistema de módulos (`es2020`, `commonjs`, `umd`, etc.) |
+
+Ejemplo:
+
+```ts
+import { valueOfPi } from "./constants.js";
+export const twoPi = valueOfPi * 2;
+```
+
+### Salida en ES2020
+
+```js
+import { valueOfPi } from "./constants.js";
+export const twoPi = valueOfPi * 2;
+```
+
+### Salida en CommonJS
+
+```js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.twoPi = void 0;
+const constants = require("./constants.js");
+exports.twoPi = constants.valueOfPi * 2;
+```
+
+---
+
+## 🧭 Namespaces (Espacios de nombres)
+
+Antes de los ES Modules, TypeScript introdujo los **namespaces**:
+
+```ts
+namespace Geometry {
+  export const pi = 3.14;
+}
+```
+
+👉 Aunque siguen siendo útiles en archivos `.d.ts`, se recomienda usar **ES Modules** para alinearse con los estándares de JavaScript.
+
+---
+
+## 📌 Resumen
+
+| Concepto                     | Descripción                                                                |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `export` / `import`          | Forma moderna de modularización                                            |
+| `require` / `module.exports` | Sintaxis CommonJS, aún común en Node.js                                    |
+| `import type`                | Solo para tipos, no genera código JS                                       |
+| `esModuleInterop`            | Mejora compatibilidad entre ESModules y CommonJS                           |
+| `module`                     | Opción que define el formato de salida (`commonjs`, `es2020`, `umd`, etc.) |
+| `moduleResolution`           | Cómo se busca el archivo en disco                                          |
+
+

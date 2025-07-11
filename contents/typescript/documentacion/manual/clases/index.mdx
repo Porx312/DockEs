@@ -1,0 +1,990 @@
+---
+title: Guía completa de clases en TypeScript
+description: Explora cómo funcionan las clases en TypeScript, desde la definición básica de clases y herencia, hasta temas avanzados como el uso de this como tipo, clases abstractas, propiedades de parámetros, expresiones de clase y relaciones estructurales entre clases. Aprende a escribir clases más seguras y reutilizables, aprovechando al máximo el sistema de tipos de TypeScript.
+---
+
+> **Lectura recomendada:**
+> [Clases (MDN)](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes)
+> [Constructor (MDN)](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes/constructor)
+> [Extends (MDN)](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes/extends)
+
+TypeScript ofrece compatibilidad total con la palabra clave `class` introducida en ES2015. Además de las funcionalidades estándar de JavaScript, TypeScript permite agregar **anotaciones de tipo**, asegurando un desarrollo más robusto.
+
+---
+
+## 📌 Miembros de Clase
+
+### Campos (`fields`)
+
+Un campo crea una propiedad pública y modificable en la clase:
+
+```go:ts
+class Point {
+  x: number;
+  y: number;
+}
+
+const pt = new Point();
+pt.x = 0;
+pt.y = 0;
+```
+
+También puedes inicializar campos directamente:
+
+```go:ts
+class Point {
+  x = 0;
+  y = 0;
+}
+```
+
+El tipo se infiere automáticamente a partir del valor:
+
+```go:ts
+pt.x = "0"; // ❌ Error: 'string' no es asignable a 'number'
+```
+
+### `strictPropertyInitialization`
+
+Si esta opción está activada, TypeScript obliga a inicializar todos los campos en el constructor:
+
+```go:ts
+class BadGreeter {
+  name: string; // ❌ Error: no está inicializado
+}
+```
+
+Solución:
+
+```go:ts
+class GoodGreeter {
+  name: string;
+
+  constructor() {
+    this.name = "Hola";
+  }
+}
+```
+
+También puedes usar el **operador de aserción de asignación definitiva** (`!`):
+
+```go:ts
+class OKGreeter {
+  name!: string; // ✅ No error aunque no esté inicializado
+}
+```
+
+---
+
+## 🔒 Propiedades `readonly`
+
+Las propiedades marcadas como `readonly` no pueden ser modificadas fuera del constructor:
+
+```go:ts
+class Greeter {
+  readonly name: string = "mundo";
+
+  constructor(otherName?: string) {
+    if (otherName !== undefined) {
+      this.name = otherName;
+    }
+  }
+
+  err() {
+    this.name = "no permitido"; // ❌ Error
+  }
+}
+```
+
+---
+
+## 🧱 Constructores
+
+Puedes añadir parámetros con tipos, valores por defecto u **overloads**:
+
+```go:ts
+class Point {
+  x: number;
+  y: number;
+
+  constructor(x = 0, y = 0) {
+    this.x = x;
+    this.y = y;
+  }
+}
+```
+
+También puedes definir múltiples firmas:
+
+```go:ts
+class Point {
+  constructor(x: number, y: number);
+  constructor(xy: string);
+  constructor(x: string | number, y: number = 0) {
+    // lógica
+  }
+}
+```
+
+> Los constructores no pueden tener tipo de retorno, y los genéricos se definen en la clase, no en el constructor.
+
+---
+
+## 🧬 Herencia y `super()`
+
+Cuando heredas de otra clase, debes llamar a `super()` antes de acceder a `this`:
+
+```go:ts
+class Base {
+  k = 4;
+}
+
+class Derived extends Base {
+  constructor() {
+    super(); // Obligatorio antes de usar this
+    console.log(this.k);
+  }
+}
+```
+
+---
+
+## ⚙ Metodos
+
+Los métodos son funciones dentro de una clase. Usan las mismas anotaciones de tipo que las funciones normales:
+
+```go:ts
+class Point {
+  x = 10;
+  y = 10;
+
+  scale(n: number): void {
+    this.x *= n;
+    this.y *= n;
+  }
+}
+```
+
+> Siempre accede a propiedades de la clase con `this.` dentro de métodos.
+
+---
+
+## 🪟 Getters y Setters
+
+```go:ts
+class C {
+  _length = 0;
+
+  get length() {
+    return this._length;
+  }
+
+  set length(value) {
+    this._length = value;
+  }
+}
+```
+
+TypeScript infiere tipos automáticamente. Si no defines un `set`, la propiedad se considera `readonly`.
+
+Desde TypeScript 4.3 puedes tener tipos distintos en `get` y `set`:
+
+```go:ts
+class Thing {
+  _size = 0;
+
+  get size(): number {
+    return this._size;
+  }
+
+  set size(value: string | number | boolean) {
+    const num = Number(value);
+    this._size = Number.isFinite(num) ? num : 0;
+  }
+}
+```
+
+---
+
+## 📇 Índices con firma (`index signatures`)
+
+```go:ts
+class MyClass {
+  [key: string]: boolean | ((s: string) => boolean);
+
+  check(s: string) {
+    return this[s] as boolean;
+  }
+}
+```
+
+> No es recomendable guardar datos indexados directamente en la instancia; mejor usar un objeto separado.
+
+---
+
+## ✅ Implementar Interfaces (`implements`)
+
+```go:ts
+interface Pingable {
+  ping(): void;
+}
+
+class Sonar implements Pingable {
+  ping() {
+    console.log("ping!");
+  }
+}
+
+class Ball implements Pingable {
+  pong() {
+    console.log("pong!");
+  }
+}
+// ❌ Error: falta el método 'ping'
+```
+
+> `implements` solo valida tipos; **no modifica el comportamiento** ni añade propiedades automáticamente.
+
+---
+
+## 🧬 Herencia (`extends`)
+
+```go:ts
+class Animal {
+  move() {
+    console.log("¡Me estoy moviendo!");
+  }
+}
+
+class Dog extends Animal {
+  woof(times: number) {
+    console.log("woof!".repeat(times));
+  }
+}
+```
+
+---
+
+## 🔁 Sobrescribir Metodos
+
+Puedes sobrescribir métodos del padre:
+
+```go:ts
+class Base {
+  greet() {
+    console.log("Hola mundo!");
+  }
+}
+
+class Derived extends Base {
+  greet(name?: string) {
+    if (name === undefined) {
+      super.greet();
+    } else {
+      console.log(`Hola, ${name.toUpperCase()}`);
+    }
+  }
+}
+```
+
+> Debes mantener la compatibilidad con la firma del método base. Si cambias el número o tipo de parámetros, TypeScript mostrará un error.
+
+---
+
+## 🎯 Declaraciones solo de tipo (`declare`)
+
+Para redefinir solo el tipo de una propiedad heredada sin afectar la ejecución:
+
+```go:ts
+class AnimalHouse {
+  resident: Animal;
+  constructor(animal: Animal) {
+    this.resident = animal;
+  }
+}
+
+class DogHouse extends AnimalHouse {
+  declare resident: Dog; // Solo afecta el tipo
+  constructor(dog: Dog) {
+    super(dog);
+  }
+}
+```
+
+---
+
+## 🔄 Orden de Inicialización
+
+```go:ts
+class Base {
+  name = "base";
+  constructor() {
+    console.log("Mi nombre es " + this.name);
+  }
+}
+
+class Derived extends Base {
+  name = "derived";
+}
+
+const d = new Derived(); // Imprime "base"
+```
+
+> El orden es:
+
+1. Inicialización de campos del padre
+2. Constructor del padre
+3. Inicialización de campos del hijo
+4. Constructor del hijo
+
+---
+
+## ⚠️ Heredar Tipos Integrados (como `Error`, `Array`)
+
+Heredar de tipos integrados requiere configuración especial:
+
+```go:ts
+class MsgError extends Error {
+  constructor(m: string) {
+    super(m);
+    Object.setPrototypeOf(this, MsgError.prototype);
+  }
+
+  sayHello() {
+    return "hola " + this.message;
+  }
+}
+```
+
+> Sin esta línea `Object.setPrototypeOf(...)`, `instanceof` puede fallar y métodos como `sayHello` no estarán disponibles.
+
+---
+
+## Visibilidad de Miembros en TypeScript
+
+### `public`
+
+Por defecto, todos los miembros de una clase en TypeScript son públicos (`public`). Esto significa que pueden ser accedidos desde cualquier parte:
+
+```go:ts
+class Greeter {
+  public greet() {
+    console.log("¡Hola!");
+  }
+}
+
+const g = new Greeter();
+g.greet(); // OK
+```
+
+> Aunque no es necesario escribir `public`, puedes usarlo por razones de estilo o legibilidad.
+
+---
+
+### `protected`
+
+Los miembros `protected` **solo son accesibles desde la clase base y sus subclases**.
+
+```go:ts
+class Greeter {
+  public greet() {
+    console.log("Hola, " + this.getName());
+  }
+
+  protected getName() {
+    return "mundo";
+  }
+}
+
+class SpecialGreeter extends Greeter {
+  public howdy() {
+    console.log("¡Qué tal, " + this.getName() + "!");
+  }
+}
+```
+
+```go:ts
+const g = new SpecialGreeter();
+g.greet(); // OK
+g.getName(); // ❌ Error: 'getName' es 'protected'
+```
+
+#### Exponer miembros protegidos
+
+Una subclase puede optar por hacer público un miembro `protected` (aunque debe hacerse con cuidado):
+
+```go:ts
+class Base {
+  protected m = 10;
+}
+
+class Derived extends Base {
+  m = 15; // Ahora es público por omisión
+}
+
+const d = new Derived();
+console.log(d.m); // OK
+```
+
+> Si no deseas exponerlo públicamente, recuerda declarar explícitamente `protected` en la subclase.
+
+#### Acceso cruzado entre subclases
+
+No se permite acceder a miembros `protected` desde instancias de otras subclases:
+
+```go:ts
+class Base {
+  protected x = 1;
+}
+
+class Derived1 extends Base {
+  protected x = 5;
+}
+
+class Derived2 extends Base {
+  f1(other: Derived2) {
+    other.x = 10; // OK
+  }
+
+  f2(other: Derived1) {
+    other.x = 10; // ❌ Error
+  }
+}
+```
+
+---
+
+### `private`
+
+Los miembros `private` **solo son accesibles desde dentro de la clase en que fueron definidos**. Ni siquiera las subclases pueden acceder a ellos.
+
+```go:ts
+class Base {
+  private x = 0;
+}
+
+const b = new Base();
+console.log(b.x); // ❌ Error
+```
+
+```go:ts
+class Derived extends Base {
+  showX() {
+    console.log(this.x); // ❌ Error
+  }
+}
+```
+
+> Además, no puedes redefinir un miembro `private` como `public` en una subclase.
+
+#### Acceso entre instancias
+
+A diferencia de algunos lenguajes, TypeScript **sí permite que diferentes instancias de una clase accedan a miembros privados entre sí**:
+
+```go:ts
+class A {
+  private x = 10;
+
+  sameAs(other: A) {
+    return this.x === other.x; // OK
+  }
+}
+```
+
+---
+
+### Consideraciones sobre privacidad
+
+Las restricciones de `private` y `protected` **son solo verificaciones de tipo**. A nivel de ejecución (JavaScript), aún puedes acceder a estos miembros:
+
+```go:ts
+class MySafe {
+  private secretKey = 12345;
+}
+
+const s = new MySafe();
+console.log(s["secretKey"]); // ⚠️ Funciona, aunque no debería
+```
+
+#### Campos privados "duros" con 
+
+TypeScript también admite la sintaxis de campos privados reales de JavaScript:
+
+```go:ts
+class Dog {
+  #barkAmount = 0;
+  personality = "feliz";
+
+  constructor() {}
+}
+```
+
+> Estos campos son verdaderamente privados y no pueden ser accedidos de ninguna forma externa.
+
+---
+
+## Miembros Estaticos
+
+Los miembros `static` **pertenecen a la clase en sí, no a las instancias**:
+
+```go:ts
+class MyClass {
+  static x = 0;
+
+  static printX() {
+    console.log(MyClass.x);
+  }
+}
+
+MyClass.printX(); // OK
+```
+
+Pueden tener modificadores de visibilidad como `private`:
+
+```go:ts
+class MyClass {
+  private static x = 0;
+}
+
+console.log(MyClass.x); // ❌ Error
+```
+
+También se heredan:
+
+```go:ts
+class Base {
+  static getGreeting() {
+    return "Hola mundo";
+  }
+}
+
+class Derived extends Base {
+  myGreeting = Derived.getGreeting(); // OK
+}
+```
+
+#### Nombres estaticos reservados
+
+No puedes usar nombres como `name`, `length`, o `call` como miembros estáticos, ya que entrarían en conflicto con propiedades del prototipo de `Function`.
+
+---
+
+### Clases "estaticas"
+
+JavaScript/TypeScript no tienen clases `static` como C#, porque en JS se pueden usar objetos simples o funciones:
+
+```go:ts
+// No recomendado
+class MyStaticClass {
+  static doSomething() {}
+}
+
+// Alternativas más limpias
+function doSomething() {}
+
+const Utils = {
+  doSomething() {},
+};
+```
+
+---
+
+### Bloques estaticos
+
+Puedes usar bloques `static` para inicializar miembros privados u otros procesos complejos en la clase:
+
+```go:ts
+class Foo {
+  static #count = 0;
+
+  get count() {
+    return Foo.#count;
+  }
+
+  static {
+    try {
+      const lastInstances = loadLastInstances();
+      Foo.#count += lastInstances.length;
+    } catch {}
+  }
+}
+```
+
+---
+
+## Clases Genericas
+
+Al igual que las interfaces, las clases pueden ser genéricas:
+
+```go:ts
+class Box<Type> {
+  contents: Type;
+  constructor(value: Type) {
+    this.contents = value;
+  }
+}
+
+const b = new Box("hola"); // Box<string>
+```
+
+> Las clases genéricas pueden tener restricciones (`extends`) y valores por defecto.
+
+#### Miembros estaticos y tipos genéricos
+
+No puedes usar el tipo genérico en miembros estáticos:
+
+```go:ts
+class Box<Type> {
+  static defaultValue: Type; // ❌ Error
+}
+```
+
+Esto es porque **los tipos se borran en tiempo de ejecución**, y `Box.defaultValue` sería compartido entre todas las instancias del tipo.
+
+---
+
+## `this` en tiempo de ejecucion
+
+JavaScript tiene un comportamiento peculiar con `this`. Su valor depende de **cómo se llama una función**, no de dónde se definió.
+
+```go:ts
+class MyClass {
+  name = "MiClase";
+
+  getName() {
+    return this.name;
+  }
+}
+
+const c = new MyClass();
+const obj = {
+  name: "objeto",
+  getName: c.getName,
+};
+
+console.log(obj.getName()); // "objeto"
+```
+
+> Se pierde el contexto original. Esto puede evitarse usando **funciones flecha** o **parámetros `this`**.
+
+---
+
+### Funciones flecha
+
+```go:ts
+class MyClass {
+  name = "MiClase";
+  getName = () => this.name;
+}
+
+const c = new MyClass();
+const g = c.getName;
+console.log(g()); // "MiClase"
+```
+
+> ✅ No pierde el contexto.
+> ⚠️ Cada instancia tiene su propia copia → mayor uso de memoria.
+> ❌ No puedes usar `super`.
+
+---
+
+### Parametro `this`
+
+```go:ts
+class MyClass {
+  name = "MiClase";
+
+  getName(this: MyClass) {
+    return this.name;
+  }
+}
+
+const c = new MyClass();
+c.getName(); // OK
+
+const g = c.getName;
+console.log(g()); // ❌ Error en tiempo de compilación
+```
+
+> ✅ Se ahorra memoria, solo una función compartida.
+> ❌ Puede fallar si se usa en JavaScript sin TypeScript.
+
+## 🔁 El tipo especial `this` en clases
+
+En TypeScript, el tipo especial `this` hace referencia **dinámicamente al tipo de la clase actual**. Esto es útil, por ejemplo, cuando queremos que los métodos de una clase retornen la instancia concreta (subclase), no simplemente el tipo base.
+
+### Ejemplo basico:
+
+```go:ts
+class Box {
+  contents: string = "";
+
+  set(value: string) {
+    this.contents = value;
+    return this;
+  }
+}
+```
+
+TypeScript **infirió que `set` retorna `this`**, no `Box`, lo que permite encadenamiento fluido incluso en subclases.
+
+```go:ts
+class ClearableBox extends Box {
+  clear() {
+    this.contents = "";
+  }
+}
+
+const a = new ClearableBox();
+const b = a.set("hello"); // b es de tipo ClearableBox, ¡no Box!
+```
+
+---
+
+## 📥 Usar `this` como tipo de parametro
+
+```go:ts
+class Box {
+  content: string = "";
+
+  sameAs(other: this) {
+    return other.content === this.content;
+  }
+}
+```
+
+Esto **difiere de usar `other: Box`**, ya que con `this`, la comparación solo es válida entre **instancias del mismo subtipo**.
+
+```go:ts
+class DerivedBox extends Box {
+  otherContent: string = "?";
+}
+
+const base = new Box();
+const derived = new DerivedBox();
+
+derived.sameAs(base); 
+// ❌ Error: el parámetro debe ser un DerivedBox, no un Box
+```
+
+---
+
+## 🧠 Type Guards con `this`
+
+Puedes crear **type guards personalizados** con `this is Tipo`, lo que permite a TypeScript **inferir dinámicamente el tipo** correcto al usar `if`.
+
+```go:ts
+class FileSystemObject {
+  isFile(): this is FileRep {
+    return this instanceof FileRep;
+  }
+
+  isDirectory(): this is Directory {
+    return this instanceof Directory;
+  }
+
+  isNetworked(): this is Networked & this {
+    return this.networked;
+  }
+
+  constructor(public path: string, private networked: boolean) {}
+}
+```
+
+Subclases:
+
+```go:ts
+class FileRep extends FileSystemObject {
+  constructor(path: string, public content: string) {
+    super(path, false);
+  }
+}
+
+class Directory extends FileSystemObject {
+  children: FileSystemObject[] = [];
+}
+
+interface Networked {
+  host: string;
+}
+
+const fso: FileSystemObject = new FileRep("foo/bar.txt", "foo");
+
+if (fso.isFile()) {
+  fso.content; // ✅ fso es tratado como FileRep
+} else if (fso.isDirectory()) {
+  fso.children; // ✅ fso es tratado como Directory
+} else if (fso.isNetworked()) {
+  fso.host; // ✅ fso es Networked & FileSystemObject
+}
+```
+
+---
+
+## 🔍 Validacion perezosa con `this is`
+
+```go:ts
+class Box<T> {
+  value?: T;
+
+  hasValue(): this is { value: T } {
+    return this.value !== undefined;
+  }
+}
+
+const box = new Box<string>();
+box.value = "Gameboy";
+
+if (box.hasValue()) {
+  box.value; // ✅ Tratado como `string`, no `string | undefined`
+}
+```
+
+---
+
+## 🏗️ Propiedades de parametro
+
+Puedes usar modificadores (`public`, `private`, `protected`, `readonly`) en los parámetros del constructor para **declarar y asignar automáticamente propiedades**:
+
+```go:ts
+class Params {
+  constructor(
+    public readonly x: number,
+    protected y: number,
+    private z: number
+  ) {}
+}
+
+const a = new Params(1, 2, 3);
+console.log(a.x); // ✅
+
+console.log(a.z); // ❌ Error: 'z' es privado
+```
+
+---
+
+## 📦 Expresiones de clase
+
+Las **expresiones de clase** permiten definir clases anónimas:
+
+```go:ts
+const someClass = class<Type> {
+  content: Type;
+
+  constructor(value: Type) {
+    this.content = value;
+  }
+};
+
+const m = new someClass("Hola mundo");
+```
+
+---
+
+## 🧱 Firmas de constructor y `InstanceType`
+
+Puedes usar `InstanceType<typeof Clase>` para referirte al tipo de una instancia creada con `new`:
+
+```go:ts
+class Point {
+  createdAt = Date.now();
+  constructor(public x: number, public y: number) {}
+}
+
+type PointInstance = InstanceType<typeof Point>;
+
+function moveRight(point: PointInstance) {
+  point.x += 5;
+}
+```
+
+---
+
+## 🧩 Clases y metodos abstractos
+
+Una clase `abstract` **no se puede instanciar directamente** y puede tener miembros `abstract` que **deben implementarse en las subclases**.
+
+```go:ts
+abstract class Base {
+  abstract getName(): string;
+
+  printName() {
+    console.log("Hola, " + this.getName());
+  }
+}
+
+class Derived extends Base {
+  getName() {
+    return "mundo";
+  }
+}
+
+const d = new Derived();
+d.printName(); // "Hola, mundo"
+```
+
+---
+
+## 🚫 Firmas abstractas de constructores
+
+No puedes pasar una clase abstracta como argumento si luego haces `new ctor()`:
+
+```go:ts
+function greet(ctor: new () => Base) {
+  const instance = new ctor();
+  instance.printName();
+}
+
+greet(Derived); // ✅
+greet(Base);    // ❌ Error: Base es abstracta
+```
+
+---
+
+## 🧬 Relaciones entre clases
+
+En TypeScript, las clases se **comparan estructuralmente**, no nominalmente. Dos clases con los mismos miembros se consideran compatibles:
+
+```go:ts
+class Point1 {
+  x = 0;
+  y = 0;
+}
+
+class Point2 {
+  x = 0;
+  y = 0;
+}
+
+const p: Point1 = new Point2(); // ✅
+```
+
+Incluso sin herencia explícita, una clase puede ser subtipo de otra si contiene todos sus miembros:
+
+```go:ts
+class Person {
+  name: string;
+  age: number;
+}
+
+class Employee {
+  name: string;
+  age: number;
+  salary: number;
+}
+
+const p: Person = new Employee(); // ✅
+```
+
+Clases vacías (`class Empty {}`) **aceptan cualquier cosa** debido al sistema estructural:
+
+```go:ts
+class Empty {}
+
+function fn(x: Empty) {}
+
+fn(window); // ✅
+fn({});     // ✅
+fn(fn);     // ✅
+```
+

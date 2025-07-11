@@ -1,0 +1,127 @@
+---
+title: Template Literal Types en TypeScript
+description: Aprende a construir tipos de cadena dinámicos y seguros con Template Literal Types en TypeScript. Manipula strings, crea claves derivadas automáticamente, y aplica inferencia de tipos en callbacks con Capitalize, Uppercase, y más.
+---
+
+Los **Template Literal Types** permiten **construir tipos de cadena dinámica** combinando literales, uniones, y transformaciones de strings.
+
+---
+
+###  Sintaxis Basica
+
+```go:ts
+type World = "world";
+type Greeting = `hello ${World}`;
+// "hello world"
+```
+
+---
+
+### Combinando con uniones
+
+Cuando usas una unión dentro de una interpolación (`${...}`), se genera una combinación de **todas las posibles cadenas**:
+
+```go:ts
+type EmailLocaleIDs = "welcome_email" | "email_heading";
+type FooterLocaleIDs = "footer_title" | "footer_sendoff";
+
+type AllLocaleIDs = `${EmailLocaleIDs | FooterLocaleIDs}_id`;
+/*
+"welcome_email_id" | "email_heading_id" |
+"footer_title_id" | "footer_sendoff_id"
+*/
+```
+
+#### Multiplicacion cruzada
+
+```go:ts
+type Lang = "en" | "ja" | "pt";
+type LocaleMessageIDs = `${Lang}_${AllLocaleIDs}`;
+/*
+"en_welcome_email_id" | "ja_email_heading_id" | ... etc.
+*/
+```
+
+> ✅ Útil para generar automáticamente combinaciones de cadenas tipo claves de i18n o cache.
+
+---
+
+## Tipado avanzado con inferencia
+
+Considera un objeto:
+
+```go:ts
+const person = makeWatchedObject({
+  firstName: "Saoirse",
+  lastName: "Ronan",
+  age: 26,
+});
+```
+
+Queremos que:
+
+* Se pueda escuchar `"firstNameChanged"`, `"lastNameChanged"`...
+* El callback reciba el nuevo valor **del mismo tipo que la propiedad**.
+
+###  Tipado con template literal + indexed access
+
+```go:ts
+type PropEventSource<Type> = {
+  on<Key extends string & keyof Type>(
+    eventName: `${Key}Changed`,
+    callback: (newValue: Type[Key]) => void
+  ): void;
+};
+
+declare function makeWatchedObject<Type>(obj: Type): Type & PropEventSource<Type>;
+```
+
+Ahora:
+
+```go:ts
+person.on("firstNameChanged", (newName) => {
+  // newName: string
+});
+
+person.on("ageChanged", (newAge) => {
+  // newAge: number
+});
+```
+
+* 🔒 **Seguridad de tipo**: No permite `"firstName"` o `"frstNameChanged"`
+* 🤖 **Inferencia automática**: El tipo correcto es inferido por TypeScript
+
+---
+
+## Manipulacion de strings
+
+### 1. `Uppercase<StringType>`
+
+```go:ts
+type Greeting = "hello";
+type Loud = Uppercase<Greeting>; // "HELLO"
+```
+
+### 2. `Lowercase<StringType>`
+
+```go:ts
+type Shout = "HELLO";
+type Calm = Lowercase<Shout>; // "hello"
+```
+
+### 3. `Capitalize<StringType>`
+
+```go:ts
+type Name = "john";
+type Formal = Capitalize<Name>; // "John"
+```
+
+### 4. `Uncapitalize<StringType>`
+
+```go:ts
+type Yell = "JOHN";
+type Soft = Uncapitalize<Yell>; // "jOHN"
+```
+
+---
+

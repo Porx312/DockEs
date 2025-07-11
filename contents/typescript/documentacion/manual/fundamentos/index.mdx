@@ -1,0 +1,291 @@
+---
+title: Los fundamentos de TypeScript
+description: Una introducción clara al comportamiento de los valores en JavaScript, la utilidad del sistema de tipos estáticos y cómo TypeScript ayuda a detectar errores antes de ejecutar el código. Explora conceptos clave como el chequeo estático, errores comunes y las ventajas del uso de herramientas de desarroll
+
+
+### Comprendiendo los valores en JavaScript
+
+Cada valor en JavaScript tiene un conjunto de comportamientos que podemos observar al realizar distintas operaciones sobre él. Puede sonar abstracto, pero veamos un ejemplo rápido con una variable llamada `message`:
+
+```go:ts
+message.toLowerCase(); // Acceder a 'toLowerCase' y luego llamarlo
+message();             // Intentar llamar directamente a 'message'
+```
+
+En la primera línea, accedemos a la propiedad `toLowerCase` y la invocamos. En la segunda, intentamos llamar a `message` como si fuera una función.
+
+Pero si no sabemos cuál es el valor de `message`, no podemos predecir el resultado de forma confiable. Todo depende del tipo de valor que tenga:
+
+* ¿Es `message` una función?
+* ¿Tiene una propiedad llamada `toLowerCase`?
+* ¿Esa propiedad es una función?
+* Si lo es, ¿qué retorna al llamarla?
+
+Normalmente, respondemos a estas preguntas mentalmente al escribir JavaScript. Pero a veces cometemos errores.
+
+---
+
+### Ejemplo: un valor conocido
+
+```go:ts
+const message = "Hello World!";
+```
+
+Sabemos que `message.toLowerCase()` funcionará y devolverá el string en minúsculas. Pero `message()` fallará con una excepción:
+
+```go:ts
+TypeError: message is not a function
+```
+
+Este error ocurre porque el motor de JavaScript determina que el tipo del valor `"Hello World!"` no es una función, por lo que no puede ser llamado como tal.
+
+---
+
+### Tipos en tiempo de ejecucion
+
+Con tipos primitivos como `string` o `number`, podemos usar `typeof` para identificar su tipo. Pero en otros casos, como funciones u objetos con propiedades específicas, no existe un mecanismo de verificación automática en tiempo de ejecución.
+
+Por ejemplo:
+
+```go:ts
+function fn(x) {
+  return x.flip();
+}
+```
+
+Este código solo funcionará si `x` tiene una propiedad `flip` que sea una función. Pero no podemos verificar eso sin ejecutar el código. Esto dificulta predecir el comportamiento antes de correr el programa.
+
+Aquí es donde entra el concepto de **tipo**: describe qué valores podemos pasar a una función sin que falle.
+
+JavaScript solo tiene **tipado dinámico**, es decir, nos enteramos de los errores al ejecutar el código. En cambio, TypeScript introduce un sistema de **tipado estático** que nos permite prever errores sin ejecutarlo.
+
+---
+
+## Chequeo de tipos en tiempo de compilacion
+
+Volvamos al ejemplo anterior:
+
+```go:ts
+const message = "hello!";
+message();
+```
+
+Al ejecutar esto con TypeScript, obtendremos un error antes siquiera de correr el código:
+
+```
+Esta expresión no es invocable.
+El tipo 'string' no tiene firmas de llamada.
+```
+
+Esto evita que cometamos errores comunes en tiempo de ejecución.
+
+---
+
+## Fallos que no son excepciones
+
+Algunos errores no generan excepciones pero igualmente son problemáticos. Por ejemplo:
+
+```go:ts
+const user = {
+  name: "Daniel",
+  age: 26,
+};
+
+user.location; // Devuelve undefined
+```
+
+Aunque esto no lanza un error en JavaScript, TypeScript sí lo reporta:
+
+```
+La propiedad 'location' no existe en el tipo '{ name: string; age: number; }'.
+```
+
+Este tipo de verificación previene errores por propiedades mal escritas o inexistentes.
+
+---
+
+### Ejemplos de errores comunes que detecta TypeScript
+
+**Errores por errores de escritura (typos):**
+
+```go:ts
+announcement.toLocaleLowercase(); // Debería ser 'toLocaleLowerCase'
+```
+
+**Funciones no llamadas correctamente:**
+
+```go:ts
+function flipCoin() {
+  return Math.random < 0.5; // Debería ser Math.random()
+}
+```
+
+**Errores de lógica:**
+
+```go:ts
+const value = Math.random() < 0.5 ? "a" : "b";
+
+if (value !== "a") {
+} else if (value === "b") {
+  // Código inalcanzable
+}
+```
+
+---
+
+## Tipos para mejorar el editor
+
+Además de detectar errores, TypeScript mejora la experiencia de desarrollo. Por ejemplo:
+
+```go:ts
+import express from "express";
+const app = express();
+
+app.get("/", function (req, res) {
+  res.sen
+  // El editor sugiere: send, sendFile, sendStatus, etc.
+});
+```
+
+Estas sugerencias inteligentes vienen gracias al sistema de tipos. También puedes obtener:
+
+* Navegación entre archivos
+* Refactorizaciones automáticas
+* Correcciones rápidas (quick fixes)
+
+---
+
+## El compilador de TypeScript (tsc)
+
+Para comenzar, instala el compilador:
+
+```go:bash
+npm install -g typescript
+```
+
+Escribe un archivo `hello.ts`:
+
+```go:ts
+console.log("Hello world!");
+```
+
+Compílalo con:
+
+```go:bash
+tsc hello.ts
+```
+
+Esto genera un archivo `hello.js`. Si no hay errores, el archivo será funcional y legible.
+
+---
+
+### ¿Y si hay errores?
+
+```go:ts
+function greet(person, date) {
+  console.log(`Hello ${person}, today is ${date}!`);
+}
+
+greet("Brendan"); // Falta el segundo argumento
+```
+
+Al compilar:
+
+```
+Se esperaban 2 argumentos, pero se pasaron 1.
+```
+
+---
+
+### Control de errores con `noEmitOnError`
+
+Puedes evitar que se genere el archivo `.js` si hay errores con:
+
+```go:bash
+tsc --noEmitOnError hello.ts
+```
+
+---
+
+## Tipos explicitos
+
+Agrega tipos para mayor claridad:
+
+```go:ts
+function greet(person: string, date: Date) {
+  console.log(`Hello ${person}, today is ${date.toDateString()}!`);
+}
+```
+
+Llamadas incorrectas como esta generarán errores:
+
+```go:ts
+greet("Maddison", Date()); // Error: Date() retorna un string
+```
+
+Lo correcto sería:
+
+```go:ts
+greet("Maddison", new Date());
+```
+
+---
+
+## Inferencia de tipos
+
+TypeScript puede inferir tipos automáticamente:
+
+```go:ts
+let msg = "hello there!"; // Inferido como string
+```
+
+No hace falta declarar explícitamente `let msg: string`.
+
+---
+
+## Tipos eliminados
+
+Al compilar, los tipos no forman parte del archivo `.js` resultante. Por ejemplo:
+
+```go:ts
+function greet(person: string, date: Date) {
+  console.log(`Hello ${person}, today is ${date.toDateString()}!`);
+}
+```
+
+Se convierte en:
+
+```js
+function greet(person, date) {
+  console.log("Hello ".concat(person, ", today is ").concat(date.toDateString(), "!"));
+}
+```
+
+Los tipos solo existen en tiempo de compilación.
+
+---
+
+## Compatibilidad con versiones antiguas (Downleveling)
+
+TypeScript convierte código moderno a versiones antiguas de JavaScript (como ES5), útil para navegadores antiguos.
+
+```go:ts
+// Código con template strings
+`Hello ${person}, today is ${date.toDateString()}!`;
+
+// Compilado como:
+"Hello ".concat(person, ", today is ").concat(date.toDateString(), "!");
+```
+
+Puedes usar `--target es2015` para evitar esa conversión si tu entorno lo soporta.
+
+---
+
+## Configuración de estrictez
+
+TypeScript permite ajustar el nivel de verificación mediante opciones como `--strict`. Esto activa:
+
+* `noImplicitAny`: evita que variables tengan tipo `any` por defecto.
+* `strictNullChecks`: obliga a manejar explícitamente `null` y `undefined`.
+
+Recomendación: activar `strict: true` desde el inicio de un proyecto para evitar errores difíciles de detectar.

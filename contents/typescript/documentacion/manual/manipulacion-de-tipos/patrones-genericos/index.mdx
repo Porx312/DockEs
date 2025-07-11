@@ -1,0 +1,278 @@
+---
+title: Tipos comunes en JavaScript y TypeScript
+description: Aprende sobre los tipos básicos más usados en JavaScript y cómo describirlos correctamente en TypeScript para mejorar tu código y evitar errores comunes.
+---
+
+
+Una parte fundamental del desarrollo de software es construir componentes que no solo tengan APIs bien definidas y consistentes, sino que también sean reutilizables. Los componentes que pueden trabajar con los datos de hoy y también con los de mañana brindan una gran flexibilidad para crear sistemas grandes y robustos.
+
+En lenguajes como C# o Java, una de las herramientas principales para crear componentes reutilizables es el uso de **genéricos**. Esto permite crear componentes que pueden operar sobre una variedad de tipos en lugar de uno específico, permitiendo a los usuarios trabajar con sus propios tipos de datos.
+
+---
+
+## El “Hola Mundo” de los Genéricos: La función identidad
+
+La función identidad es un buen punto de partida para entender los genéricos. Su objetivo es simple: devolver exactamente el valor que recibe como argumento, como un "eco".
+
+### Sin genéricos
+
+Si no usamos genéricos, podríamos definir la función identidad para un tipo específico:
+
+```typescript
+function identidad(arg: number): number {
+  return arg;
+}
+```
+
+O podríamos usar el tipo `any`, que acepta cualquier tipo:
+
+```typescript
+function identidad(arg: any): any {
+  return arg;
+}
+```
+
+Aunque `any` es flexible, pierde información sobre el tipo. Por ejemplo, si pasamos un número, el resultado podría ser cualquier cosa, perdiendo el tipo original.
+
+### Con genéricos
+
+Para conservar el tipo y permitir flexibilidad, usamos un **parámetro de tipo** (tipo genérico), que capturará el tipo del argumento y lo usará también para el retorno:
+
+```typescript
+function identidad<Tipo>(arg: Tipo): Tipo {
+  return arg;
+}
+```
+
+Aquí, `Tipo` es una variable que representa el tipo del argumento. De esta forma, si pasamos un string, la función devuelve un string; si pasamos un número, devuelve un número, y así sucesivamente.
+
+### Cómo llamar a funciones genéricas
+
+1. **Especificar explícitamente el tipo:**
+
+```typescript
+let salida = identidad<string>("miCadena");
+```
+
+2. **Inferencia de tipos:** El compilador deduce el tipo automáticamente:
+
+```typescript
+let salida = identidad("miCadena");
+```
+
+La inferencia de tipos simplifica el código y es comúnmente usada, aunque en algunos casos complejos necesitarás especificar el tipo explícitamente.
+
+---
+
+## Trabajando con variables genéricas
+
+Al usar genéricos, el compilador espera que trates los parámetros genéricos de forma segura. Por ejemplo, si intentas acceder a propiedades que podrían no existir en todos los tipos, obtendrás errores:
+
+```typescript
+function logIdentidad<Tipo>(arg: Tipo): Tipo {
+  console.log(arg.length); // Error: 'length' no existe en todos los tipos
+  return arg;
+}
+```
+
+Para solucionar esto, puedes especificar que `arg` es un arreglo del tipo `Tipo`, y los arreglos siempre tienen `.length`:
+
+```typescript
+function logIdentidad<Tipo>(arg: Tipo[]): Tipo[] {
+  console.log(arg.length);
+  return arg;
+}
+```
+
+Otra forma equivalente:
+
+```typescript
+function logIdentidad<Tipo>(arg: Array<Tipo>): Array<Tipo> {
+  console.log(arg.length);
+  return arg;
+}
+```
+
+Esto indica que `logIdentidad` funciona con arreglos de cualquier tipo.
+
+---
+
+## Tipos genéricos
+
+Puedes describir el tipo de una función genérica usando la misma sintaxis:
+
+```typescript
+function identidad<Tipo>(arg: Tipo): Tipo {
+  return arg;
+}
+
+let miIdentidad: <Tipo>(arg: Tipo) => Tipo = identidad;
+```
+
+También puedes usar un nombre distinto para el parámetro genérico, siempre que sea coherente:
+
+```typescript
+let miIdentidad: <Entrada>(arg: Entrada) => Entrada = identidad;
+```
+
+O usar un objeto con una firma de llamada:
+
+```typescript
+let miIdentidad: { <Tipo>(arg: Tipo): Tipo } = identidad;
+```
+
+---
+
+## Interfaces genéricas
+
+Podemos definir una interfaz genérica para funciones:
+
+```typescript
+interface FuncionIdentidadGenerica {
+  <Tipo>(arg: Tipo): Tipo;
+}
+
+let miIdentidad: FuncionIdentidadGenerica = identidad;
+```
+
+O poner el parámetro genérico en la interfaz:
+
+```typescript
+interface FuncionIdentidadGenerica<Tipo> {
+  (arg: Tipo): Tipo;
+}
+
+let miIdentidad: FuncionIdentidadGenerica<number> = identidad;
+```
+
+Aquí, el tipo genérico se fija cuando usamos la interfaz.
+
+---
+
+## Clases genéricas
+
+Las clases también pueden ser genéricas, con parámetros de tipo que aseguran que todas las propiedades usen el mismo tipo:
+
+```typescript
+class NumeroGenerico<TipoNum> {
+  valorCero: TipoNum;
+  sumar: (x: TipoNum, y: TipoNum) => TipoNum;
+}
+
+let numeroGenerico = new NumeroGenerico<number>();
+numeroGenerico.valorCero = 0;
+numeroGenerico.sumar = function (x, y) {
+  return x + y;
+};
+```
+
+No estás limitado a usar solo números, por ejemplo:
+
+```typescript
+let cadenaNumerica = new NumeroGenerico<string>();
+cadenaNumerica.valorCero = "";
+cadenaNumerica.sumar = function (x, y) {
+  return x + y;
+};
+
+console.log(cadenaNumerica.sumar(cadenaNumerica.valorCero, "test"));
+```
+
+Nota que los genéricos solo aplican a la parte de instancia de la clase, no a los miembros estáticos.
+
+---
+
+## Restricciones genéricas
+
+A veces queremos limitar los tipos aceptados para que tengan ciertas propiedades o métodos.
+
+Si queremos acceder a `.length`, podemos definir una interfaz que garantice su existencia:
+
+```typescript
+interface TieneLongitud {
+  length: number;
+}
+
+function logIdentidad<Tipo extends TieneLongitud>(arg: Tipo): Tipo {
+  console.log(arg.length);
+  return arg;
+}
+```
+
+Así, si intentamos pasar un número:
+
+```typescript
+logIdentidad(3); // Error: 'number' no cumple con 'TieneLongitud'
+```
+
+Pero sí podemos pasar objetos que tengan `.length`:
+
+```typescript
+logIdentidad({ length: 10, valor: 3 });
+```
+
+---
+
+## Usando parámetros de tipo en restricciones
+
+Puedes usar parámetros genéricos para restringir otros parámetros:
+
+```typescript
+function obtenerPropiedad<Tipo, Clave extends keyof Tipo>(obj: Tipo, clave: Clave) {
+  return obj[clave];
+}
+
+let x = { a: 1, b: 2, c: 3, d: 4 };
+
+obtenerPropiedad(x, "a"); // Ok
+obtenerPropiedad(x, "m"); // Error: 'm' no es clave de 'x'
+```
+
+Esto garantiza que solo accedamos a propiedades existentes en un objeto.
+
+---
+
+## Usando tipos de clase en genéricos
+
+Para crear instancias genéricas, necesitamos usar el constructor de la clase como tipo:
+
+```typescript
+function crear<Tipo>(c: { new (): Tipo }): Tipo {
+  return new c();
+}
+```
+
+Ejemplo avanzado con clases y herencia:
+
+```typescript
+class CuidadorAbeja {
+  tieneMascarilla = true;
+}
+
+class CuidadorLeon {
+  etiqueta = "Miguel";
+}
+
+class Animal {
+  patas = 4;
+}
+
+class Abeja extends Animal {
+  patas = 6;
+  cuidador: CuidadorAbeja = new CuidadorAbeja();
+}
+
+class Leon extends Animal {
+  cuidador: CuidadorLeon = new CuidadorLeon();
+}
+
+function crearInstancia<A extends Animal>(c: new () => A): A {
+  return new c();
+}
+
+crearInstancia(Leon).cuidador.etiqueta;
+crearInstancia(Abeja).cuidador.tieneMascarilla;
+```
+
+Este patrón es útil para implementar **mixins** y otras técnicas avanzadas.
+

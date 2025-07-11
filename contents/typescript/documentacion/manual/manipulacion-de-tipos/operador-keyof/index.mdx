@@ -1,0 +1,47 @@
+---
+title: Operador keyof en TypeScript
+description: Descubre cómo usar el operador `keyof` para extraer las claves de un tipo objeto en TypeScript y su utilidad en combinación con tipos mapeados para crear tipos genéricos avanzados.
+---
+
+El operador **keyof** toma un tipo de objeto y produce una unión literal de cadenas o números que representa las claves de dicho objeto. Por ejemplo, para el tipo `Point`:
+
+```go:ts
+type Point = { x: number; y: number };
+type P = keyof Point;  // "x" | "y"
+```
+
+Aquí, el tipo `P` es equivalente a `"x" | "y"`, es decir, una unión de las claves del tipo `Point`.
+
+---
+
+Si el tipo incluye una firma de índice de cadena o número, `keyof` devolverá ese tipo en lugar de las claves explícitas. Por ejemplo:
+
+```go:ts
+type Arrayish = { [n: number]: unknown };
+type A = keyof Arrayish;  // number
+```
+
+En este caso, `A` es `number` porque el índice es numérico.
+
+Otro ejemplo con una firma de índice de cadena:
+
+```go:ts
+type Mapish = { [k: string]: boolean };
+type M = keyof Mapish;  // string | number
+```
+
+Aquí, el tipo `M` es `string | number` porque en JavaScript las claves de objeto siempre se convierten a cadena, y acceder a `obj[0]` es lo mismo que acceder a `obj["0"]`.
+
+---
+
+El operador `keyof` es especialmente útil cuando se combina con tipos mapeados, una característica avanzada para transformar tipos basada en sus propiedades. Esto permite crear tipos genéricos que operan sobre las propiedades de otros tipos, facilitando la creación de APIs flexibles y reutilizables.
+
+---
+
+### Resumen
+
+* `keyof` produce una unión de las claves de un tipo objeto.
+* Si el tipo tiene índices numéricos o de cadena, `keyof` devuelve esos tipos.
+* Es clave para trabajar con tipos mapeados y construir tipos genéricos avanzados.
+
+---

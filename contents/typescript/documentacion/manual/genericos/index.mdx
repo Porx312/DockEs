@@ -1,0 +1,583 @@
+---
+title: Tipos Genéricos en TypeScript
+description: Una guía completa sobre cómo usar tipos genéricos en TypeScript para crear tipos y funciones reutilizables, con ejemplos de arrays, tuplas, y cómo evitar errores comunes usando readonly y tipos genéricos.
+---
+## Tipos de Objetos en TypeScript
+
+En JavaScript, la forma fundamental de agrupar y pasar datos es mediante objetos. En TypeScript, representamos esos objetos a través de **tipos de objeto**.
+
+---
+
+## Definicion de Tipos de Objeto
+
+Los tipos de objeto pueden definirse de tres formas:
+
+### 1. Tipos anonimos
+
+```go:ts
+function saludar(persona: { nombre: string; edad: number }) {
+  return "Hola " + persona.nombre;
+}
+```
+
+### 2. Interfaces (tipos nombrados)
+
+```go:ts
+interface Persona {
+  nombre: string;
+  edad: number;
+}
+
+function saludar(persona: Persona) {
+  return "Hola " + persona.nombre;
+}
+```
+
+### 3. Alias de tipo (type alias)
+
+```go:ts
+type Persona = {
+  nombre: string;
+  edad: number;
+};
+
+function saludar(persona: Persona) {
+  return "Hola " + persona.nombre;
+}
+```
+
+---
+
+## Modificadores de Propiedades
+
+Cada propiedad en un tipo de objeto puede definir:
+
+* Su tipo.
+* Si es **opcional**.
+* Si es **solo lectura (readonly)**.
+
+---
+
+### Propiedades Opcionales
+
+Se usan cuando una propiedad puede o no estar presente. Se indican con un signo de interrogación (`?`):
+
+```go:ts
+interface OpcionesPintura {
+  forma: Forma;
+  xPos?: number;  // opcional
+  yPos?: number;  // opcional
+}
+
+function pintarForma(opts: OpcionesPintura) {
+  // ...
+}
+
+const forma = obtenerForma();
+pintarForma({ forma });
+pintarForma({ forma, xPos: 100 });
+pintarForma({ forma, yPos: 100 });
+pintarForma({ forma, xPos: 100, yPos: 100 });
+```
+
+* Si la propiedad opcional no se provee, su valor será `undefined`.
+* Para evitar errores con `undefined`, es común asignar valores por defecto.
+
+```go:ts
+function pintarForma({ forma, xPos = 0, yPos = 0 }: OpcionesPintura) {
+  console.log("Coordenada x:", xPos);
+  console.log("Coordenada y:", yPos);
+}
+```
+
+---
+
+### Propiedades de Solo Lectura (`readonly`)
+
+Indican que una propiedad no puede ser reasignada después de su creación (solo a nivel de tipos, no en tiempo de ejecución):
+
+```go:ts
+interface TipoEjemplo {
+  readonly prop: string;
+}
+
+function hacerAlgo(obj: TipoEjemplo) {
+  console.log(obj.prop); // lectura OK
+  obj.prop = "nuevo valor"; // Error: propiedad de solo lectura
+}
+```
+
+**Nota:** Si la propiedad es un objeto, sus propiedades internas **sí pueden cambiar**, solo no se puede reasignar la referencia completa.
+
+```go:ts
+interface Casa {
+  readonly residente: { nombre: string; edad: number };
+}
+
+function visitarCasa(casa: Casa) {
+  casa.residente.edad++; // permitido
+  casa.residente = { nombre: "Nuevo", edad: 30 }; // error
+}
+```
+
+---
+
+## Firmas de Indice (Index Signatures)
+
+Se usan cuando no conoces todas las propiedades, pero sabes el tipo de sus valores.
+
+```go:ts
+interface ArrayDeStrings {
+  [indice: number]: string;
+}
+
+const miArray: ArrayDeStrings = obtenerArray();
+const segundoElemento = miArray[1];  // string
+```
+
+* Las firmas de índice pueden usar tipos `string`, `number`, `symbol` y sus combinaciones.
+* Si usas un índice `string`, todas las propiedades deben coincidir con el tipo definido.
+* Puedes usar un índice de tipo unión para aceptar más de un tipo:
+
+```go:ts
+interface DiccionarioNumOString {
+  [index: string]: number | string;
+  longitud: number; // válido
+  nombre: string;   // válido
+}
+```
+
+* También puedes hacer las firmas de índice de solo lectura:
+
+```go:ts
+interface ArraySoloLectura {
+  readonly [index: number]: string;
+}
+
+let arr: ArraySoloLectura = obtenerArraySoloLectura();
+arr[2] = "valor"; // Error: no se puede asignar
+```
+
+---
+
+## Comprobaciones de Propiedades Excedentes (Excess Property Checks)
+
+Cuando se pasan objetos literales a funciones o se asignan a variables con tipos específicos, TypeScript verifica que no haya propiedades extra no definidas en el tipo.
+
+```go:ts
+interface ConfigCuadrado {
+  color?: string;
+  ancho?: number;
+}
+
+function crearCuadrado(config: ConfigCuadrado) {
+  return {
+    color: config.color || "rojo",
+    area: config.ancho ? config.ancho * config.ancho : 20,
+  };
+}
+
+crearCuadrado({ colour: "rojo", ancho: 100 }); 
+// Error: 'colour' no existe en ConfigCuadrado. Quizá quisiste decir 'color'.
+```
+
+Para evitar esto:
+
+* Usa una **aserción de tipo**:
+
+```go:ts
+crearCuadrado({ ancho: 100, opacity: 0.5 } as ConfigCuadrado);
+```
+
+* O añade una firma de índice para permitir propiedades adicionales:
+
+```go:ts
+interface ConfigCuadrado {
+  color?: string;
+  ancho?: number;
+  [propNombre: string]: unknown;
+}
+```
+
+* También puedes asignar el objeto a una variable antes de pasarlo, lo que desactiva esta comprobación para esa asignación:
+
+```go:ts
+let opciones = { colour: "rojo", ancho: 100 };
+crearCuadrado(opciones);  // no hay error
+```
+
+---
+
+## Extender Tipos
+
+Puedes crear tipos que extiendan otros para evitar repetir propiedades comunes.
+
+```go:ts
+interface DireccionBasica {
+  nombre?: string;
+  calle: string;
+  ciudad: string;
+  pais: string;
+  codigoPostal: string;
+}
+
+interface DireccionConUnidad extends DireccionBasica {
+  unidad: string;
+}
+```
+
+También puedes extender múltiples interfaces:
+
+```go:ts
+interface Colorido {
+  color: string;
+}
+
+interface Circulo {
+  radio: number;
+}
+
+interface CirculoColorido extends Colorido, Circulo {}
+
+const cc: CirculoColorido = {
+  color: "rojo",
+  radio: 42,
+};
+```
+
+---
+
+## Tipos de Interseccion (Intersection Types)
+
+Otra forma de combinar tipos es usando intersecciones con `&`:
+
+```go:ts
+interface Colorido {
+  color: string;
+}
+
+interface Circulo {
+  radio: number;
+}
+
+type CirculoColorido = Colorido & Circulo;
+
+function dibujar(c: CirculoColorido) {
+  console.log(`Color: ${c.color}`);
+  console.log(`Radio: ${c.radio}`);
+}
+
+dibujar({ color: "azul", radio: 42 }); // OK
+dibujar({ color: "rojo", raidus: 42 }); // Error: 'raidus' mal escrito
+```
+
+---
+
+## Extension de Interfaces vs Interseccion de Tipos
+
+* **Interfaces** con el mismo nombre se *fusionan* si las propiedades son compatibles.
+* Si tienen propiedades con el mismo nombre pero tipos incompatibles, dan error.
+
+```go:ts
+interface Persona {
+  nombre: string;
+}
+interface Persona {
+  nombre: number;  // Error: tipos incompatibles
+}
+```
+
+* Las **intersecciones** (`&`) combinan tipos pero exigen que las propiedades cumplan *ambos* tipos simultáneamente, lo que puede resultar en un tipo `never` si son incompatibles:
+
+```go:ts
+interface Persona1 {
+  nombre: string;
+}
+interface Persona2 {
+  nombre: number;
+}
+
+type Staff = Persona1 & Persona2;
+
+declare const staffer: Staff;
+staffer.nombre; // tipo 'never'
+```
+
+Esto sucede porque la propiedad `nombre` no puede ser a la vez `string` y `number`.
+
+---
+## Tipos genericos en objetos
+
+Imagina que tienes un tipo `Box` que puede contener cualquier valor — cadenas, números, jirafas, lo que sea.
+
+```go:ts
+interface Box {
+  contents: any;
+}
+```
+
+Actualmente, la propiedad `contents` está tipada como `any`, lo cual funciona, pero puede causar problemas y errores difíciles de detectar más adelante.
+
+Podríamos usar `unknown` en lugar de `any` para mayor seguridad, pero eso nos obliga a hacer verificaciones o usar aserciones de tipo cuando ya sabemos qué tipo contiene el `Box`:
+
+```go:ts
+interface Box {
+  contents: unknown;
+}
+
+let x: Box = {
+  contents: "hola mundo",
+};
+
+// podemos verificar el tipo
+if (typeof x.contents === "string") {
+  console.log(x.contents.toLowerCase());
+}
+
+// o usar una aserción (menos segura)
+console.log((x.contents as string).toLowerCase());
+```
+
+Una forma segura sería crear tipos diferentes para cada tipo de contenido:
+
+```go:ts
+interface NumberBox {
+  contents: number;
+}
+
+interface StringBox {
+  contents: string;
+}
+
+interface BooleanBox {
+  contents: boolean;
+}
+```
+
+Pero eso implica crear funciones o sobrecargas específicas para cada uno, lo que genera mucho código repetitivo:
+
+```go:ts
+function setContents(box: StringBox, newContents: string): void;
+function setContents(box: NumberBox, newContents: number): void;
+function setContents(box: BooleanBox, newContents: boolean): void;
+function setContents(box: { contents: any }, newContents: any) {
+  box.contents = newContents;
+}
+```
+
+---
+
+## Genericos para evitar repeticion
+
+En vez de eso, podemos usar tipos genéricos que aceptan un parámetro de tipo, para reutilizar el mismo tipo `Box` con cualquier contenido:
+
+```go:ts
+interface Box<Type> {
+  contents: Type;
+}
+```
+
+Esto se lee como: “Un Box de tipo `Type` es un objeto cuyo contenido es del tipo `Type`.”
+
+Por ejemplo:
+
+```go:ts
+let box: Box<string> = { contents: "hola" };
+```
+
+Aquí, `Box<string>` es equivalente a `{ contents: string }`.
+
+De esta forma, no necesitamos definir múltiples tipos `Box` para cada tipo de contenido:
+
+```go:ts
+interface Apple {
+  // propiedades de Apple
+}
+
+type AppleBox = Box<Apple>;
+```
+
+También podemos hacer funciones genéricas para trabajar con `Box` sin necesidad de sobrecargas:
+
+```go:ts
+function setContents<Type>(box: Box<Type>, newContents: Type) {
+  box.contents = newContents;
+}
+```
+
+---
+
+## Alias de tipo genericos
+
+Los alias de tipo también pueden ser genéricos, y pueden definir más que solo objetos:
+
+```go:ts
+type Box<Type> = {
+  contents: Type;
+};
+
+type OrNull<Type> = Type | null;
+type OneOrMany<Type> = Type | Type[];
+type OneOrManyOrNull<Type> = OrNull<OneOrMany<Type>>;
+
+// Ejemplo concreto:
+type OneOrManyOrNullStrings = OneOrManyOrNull<string>;
+// equivale a: string | string[] | null
+```
+
+---
+
+## El tipo generico `Array`
+
+El tipo `Array` es un ejemplo clásico de tipo genérico. Por ejemplo, `number[]` es una abreviatura para `Array<number>`:
+
+```go:ts
+function doSomething(value: Array<string>) {
+  // ...
+}
+
+let myArray: string[] = ["hola", "mundo"];
+
+doSomething(myArray);
+doSomething(new Array("hola", "mundo"));
+```
+
+Así funciona internamente:
+
+```go:ts
+interface Array<Type> {
+  length: number;
+  pop(): Type | undefined;
+  push(...items: Type[]): number;
+  // más métodos...
+}
+```
+
+---
+
+## `ReadonlyArray`  arreglos solo lectura
+
+`ReadonlyArray<Type>` es un tipo especial que describe arreglos que no deben modificarse.
+
+```go:ts
+function doStuff(values: ReadonlyArray<string>) {
+  console.log(values[0]); // podemos leer
+
+  values.push("hola!"); // Error: push no existe en ReadonlyArray
+}
+```
+
+No existe un constructor para `ReadonlyArray`, sino que asignamos un arreglo normal:
+
+```go:ts
+const roArray: ReadonlyArray<string> = ["rojo", "verde", "azul"];
+```
+
+También podemos usar el atajo `readonly Type[]` para indicar arreglos de solo lectura:
+
+```go:ts
+function doStuff(values: readonly string[]) {
+  console.log(values[0]);
+
+  values.push("hola"); // Error
+}
+```
+
+La asignación entre arreglos normales y `readonly` es unilateral:
+
+```go:ts
+let x: readonly string[] = [];
+let y: string[] = [];
+
+x = y; // válido: arreglo mutable a readonly
+y = x; // Error: no puedes asignar un readonly a un mutable
+```
+
+---
+
+## Tipos Tuple (Tuplas)
+
+Una tupla es un arreglo con longitud fija y tipos específicos en cada índice:
+
+```go:ts
+type StringNumberPair = [string, number];
+
+function doSomething(pair: [string, number]) {
+  const a = pair[0]; // string
+  const b = pair[1]; // number
+}
+
+doSomething(["hola", 42]);
+```
+
+Si intentamos acceder a un índice fuera del rango, TypeScript lanza error:
+
+```go:ts
+const c = pair[2]; // Error: no existe índice 2
+```
+
+Podemos desestructurar:
+
+```go:ts
+function doSomething(pair: [string, number]) {
+  const [inputString, hash] = pair;
+  console.log(inputString, hash);
+}
+```
+
+---
+
+## Tuplas con elementos opcionales y rest
+
+Podemos hacer que los últimos elementos sean opcionales:
+
+```go:ts
+type Either2dOr3d = [number, number, number?];
+
+function setCoordinate(coord: Either2dOr3d) {
+  const [x, y, z] = coord; // z puede ser undefined
+  console.log(`Dimensiones: ${coord.length}`);
+}
+```
+
+Y también tuplas con elementos rest (arreglos variables dentro de la tupla):
+
+```go:ts
+type StringNumberBooleans = [string, number, ...boolean[]];
+
+const a: StringNumberBooleans = ["hola", 1];
+const b: StringNumberBooleans = ["bonito", 2, true, false];
+```
+
+Esto es útil para funciones con parámetros variables:
+
+```go:ts
+function readButtonInput(...args: [string, number, ...boolean[]]) {
+  const [name, version, ...input] = args;
+}
+```
+
+---
+
+## Tuplas `readonly`
+
+Las tuplas también pueden ser inmutables usando `readonly`:
+
+```go:ts
+function doSomething(pair: readonly [string, number]) {
+  pair[0] = "hola"; // Error: no se puede modificar
+}
+```
+
+Al usar `const` en literales de arreglos, TypeScript los infiere como tuplas `readonly`:
+
+```go:ts
+let point = [3, 4] as const;
+
+function distanceFromOrigin([x, y]: [number, number]) {
+  return Math.sqrt(x ** 2 + y ** 2);
+}
+
+distanceFromOrigin(point); // Error: readonly no es compatible con mutable
+```
+
