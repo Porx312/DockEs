@@ -11,6 +11,9 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "docsjs - Blog",
+  alternates:{
+    canonical: "https://www.docsjs.com/blog",
+  }
 };
 
 export default async function BlogIndexPage() {

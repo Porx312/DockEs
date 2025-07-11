@@ -51,7 +51,7 @@ export async function generateMetadata(props: PageProps) {
   const { title, description } = res;
 
   // Construct canonical URL
-  const baseUrl = "https://docsjs.com/docs";
+  const baseUrl = "https://www.docsjs.com/docs";
   const canonicalUrl = [baseUrl, name, ...slug].filter(Boolean).join("/");
 
   return {
