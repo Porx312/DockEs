@@ -3,8 +3,7 @@ title: Módulos en TypeScript
 description: Aprende cómo TypeScript maneja la modularización del código usando ES Modules y CommonJS. Descubre las diferencias entre scripts y módulos, la sintaxis import/export, la interoperabilidad con CommonJS, las estrategias de resolución de módulos, y cómo configurar la salida del compilador para distintos entornos.
 ---
 
-
-### 🔍 Introducción
+### 🔍 Introduccion
 
 JavaScript ha tenido históricamente varias formas de modularizar el código. Desde su creación en 2012, TypeScript ha dado soporte a muchas de estas, pero hoy en día, la comunidad ha adoptado como estándar **ES Modules** (o **Módulos ES6**), también conocidos por la sintaxis `import/export`.
 
@@ -19,7 +18,7 @@ El manual de TypeScript se enfoca en:
 
 ---
 
-### 📁 ¿Qué es un módulo en JavaScript y TypeScript?
+### 📁 ¿Qué es un modulo en JavaScript y TypeScript?
 
 Un archivo que contiene una **instrucción `import` o `export` de nivel superior** es tratado como un **módulo**.
 
@@ -29,31 +28,31 @@ Un archivo que contiene una **instrucción `import` o `export` de nivel superior
 
 ---
 
-### ❗ Archivos no módulo (scripts)
+### ❗ Archivos no modulo (scripts)
 
 * Un archivo sin `import`/`export` es tratado como **script global**.
 * Se espera que uses múltiples etiquetas `<script>` o la opción `outFile` del compilador para combinar los archivos.
 
 ✅ Si quieres que un archivo se trate como módulo aunque no exporte nada, puedes usar:
 
-```ts
+```go:ts
 export {};
 ```
 
 ---
 
-## 🚀 Sintaxis de Módulos en TypeScript
+## 🚀 Sintaxis de Modulos en TypeScript
 
-### ✅ Exportación por defecto
+### ✅ Exportacion por defecto
 
-```ts
+```go:ts
 // hello.ts
 export default function helloWorld() {
   console.log("Hello, world!");
 }
 ```
 
-```ts
+```go:ts
 // app.ts
 import helloWorld from "./hello.js";
 helloWorld();
@@ -63,7 +62,7 @@ helloWorld();
 
 ### ✅ Exportaciones nombradas
 
-```ts
+```go:ts
 // maths.ts
 export const pi = 3.14;
 export let squareTwo = 1.41;
@@ -72,24 +71,24 @@ export function absolute(num: number) {
 }
 ```
 
-```ts
+```go:ts
 // app.ts
 import { pi, absolute } from "./maths.js";
 ```
 
 ---
 
-### ✅ Alias de importación
+### ✅ Alias de importacion
 
-```ts
+```go:ts
 import { pi as π } from "./maths.js";
 ```
 
 ---
 
-### ✅ Importación combinada
+### ✅ Importacion combinada
 
-```ts
+```go:ts
 // maths.ts
 export const pi = 3.14;
 export default class RNG {}
@@ -102,16 +101,16 @@ import RNG, { pi as π } from "./maths.js";
 
 ### ✅ Importar todo como un namespace
 
-```ts
+```go:ts
 import * as math from "./maths.js";
 console.log(math.pi);
 ```
 
 ---
 
-### ✅ Importación sin asignación
+### ✅ Importacion sin asignacion
 
-```ts
+```go:ts
 import "./side-effects.js";
 ```
 
@@ -119,17 +118,17 @@ import "./side-effects.js";
 
 ---
 
-## 🧾 Tipos en Módulos (ES Modules)
+## 🧾 Tipos en Modulos (ES Modules)
 
 Puedes importar y exportar tipos como valores:
 
-```ts
+```go:ts
 // animal.ts
 export type Cat = { breed: string; yearOfBirth: number };
 export interface Dog { breeds: string[]; yearOfBirth: number };
 ```
 
-```ts
+```go:ts
 // app.ts
 import { Cat, Dog } from "./animal.js";
 type Animal = Cat | Dog;
@@ -139,7 +138,7 @@ type Animal = Cat | Dog;
 
 ### `import type` – solo importa tipos
 
-```ts
+```go:ts
 import type { Cat, Dog } from "./animal.js";
 ```
 
@@ -149,7 +148,7 @@ import type { Cat, Dog } from "./animal.js";
 
 ### Importaciones inline con `type`
 
-```ts
+```go:ts
 import { createCatName, type Cat, type Dog } from "./animal.js";
 ```
 
@@ -159,7 +158,7 @@ import { createCatName, type Cat, type Dog } from "./animal.js";
 
 ### CommonJS: Exportaciones
 
-```ts
+```go:ts
 function absolute(num) {
   return num < 0 ? -num : num;
 }
@@ -172,7 +171,7 @@ module.exports = {
 
 ### CommonJS: Importaciones
 
-```ts
+```go:ts
 const maths = require("./maths");
 console.log(maths.pi);
 
@@ -185,7 +184,7 @@ Permite que `import` funcione con módulos CommonJS de forma más fluida.
 
 ---
 
-## 🧭 Resolución de módulos
+## 🧭 Resolucion de modulos
 
 TypeScript tiene dos estrategias de resolución:
 
@@ -201,7 +200,7 @@ Configuraciones útiles:
 
 ---
 
-## 🏗️ Salida de módulos
+## 🏗️ Salida de modulos
 
 Controlada por dos opciones en `tsconfig.json`:
 
@@ -212,7 +211,7 @@ Controlada por dos opciones en `tsconfig.json`:
 
 Ejemplo:
 
-```ts
+```go:ts
 import { valueOfPi } from "./constants.js";
 export const twoPi = valueOfPi * 2;
 ```
@@ -240,7 +239,7 @@ exports.twoPi = constants.valueOfPi * 2;
 
 Antes de los ES Modules, TypeScript introdujo los **namespaces**:
 
-```ts
+```go:ts
 namespace Geometry {
   export const pi = 3.14;
 }
