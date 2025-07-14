@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { BookAIcon, AtSign, Sparkles } from "lucide-react";
+import { BookAIcon, AtSign} from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
@@ -7,7 +7,6 @@ import { SheetLeftbar } from "./leftbar";
 import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
 import HeaderProfileBtn from "./clerk/HeaderProfileBtn";
-import { SignedOut } from "@clerk/nextjs";
 import ProLink from "./clerk/ProLink";
 
 export const NAVLINKS = [
