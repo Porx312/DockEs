@@ -1,73 +1,76 @@
 ---
-title: Operador typeof en TypeScript
-description: Aprende a usar el operador typeof en TypeScript para referirte al tipo de una variable o función y cómo usarlo junto con tipos predefinidos como ReturnType.
+title: Tipos de acceso indexado en TypeScript
+description: Descubre cómo usar los tipos de acceso indexado en TypeScript para extraer el tipo de una propiedad dentro de otro tipo, combinando con uniones y keyof.
 ---
 
-JavaScript ya tiene un operador `typeof` que se usa en expresiones para obtener el tipo primitivo de un valor en tiempo de ejecución:
+En TypeScript, un **tipo de acceso indexado** te permite obtener el tipo de una propiedad específica dentro de otro tipo usando la sintaxis de índice:
 
-```js
-// Imprime "string"
-console.log(typeof "Hello world");
+```go:ts
+type Person = { age: number; name: string; alive: boolean };
+type Age = Person["age"];  // Age es number
 ```
-
----
-
-TypeScript añade un operador `typeof` que puede usarse en contexto de tipos para referirse al tipo de una variable o propiedad ya declarada:
-
-```ts
-let s = "hello";
-let n: typeof s;  // n es de tipo string
-```
-
-Aunque esto no aporta mucho para tipos básicos, cuando se combina con otros operadores de tipos, `typeof` permite expresar patrones complejos de forma sencilla.
 
 ---
 
-Por ejemplo, el tipo predefinido `ReturnType<T>` toma un tipo función y devuelve el tipo de su valor de retorno:
+### Acceso con uniones y keyof
 
-```ts
-type Predicate = (x: unknown) => boolean;
-type K = ReturnType<Predicate>;  // K es boolean
+El índice puede ser un tipo compuesto, como una unión o `keyof` (las claves de un tipo):
+
+```go:ts
+type I1 = Person["age" | "name"];  // string | number
+type I2 = Person[keyof Person];    // string | number | boolean
+
+type AliveOrName = "alive" | "name";
+type I3 = Person[AliveOrName];     // string | boolean
 ```
 
-Si intentas usar `ReturnType` directamente sobre un nombre de función, TypeScript lanza un error instructivo:
+Si intentas acceder a una propiedad que no existe, TypeScript mostrará un error:
 
-```ts
-function f() {
-  return { x: 10, y: 3 };
-}
-type P = ReturnType<f>;  
-// Error: 'f' es un valor, no un tipo. ¿Querías decir 'typeof f'?
+```go:ts
+type I1 = Person["alve"];  // Error: propiedad 'alve' no existe en Person
 ```
 
-Para referirnos al tipo que tiene la función `f` como valor, usamos `typeof`:
+---
 
-```ts
-function f() {
-  return { x: 10, y: 3 };
-}
-type P = ReturnType<typeof f>;
-// P es { x: number; y: number }
+### Uso con arrays y typeof
+
+Puedes usar tipos indexados para obtener el tipo de los elementos de un array, combinándolo con `typeof`:
+
+```go:ts
+const MyArray = [
+  { name: "Alice", age: 15 },
+  { name: "Bob", age: 23 },
+  { name: "Eve", age: 38 },
+];
+
+type Person = typeof MyArray[number];       // Tipo de un elemento del array
+type Age = typeof MyArray[number]["age"];   // number
 ```
 
 ---
 
 ### Limitaciones
 
-TypeScript solo permite usar `typeof` en contexto de tipos sobre identificadores (nombres de variables o propiedades). No se puede usar en expresiones arbitrarias para evitar confusión con código ejecutable:
+No puedes usar variables normales como índices en tipos; solo se permiten tipos:
 
-```ts
-// Incorrecto — esto intentaría evaluar la llamada y no es válido en tipos
-let shouldContinue: typeof msgbox("¿Seguro que quieres continuar?");
-// Error de sintaxis
+```go:ts
+const key = "age";
+type Age = Person[key];  // Error: 'key' es un valor, no un tipo. Usa typeof key si quieres el tipo literal.
+```
+
+Para lograr algo parecido, usa un alias de tipo:
+
+```go:ts
+type key = "age";
+type Age = Person[key];  // Válido
 ```
 
 ---
 
 ### Resumen
 
-* `typeof` en tipos permite obtener el tipo de una variable o función ya declarada.
-* Es fundamental para trabajar con tipos derivados, como `ReturnType`.
-* Solo se puede usar sobre identificadores o propiedades, no expresiones complejas.
-
+* Los tipos de acceso indexado permiten obtener el tipo de una propiedad dentro de otro tipo.
+* Soportan claves simples, uniones de claves o `keyof`.
+* Son muy útiles para manipular tipos basados en estructuras de datos existentes.
+* Solo se permiten tipos como índices, no valores de variables.
 

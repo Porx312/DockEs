@@ -3,14 +3,9 @@ title: Tipos condicionales en TypeScript
 description: Aprende a usar tipos condicionales en TypeScript para definir tipos que dependen de condiciones, combinados con genéricos e inferencias.
 ---
 
-Aquí tienes una versión mejorada, traducida y resumida del artículo sobre **Conditional Types** en TypeScript, con título, descripción y href propio:
-
----
-
-
 Los **tipos condicionales** permiten definir tipos que dependen de una condición, similar a las expresiones ternarias en JavaScript:
 
-```ts
+```go:ts
 SomeType extends OtherType ? TrueType : FalseType;
 ```
 
@@ -20,7 +15,7 @@ Si `SomeType` es asignable a `OtherType`, se devuelve `TrueType`; si no, `FalseT
 
 ### Ejemplo básico
 
-```ts
+```go:ts
 interface Animal { live(): void; }
 interface Dog extends Animal { woof(): void; }
 
@@ -34,7 +29,7 @@ type Example2 = RegExp extends Animal ? number : string; // string
 
 Los tipos condicionales son muy útiles con genéricos para crear tipos que cambian según el parámetro:
 
-```ts
+```go:ts
 type NameOrId<T extends number | string> = T extends number ? IdLabel : NameLabel;
 
 function createLabel<T extends number | string>(idOrName: T): NameOrId<T> {
@@ -50,7 +45,7 @@ Aquí, `createLabel` devuelve diferentes tipos según si `T` es `number` o `stri
 
 Puedes condicionar tipos y restringir parámetros genéricos para obtener propiedades específicas:
 
-```ts
+```go:ts
 type MessageOf<T> = T extends { message: unknown } ? T["message"] : never;
 
 interface Email { message: string; }
@@ -66,7 +61,7 @@ type DogMessageContents = MessageOf<Dog>;      // never
 
 Puedes usar la palabra clave `infer` para extraer un tipo dentro de un tipo condicional:
 
-```ts
+```go:ts
 type Flatten<Type> = Type extends Array<infer Item> ? Item : Type;
 
 type Str = Flatten<string[]>;  // string
@@ -75,7 +70,7 @@ type Num = Flatten<number>;   // number
 
 También puedes extraer el tipo de retorno de una función:
 
-```ts
+```go:ts
 type GetReturnType<Type> = Type extends (...args: any[]) => infer Return ? Return : never;
 
 type Num = GetReturnType<() => number>;  // number
@@ -88,7 +83,7 @@ type Str = GetReturnType<(x: string) => string>;  // string
 
 Cuando un tipo condicional recibe un tipo unión, se aplica a cada miembro y luego se unen los resultados:
 
-```ts
+```go:ts
 type ToArray<Type> = Type extends any ? Type[] : never;
 
 type StrArrOrNumArr = ToArray<string | number>;  // string[] | number[]
@@ -96,7 +91,7 @@ type StrArrOrNumArr = ToArray<string | number>;  // string[] | number[]
 
 Si no quieres ese comportamiento, encierra el tipo en una tupla:
 
-```ts
+```go:ts
 type ToArrayNonDist<Type> = [Type] extends [any] ? Type[] : never;
 
 type ArrOfStrOrNum = ToArrayNonDist<string | number>;  // (string | number)[]

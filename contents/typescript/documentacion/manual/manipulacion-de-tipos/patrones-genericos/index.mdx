@@ -1,6 +1,6 @@
 ---
-title: Tipos comunes en JavaScript y TypeScript
-description: Aprende sobre los tipos básicos más usados en JavaScript y cómo describirlos correctamente en TypeScript para mejorar tu código y evitar errores comunes.
+title: Parámetros Genéricos con Valores Predeterminados y Anotaciones de Varianza en TypeScript
+description: Aprende cómo usar parámetros genéricos con valores predeterminados para simplificar tus tipos en TypeScript, y descubre cuándo y cómo aplicar anotaciones de varianza para controlar la relación entre tipos genéricos.
 ---
 
 
@@ -18,7 +18,7 @@ La función identidad es un buen punto de partida para entender los genéricos. 
 
 Si no usamos genéricos, podríamos definir la función identidad para un tipo específico:
 
-```typescript
+```go:ts
 function identidad(arg: number): number {
   return arg;
 }
@@ -26,7 +26,7 @@ function identidad(arg: number): number {
 
 O podríamos usar el tipo `any`, que acepta cualquier tipo:
 
-```typescript
+```go:ts
 function identidad(arg: any): any {
   return arg;
 }
@@ -38,7 +38,7 @@ Aunque `any` es flexible, pierde información sobre el tipo. Por ejemplo, si pas
 
 Para conservar el tipo y permitir flexibilidad, usamos un **parámetro de tipo** (tipo genérico), que capturará el tipo del argumento y lo usará también para el retorno:
 
-```typescript
+```go:ts
 function identidad<Tipo>(arg: Tipo): Tipo {
   return arg;
 }
@@ -50,13 +50,13 @@ Aquí, `Tipo` es una variable que representa el tipo del argumento. De esta form
 
 1. **Especificar explícitamente el tipo:**
 
-```typescript
+```go:ts
 let salida = identidad<string>("miCadena");
 ```
 
 2. **Inferencia de tipos:** El compilador deduce el tipo automáticamente:
 
-```typescript
+```go:ts
 let salida = identidad("miCadena");
 ```
 
@@ -68,7 +68,7 @@ La inferencia de tipos simplifica el código y es comúnmente usada, aunque en a
 
 Al usar genéricos, el compilador espera que trates los parámetros genéricos de forma segura. Por ejemplo, si intentas acceder a propiedades que podrían no existir en todos los tipos, obtendrás errores:
 
-```typescript
+```go:ts
 function logIdentidad<Tipo>(arg: Tipo): Tipo {
   console.log(arg.length); // Error: 'length' no existe en todos los tipos
   return arg;
@@ -77,7 +77,7 @@ function logIdentidad<Tipo>(arg: Tipo): Tipo {
 
 Para solucionar esto, puedes especificar que `arg` es un arreglo del tipo `Tipo`, y los arreglos siempre tienen `.length`:
 
-```typescript
+```go:ts
 function logIdentidad<Tipo>(arg: Tipo[]): Tipo[] {
   console.log(arg.length);
   return arg;
@@ -86,7 +86,7 @@ function logIdentidad<Tipo>(arg: Tipo[]): Tipo[] {
 
 Otra forma equivalente:
 
-```typescript
+```go:ts
 function logIdentidad<Tipo>(arg: Array<Tipo>): Array<Tipo> {
   console.log(arg.length);
   return arg;
@@ -101,7 +101,7 @@ Esto indica que `logIdentidad` funciona con arreglos de cualquier tipo.
 
 Puedes describir el tipo de una función genérica usando la misma sintaxis:
 
-```typescript
+```go:ts
 function identidad<Tipo>(arg: Tipo): Tipo {
   return arg;
 }
@@ -111,13 +111,13 @@ let miIdentidad: <Tipo>(arg: Tipo) => Tipo = identidad;
 
 También puedes usar un nombre distinto para el parámetro genérico, siempre que sea coherente:
 
-```typescript
+```go:ts
 let miIdentidad: <Entrada>(arg: Entrada) => Entrada = identidad;
 ```
 
 O usar un objeto con una firma de llamada:
 
-```typescript
+```go:ts
 let miIdentidad: { <Tipo>(arg: Tipo): Tipo } = identidad;
 ```
 
@@ -127,7 +127,7 @@ let miIdentidad: { <Tipo>(arg: Tipo): Tipo } = identidad;
 
 Podemos definir una interfaz genérica para funciones:
 
-```typescript
+```go:ts
 interface FuncionIdentidadGenerica {
   <Tipo>(arg: Tipo): Tipo;
 }
@@ -137,7 +137,7 @@ let miIdentidad: FuncionIdentidadGenerica = identidad;
 
 O poner el parámetro genérico en la interfaz:
 
-```typescript
+```go:ts
 interface FuncionIdentidadGenerica<Tipo> {
   (arg: Tipo): Tipo;
 }
@@ -153,7 +153,7 @@ Aquí, el tipo genérico se fija cuando usamos la interfaz.
 
 Las clases también pueden ser genéricas, con parámetros de tipo que aseguran que todas las propiedades usen el mismo tipo:
 
-```typescript
+```go:ts
 class NumeroGenerico<TipoNum> {
   valorCero: TipoNum;
   sumar: (x: TipoNum, y: TipoNum) => TipoNum;
@@ -168,7 +168,7 @@ numeroGenerico.sumar = function (x, y) {
 
 No estás limitado a usar solo números, por ejemplo:
 
-```typescript
+```go:ts
 let cadenaNumerica = new NumeroGenerico<string>();
 cadenaNumerica.valorCero = "";
 cadenaNumerica.sumar = function (x, y) {
@@ -188,7 +188,7 @@ A veces queremos limitar los tipos aceptados para que tengan ciertas propiedades
 
 Si queremos acceder a `.length`, podemos definir una interfaz que garantice su existencia:
 
-```typescript
+```go:ts
 interface TieneLongitud {
   length: number;
 }
@@ -201,13 +201,13 @@ function logIdentidad<Tipo extends TieneLongitud>(arg: Tipo): Tipo {
 
 Así, si intentamos pasar un número:
 
-```typescript
+```go:ts
 logIdentidad(3); // Error: 'number' no cumple con 'TieneLongitud'
 ```
 
 Pero sí podemos pasar objetos que tengan `.length`:
 
-```typescript
+```go:ts
 logIdentidad({ length: 10, valor: 3 });
 ```
 
@@ -217,7 +217,7 @@ logIdentidad({ length: 10, valor: 3 });
 
 Puedes usar parámetros genéricos para restringir otros parámetros:
 
-```typescript
+```go:ts
 function obtenerPropiedad<Tipo, Clave extends keyof Tipo>(obj: Tipo, clave: Clave) {
   return obj[clave];
 }
@@ -236,7 +236,7 @@ Esto garantiza que solo accedamos a propiedades existentes en un objeto.
 
 Para crear instancias genéricas, necesitamos usar el constructor de la clase como tipo:
 
-```typescript
+```go:ts
 function crear<Tipo>(c: { new (): Tipo }): Tipo {
   return new c();
 }
@@ -244,7 +244,7 @@ function crear<Tipo>(c: { new (): Tipo }): Tipo {
 
 Ejemplo avanzado con clases y herencia:
 
-```typescript
+```go:ts
 class CuidadorAbeja {
   tieneMascarilla = true;
 }
@@ -276,3 +276,137 @@ crearInstancia(Abeja).cuidador.tieneMascarilla;
 
 Este patrón es útil para implementar **mixins** y otras técnicas avanzadas.
 
+# Parámetros Genéricos con Valores Predeterminados
+
+Al declarar un valor predeterminado para un parámetro de tipo genérico, haces que sea opcional especificar ese argumento de tipo al usar la función o clase. Esto mejora la flexibilidad y reduce la necesidad de repetir tipos.
+
+## Ejemplo
+
+Imagina una función que crea un nuevo elemento HTML. Si llamas la función sin argumentos, genera un `HTMLDivElement`. Si pasas un elemento como primer argumento, genera un elemento de ese tipo. También puedes pasar opcionalmente una lista de hijos.
+
+Antes, podrías definir la función así:
+
+```go:ts
+declare function create(): Container<HTMLDivElement, HTMLDivElement[]>;
+declare function create<T extends HTMLElement>(element: T): Container<T, T[]>;
+declare function create<T extends HTMLElement, U extends HTMLElement>(
+  element: T,
+  children: U[]
+): Container<T, U[]>;
+```
+
+Con parámetros genéricos predeterminados, puedes simplificarlo así:
+
+```go:ts
+declare function create<
+  T extends HTMLElement = HTMLDivElement,
+  U extends HTMLElement[] = T[]
+>(
+  element?: T,
+  children?: U
+): Container<T, U>;
+```
+
+Y su uso:
+
+```go:ts
+const div = create(); // Container<HTMLDivElement, HTMLDivElement[]>
+
+const p = create(new HTMLParagraphElement()); // Container<HTMLParagraphElement, HTMLParagraphElement[]>
+```
+
+### Reglas para valores predeterminados en parámetros genéricos
+
+* Si un parámetro genérico tiene un valor predeterminado, es opcional especificarlo.
+* Los parámetros genéricos requeridos **no pueden** seguir a parámetros opcionales.
+* Los valores predeterminados deben cumplir las restricciones de sus parámetros genéricos.
+* Al usar la función o clase, solo necesitas especificar los parámetros genéricos requeridos; los opcionales usarán su valor predeterminado si no se especifican.
+* Si no se puede inferir un tipo para un parámetro genérico, se usará su valor predeterminado.
+* Las declaraciones que combinan varias interfaces o clases pueden introducir parámetros genéricos con valores predeterminados.
+
+---
+
+# Anotaciones de Varianza
+
+Este es un tema avanzado que se usa para controlar cómo los tipos genéricos se relacionan cuando se sustituyen.
+
+---
+
+## Conceptos básicos: Covarianza y Contravarianza
+
+* **Covarianza:** Cuando puedes usar un tipo más específico en lugar de uno más general.
+  Por ejemplo, si tienes un productor (`Producer<T>`), un `Producer<Gato>` puede usarse donde se espera un `Producer<Animal>`, porque `Gato` es un subtipo de `Animal`.
+
+  ```go:ts
+  interface Producer<T> {
+    make(): T;
+  }
+  ```
+
+* **Contravarianza:** Cuando puedes usar un tipo más general en lugar de uno más específico.
+  Por ejemplo, si tienes un consumidor (`Consumer<T>`), un `Consumer<Animal>` puede usarse donde se espera un `Consumer<Gato>`, porque cualquier función que acepte un `Animal` también puede aceptar un `Gato`.
+
+  ```go:ts
+  interface Consumer<T> {
+    consume(arg: T): void;
+  }
+  ```
+
+---
+
+## Varianza en TypeScript
+
+TypeScript, basado en un sistema de tipos estructurales, infiere automáticamente la varianza (co- o contravarianza) de los parámetros genéricos según cómo se usan.
+
+Sin embargo, en casos muy específicos, puedes añadir anotaciones de varianza para forzar una varianza determinada:
+
+```go:ts
+// Contravariante
+interface Consumer<in T> {
+  consume(arg: T): void;
+}
+
+// Covariante
+interface Producer<out T> {
+  make(): T;
+}
+
+// Invariante (ambas)
+interface ProducerConsumer<in out T> {
+  consume(arg: T): void;
+  make(): T;
+}
+```
+
+---
+
+## Advertencias importantes sobre las anotaciones de varianza
+
+* **No uses anotaciones de varianza a menos que sepas exactamente lo que haces.**
+  Usarlas incorrectamente puede causar errores difíciles de detectar.
+
+* **Las anotaciones de varianza solo afectan comparaciones basadas en instanciación, no en comparaciones estructurales normales.**
+  Esto significa que no cambian el comportamiento habitual del sistema de tipos estructurales de TypeScript.
+
+* **No trates de "forzar" varianza con anotaciones si no coincide con la varianza estructural real.**
+
+* TypeScript puede generar errores si la anotación que pones no coincide con la varianza estructural que realmente ocurre, ayudándote a detectar problemas.
+
+* Las anotaciones de varianza pueden ser útiles para depurar tipos o mejorar ligeramente el rendimiento en sistemas de tipos extremadamente complejos.
+
+---
+
+## Resumen rápido:
+
+| Concepto                    | Descripción                                                  |
+| --------------------------- | ------------------------------------------------------------ |
+| Parámetro genérico opcional | Parámetro con valor predeterminado                           |
+| Covarianza                  | Relación que preserva el orden de los tipos                  |
+| Contravarianza              | Relación que invierte el orden de los tipos                  |
+| Anotación `in`              | Marca contravarianza                                         |
+| Anotación `out`             | Marca covarianza                                             |
+| Anotación `in out`          | Marca invariancia                                            |
+| Uso de anotaciones          | Solo para casos específicos y coincidir con la varianza real |
+| No usar anotaciones para    | Forzar comportamiento diferente al estructural               |
+
+---

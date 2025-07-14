@@ -6,6 +6,8 @@ import Anchor from "./anchor";
 import { SheetLeftbar } from "./leftbar";
 import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
+import LoginButton from "./clerk/LoginButton";
+import HeaderProfileBtn from "./clerk/HeaderProfileBtn";
 
 export const NAVLINKS = [
   {
@@ -39,7 +41,6 @@ export function Navbar() {
             </div>
           </div>
         </div>
-
         <div className="flex items-center sm:justify-normal justify-between sm:gap-3 ml-1 sm:w-fit w-[90%]">
           <AlgoliaSearch {...algolia_props} />
           <div className="flex items-center justify-between sm:gap-2">
@@ -51,10 +52,11 @@ export function Navbar() {
                   variant: "ghost",
                   size: "icon",
                 })}
-              >
+                >
                 <AtSign className="h-[1.1rem] w-[1.1rem]" />
               </Link>
               <ModeToggle />
+                <HeaderProfileBtn/>
             </div>
           </div>
         </div>
