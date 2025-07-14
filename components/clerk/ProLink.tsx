@@ -8,7 +8,7 @@ const ProLink = () => {
   return (
     <SignedIn>
       <Link
-        href="/pricing"
+        href="/#pricing"
         className="flex items-center gap-2 px-4 py-1.5 mr-1 rounded-lg border 
     border-amber-500/60 hover:border-amber-800/80 
     bg-gradient-to-r from-amber-500/20 to-orange-500/10 
