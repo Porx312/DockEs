@@ -3,7 +3,6 @@ title: Parámetros Genéricos con Valores Predeterminados y Anotaciones de Varia
 description: Aprende cómo usar parámetros genéricos con valores predeterminados para simplificar tus tipos en TypeScript, y descubre cuándo y cómo aplicar anotaciones de varianza para controlar la relación entre tipos genéricos.
 ---
 
-
 Una parte fundamental del desarrollo de software es construir componentes que no solo tengan APIs bien definidas y consistentes, sino que también sean reutilizables. Los componentes que pueden trabajar con los datos de hoy y también con los de mañana brindan una gran flexibilidad para crear sistemas grandes y robustos.
 
 En lenguajes como C# o Java, una de las herramientas principales para crear componentes reutilizables es el uso de **genéricos**. Esto permite crear componentes que pueden operar sobre una variedad de tipos en lugar de uno específico, permitiendo a los usuarios trabajar con sus propios tipos de datos.
@@ -317,12 +316,12 @@ const p = create(new HTMLParagraphElement()); // Container<HTMLParagraphElement,
 
 ### Reglas para valores predeterminados en parámetros genéricos
 
-* Si un parámetro genérico tiene un valor predeterminado, es opcional especificarlo.
-* Los parámetros genéricos requeridos **no pueden** seguir a parámetros opcionales.
-* Los valores predeterminados deben cumplir las restricciones de sus parámetros genéricos.
-* Al usar la función o clase, solo necesitas especificar los parámetros genéricos requeridos; los opcionales usarán su valor predeterminado si no se especifican.
-* Si no se puede inferir un tipo para un parámetro genérico, se usará su valor predeterminado.
-* Las declaraciones que combinan varias interfaces o clases pueden introducir parámetros genéricos con valores predeterminados.
+- Si un parámetro genérico tiene un valor predeterminado, es opcional especificarlo.
+- Los parámetros genéricos requeridos **no pueden** seguir a parámetros opcionales.
+- Los valores predeterminados deben cumplir las restricciones de sus parámetros genéricos.
+- Al usar la función o clase, solo necesitas especificar los parámetros genéricos requeridos; los opcionales usarán su valor predeterminado si no se especifican.
+- Si no se puede inferir un tipo para un parámetro genérico, se usará su valor predeterminado.
+- Las declaraciones que combinan varias interfaces o clases pueden introducir parámetros genéricos con valores predeterminados.
 
 ---
 
@@ -334,7 +333,7 @@ Este es un tema avanzado que se usa para controlar cómo los tipos genéricos se
 
 ## Conceptos básicos: Covarianza y Contravarianza
 
-* **Covarianza:** Cuando puedes usar un tipo más específico en lugar de uno más general.
+- **Covarianza:** Cuando puedes usar un tipo más específico en lugar de uno más general.
   Por ejemplo, si tienes un productor (`Producer<T>`), un `Producer<Gato>` puede usarse donde se espera un `Producer<Animal>`, porque `Gato` es un subtipo de `Animal`.
 
   ```go:ts
@@ -343,7 +342,7 @@ Este es un tema avanzado que se usa para controlar cómo los tipos genéricos se
   }
   ```
 
-* **Contravarianza:** Cuando puedes usar un tipo más general en lugar de uno más específico.
+- **Contravarianza:** Cuando puedes usar un tipo más general en lugar de uno más específico.
   Por ejemplo, si tienes un consumidor (`Consumer<T>`), un `Consumer<Animal>` puede usarse donde se espera un `Consumer<Gato>`, porque cualquier función que acepte un `Animal` también puede aceptar un `Gato`.
 
   ```go:ts
@@ -382,17 +381,17 @@ interface ProducerConsumer<in out T> {
 
 ## Advertencias importantes sobre las anotaciones de varianza
 
-* **No uses anotaciones de varianza a menos que sepas exactamente lo que haces.**
+- **No uses anotaciones de varianza a menos que sepas exactamente lo que haces.**
   Usarlas incorrectamente puede causar errores difíciles de detectar.
 
-* **Las anotaciones de varianza solo afectan comparaciones basadas en instanciación, no en comparaciones estructurales normales.**
+- **Las anotaciones de varianza solo afectan comparaciones basadas en instanciación, no en comparaciones estructurales normales.**
   Esto significa que no cambian el comportamiento habitual del sistema de tipos estructurales de TypeScript.
 
-* **No trates de "forzar" varianza con anotaciones si no coincide con la varianza estructural real.**
+- **No trates de "forzar" varianza con anotaciones si no coincide con la varianza estructural real.**
 
-* TypeScript puede generar errores si la anotación que pones no coincide con la varianza estructural que realmente ocurre, ayudándote a detectar problemas.
+- TypeScript puede generar errores si la anotación que pones no coincide con la varianza estructural que realmente ocurre, ayudándote a detectar problemas.
 
-* Las anotaciones de varianza pueden ser útiles para depurar tipos o mejorar ligeramente el rendimiento en sistemas de tipos extremadamente complejos.
+- Las anotaciones de varianza pueden ser útiles para depurar tipos o mejorar ligeramente el rendimiento en sistemas de tipos extremadamente complejos.
 
 ---
 

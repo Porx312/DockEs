@@ -20,16 +20,16 @@ function padLeft(padding: number | string, input: string): string {
 }
 ```
 
-* Si `padding` es un número, se repite ese número de espacios.
-* Si `padding` es una cadena, se concatena directamente.
-* El uso de `typeof` es una **guardia de tipo** (`type guard`) que permite a TypeScript entender qué tipo tiene `padding` dentro de cada rama del `if`.
+- Si `padding` es un número, se repite ese número de espacios.
+- Si `padding` es una cadena, se concatena directamente.
+- El uso de `typeof` es una **guardia de tipo** (`type guard`) que permite a TypeScript entender qué tipo tiene `padding` dentro de cada rama del `if`.
 
 ---
 
 ## ¿Que es Narrowing?
 
-* **Narrowing** es el proceso de tomar un tipo amplio y reducirlo a uno más específico dentro de un bloque de código, usando controles de flujo (if, else, switch, etc.).
-* Las **guardias de tipo** permiten decirle a TypeScript que, dentro de cierto contexto, una variable tiene un tipo más concreto.
+- **Narrowing** es el proceso de tomar un tipo amplio y reducirlo a uno más específico dentro de un bloque de código, usando controles de flujo (if, else, switch, etc.).
+- Las **guardias de tipo** permiten decirle a TypeScript que, dentro de cierto contexto, una variable tiene un tipo más concreto.
 
 ---
 
@@ -41,14 +41,14 @@ JavaScript permite usar el operador `typeof` para comprobar el tipo en tiempo de
 
 Valores posibles de `typeof`:
 
-* `"string"`
-* `"number"`
-* `"bigint"`
-* `"boolean"`
-* `"symbol"`
-* `"undefined"`
-* `"object"`
-* `"function"`
+- `"string"`
+- `"number"`
+- `"bigint"`
+- `"boolean"`
+- `"symbol"`
+- `"undefined"`
+- `"object"`
+- `"function"`
 
 **Ejemplo problemático con `null`:**
 
@@ -90,7 +90,7 @@ function printAll(strs: string | string[] | null) {
 
 ---
 
-### 3. Negacion  para filtrar tipos
+### 3. Negacion para filtrar tipos
 
 ```go:ts
 function multiplyAll(values: number[] | undefined, factor: number): number[] | undefined {
@@ -162,7 +162,6 @@ function move(animal: Fish | Bird | Human) {
   }
 }
 ```
-
 
 ### instanceof y Narrowing Reduccion de tipo
 
@@ -311,6 +310,7 @@ Las clases también pueden usar este patrón de `is Type` para reducir su tipo.
 ---
 
 ### Assertion functions (Funciones de afirmacion)
+
 Los tipos también pueden reducirse usando funciones de afirmación, que lanzan errores si un valor no cumple con ciertas condiciones, pero esto queda para otro momento.
 
 ## Uniones discriminadas (Discriminated Unions)
@@ -491,4 +491,3 @@ function getArea(shape: Shape) {
 ```
 
 El compilador nos avisará que no hemos manejado el nuevo caso `"triangle"`, ayudándonos a mantener nuestro código seguro y exhaustivo.
-

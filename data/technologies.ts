@@ -1,7 +1,8 @@
 export const technologies = [
   {
     name: "Next.js",
-    comingSoon: true,
+    ispro: true,
+    comingSoon: false,
     slug: "/docs/nextjs/empezando/guias",
     iconDark: "/icons/nextjs.svg",
     description:

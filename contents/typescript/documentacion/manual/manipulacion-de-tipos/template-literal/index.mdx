@@ -7,7 +7,7 @@ Los **Template Literal Types** permiten **construir tipos de cadena dinámica** 
 
 ---
 
-###  Sintaxis Basica
+### Sintaxis Basica
 
 ```go:ts
 type World = "world";
@@ -60,10 +60,10 @@ const person = makeWatchedObject({
 
 Queremos que:
 
-* Se pueda escuchar `"firstNameChanged"`, `"lastNameChanged"`...
-* El callback reciba el nuevo valor **del mismo tipo que la propiedad**.
+- Se pueda escuchar `"firstNameChanged"`, `"lastNameChanged"`...
+- El callback reciba el nuevo valor **del mismo tipo que la propiedad**.
 
-###  Tipado con template literal + indexed access
+### Tipado con template literal + indexed access
 
 ```go:ts
 type PropEventSource<Type> = {
@@ -88,8 +88,8 @@ person.on("ageChanged", (newAge) => {
 });
 ```
 
-* 🔒 **Seguridad de tipo**: No permite `"firstName"` o `"frstNameChanged"`
-* 🤖 **Inferencia automática**: El tipo correcto es inferido por TypeScript
+- 🔒 **Seguridad de tipo**: No permite `"firstName"` o `"frstNameChanged"`
+- 🤖 **Inferencia automática**: El tipo correcto es inferido por TypeScript
 
 ---
 
@@ -124,4 +124,3 @@ type Soft = Uncapitalize<Yell>; // "jOHN"
 ```
 
 ---
-

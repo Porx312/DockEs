@@ -2,15 +2,16 @@
 title: Tipos comunes en JavaScript y TypeScript
 description: Aprende sobre los tipos básicos más usados en JavaScript y cómo describirlos correctamente en TypeScript para mejorar tu código y evitar errores comunes.
 ---
+
 ### Los tipos primitivos: string, number y boolean
 
 JavaScript tiene tres tipos primitivos muy usados: **string**, **number** y **boolean**. Cada uno tiene un tipo equivalente en TypeScript con el mismo nombre.
 
 Estos nombres coinciden con lo que devuelve el operador `typeof` de JavaScript:
 
-* **string** representa valores de texto, como `"Hola mundo"`.
-* **number** representa números, como `42`. JavaScript no diferencia entre enteros o decimales; todos son `number`.
-* **boolean** representa los valores `true` o `false`.
+- **string** representa valores de texto, como `"Hola mundo"`.
+- **number** representa números, como `42`. JavaScript no diferencia entre enteros o decimales; todos son `number`.
+- **boolean** representa los valores `true` o `false`.
 
 Nota: los tipos con mayúscula inicial `String`, `Number` y `Boolean` existen, pero son tipos especiales raramente usados. Siempre usa `string`, `number` o `boolean`.
 
@@ -191,7 +192,6 @@ function imprimirNombre(obj: { first: string; last?: string }) {
 }
 ```
 
-
 ## Tipos Union
 
 El sistema de tipos de TypeScript te permite construir nuevos tipos a partir de tipos existentes usando una gran variedad de operadores. Ahora que sabemos cómo escribir algunos tipos, es momento de comenzar a combinarlos de maneras interesantes.
@@ -221,7 +221,7 @@ El separador `|` puede usarse incluso antes del primer miembro, por lo que tambi
 
 ```go:ts
 function imprimirTextoONumeroOBool(
-  valor: 
+  valor:
     | string
     | number
     | boolean
@@ -458,7 +458,7 @@ function hacerAlgo(x: string | null) {
 }
 ```
 
-### Operador de Asercion Non-null 
+### Operador de Asercion Non-null
 
 TypeScript tiene una sintaxis especial para decirle que un valor **no es** `null` ni `undefined` sin hacer una comprobación explícita. Colocar `!` después de una expresión es una aserción que indica que el valor no es nulo ni indefinido:
 

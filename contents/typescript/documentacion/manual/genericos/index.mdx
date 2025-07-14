@@ -2,6 +2,7 @@
 title: Tipos Genéricos en TypeScript
 description: Una guía completa sobre cómo usar tipos genéricos en TypeScript para crear tipos y funciones reutilizables, con ejemplos de arrays, tuplas, y cómo evitar errores comunes usando readonly y tipos genéricos.
 ---
+
 ## Tipos de Objetos en TypeScript
 
 En JavaScript, la forma fundamental de agrupar y pasar datos es mediante objetos. En TypeScript, representamos esos objetos a través de **tipos de objeto**.
@@ -52,9 +53,9 @@ function saludar(persona: Persona) {
 
 Cada propiedad en un tipo de objeto puede definir:
 
-* Su tipo.
-* Si es **opcional**.
-* Si es **solo lectura (readonly)**.
+- Su tipo.
+- Si es **opcional**.
+- Si es **solo lectura (readonly)**.
 
 ---
 
@@ -80,8 +81,8 @@ pintarForma({ forma, yPos: 100 });
 pintarForma({ forma, xPos: 100, yPos: 100 });
 ```
 
-* Si la propiedad opcional no se provee, su valor será `undefined`.
-* Para evitar errores con `undefined`, es común asignar valores por defecto.
+- Si la propiedad opcional no se provee, su valor será `undefined`.
+- Para evitar errores con `undefined`, es común asignar valores por defecto.
 
 ```go:ts
 function pintarForma({ forma, xPos = 0, yPos = 0 }: OpcionesPintura) {
@@ -135,9 +136,9 @@ const miArray: ArrayDeStrings = obtenerArray();
 const segundoElemento = miArray[1];  // string
 ```
 
-* Las firmas de índice pueden usar tipos `string`, `number`, `symbol` y sus combinaciones.
-* Si usas un índice `string`, todas las propiedades deben coincidir con el tipo definido.
-* Puedes usar un índice de tipo unión para aceptar más de un tipo:
+- Las firmas de índice pueden usar tipos `string`, `number`, `symbol` y sus combinaciones.
+- Si usas un índice `string`, todas las propiedades deben coincidir con el tipo definido.
+- Puedes usar un índice de tipo unión para aceptar más de un tipo:
 
 ```go:ts
 interface DiccionarioNumOString {
@@ -147,7 +148,7 @@ interface DiccionarioNumOString {
 }
 ```
 
-* También puedes hacer las firmas de índice de solo lectura:
+- También puedes hacer las firmas de índice de solo lectura:
 
 ```go:ts
 interface ArraySoloLectura {
@@ -177,19 +178,19 @@ function crearCuadrado(config: ConfigCuadrado) {
   };
 }
 
-crearCuadrado({ colour: "rojo", ancho: 100 }); 
+crearCuadrado({ colour: "rojo", ancho: 100 });
 // Error: 'colour' no existe en ConfigCuadrado. Quizá quisiste decir 'color'.
 ```
 
 Para evitar esto:
 
-* Usa una **aserción de tipo**:
+- Usa una **aserción de tipo**:
 
 ```go:ts
 crearCuadrado({ ancho: 100, opacity: 0.5 } as ConfigCuadrado);
 ```
 
-* O añade una firma de índice para permitir propiedades adicionales:
+- O añade una firma de índice para permitir propiedades adicionales:
 
 ```go:ts
 interface ConfigCuadrado {
@@ -199,7 +200,7 @@ interface ConfigCuadrado {
 }
 ```
 
-* También puedes asignar el objeto a una variable antes de pasarlo, lo que desactiva esta comprobación para esa asignación:
+- También puedes asignar el objeto a una variable antes de pasarlo, lo que desactiva esta comprobación para esa asignación:
 
 ```go:ts
 let opciones = { colour: "rojo", ancho: 100 };
@@ -275,8 +276,8 @@ dibujar({ color: "rojo", raidus: 42 }); // Error: 'raidus' mal escrito
 
 ## Extension de Interfaces vs Interseccion de Tipos
 
-* **Interfaces** con el mismo nombre se *fusionan* si las propiedades son compatibles.
-* Si tienen propiedades con el mismo nombre pero tipos incompatibles, dan error.
+- **Interfaces** con el mismo nombre se _fusionan_ si las propiedades son compatibles.
+- Si tienen propiedades con el mismo nombre pero tipos incompatibles, dan error.
 
 ```go:ts
 interface Persona {
@@ -287,7 +288,7 @@ interface Persona {
 }
 ```
 
-* Las **intersecciones** (`&`) combinan tipos pero exigen que las propiedades cumplan *ambos* tipos simultáneamente, lo que puede resultar en un tipo `never` si son incompatibles:
+- Las **intersecciones** (`&`) combinan tipos pero exigen que las propiedades cumplan _ambos_ tipos simultáneamente, lo que puede resultar en un tipo `never` si son incompatibles:
 
 ```go:ts
 interface Persona1 {
@@ -306,6 +307,7 @@ staffer.nombre; // tipo 'never'
 Esto sucede porque la propiedad `nombre` no puede ser a la vez `string` y `number`.
 
 ---
+
 ## Tipos genericos en objetos
 
 Imagina que tienes un tipo `Box` que puede contener cualquier valor — cadenas, números, jirafas, lo que sea.
@@ -455,7 +457,7 @@ interface Array<Type> {
 
 ---
 
-## `ReadonlyArray`  arreglos solo lectura
+## `ReadonlyArray` arreglos solo lectura
 
 `ReadonlyArray<Type>` es un tipo especial que describe arreglos que no deben modificarse.
 
@@ -580,4 +582,3 @@ function distanceFromOrigin([x, y]: [number, number]) {
 
 distanceFromOrigin(point); // Error: readonly no es compatible con mutable
 ```
-

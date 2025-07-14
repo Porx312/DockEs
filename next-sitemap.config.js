@@ -1,3 +1,3 @@
 module.exports = {
-  siteUrl: 'https://docsjs.com',
+  siteUrl: "https://docsjs.com",
 };

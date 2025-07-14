@@ -5,6 +5,7 @@ import { Space_Mono, Space_Grotesk } from "next/font/google";
 import { Footer } from "@/components/footer";
 import "@/styles/globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 
 const sansFont = Space_Grotesk({
   subsets: ["latin"],
@@ -27,8 +28,8 @@ export const metadata: Metadata = {
   other: {
     "google-site-verification": "bTOPYCV6jNyIDuIkkVMoAvwwXsBxpM9VWYNaS0a_f00",
   },
-   alternates: {
-    canonical: "https://www.docsjs.com/",                // https://dock-es.vercel.app/
+  alternates: {
+    canonical: "https://www.docsjs.com/", // https://dock-es.vercel.app/
   },
 };
 
@@ -39,33 +40,33 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link
-          rel="stylesheet"
-          type="text/css"
-          href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
-        />
-      </head>
-      <body
-        className={`${sansFont.variable} ${monoFont.variable} font-regular antialiased tracking-wide`}
-        suppressHydrationWarning
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+          />
+        </head>
+        <body
+          className={`${sansFont.variable} ${monoFont.variable} font-regular antialiased tracking-wide`}
+          suppressHydrationWarning
         >
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
 
-          <Navbar />
-          <main className="sm:container mx-auto w-[90vw] h-auto scroll-smooth">
-            {children}
-          </main>
-          <Footer />
-        </ThemeProvider>
-      </body>
-    </html>
-      </ClerkProvider  >
+            <main className="sm:container mx-auto w-[90vw] h-auto scroll-smooth">
+              <ConvexClientProvider>{children}</ConvexClientProvider>
+            </main>
+            <Footer />
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

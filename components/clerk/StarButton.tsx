@@ -29,7 +29,9 @@ function StarButton({ snippetId }: { snippetId: Id<"snippets"> }) {
       <Star
         className={`w-4 h-4 ${isStarred ? "fill-yellow-500" : "fill-none group-hover:fill-gray-400"}`}
       />
-      <span className={`text-xs font-medium ${isStarred ? "text-yellow-500" : "text-gray-400"}`}>
+      <span
+        className={`text-xs font-medium ${isStarred ? "text-yellow-500" : "text-gray-400"}`}
+      >
         {starCount}
       </span>
     </button>

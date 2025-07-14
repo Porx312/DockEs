@@ -3,7 +3,6 @@ title: Los fundamentos de TypeScript
 description: Una introducción clara al comportamiento de los valores en JavaScript, la utilidad del sistema de tipos estáticos y cómo TypeScript ayuda a detectar errores antes de ejecutar el código. Explora conceptos clave como el chequeo estático, errores comunes y las ventajas del uso de herramientas de desarroll
 ---
 
-
 ### Comprendiendo los valores en JavaScript
 
 Cada valor en JavaScript tiene un conjunto de comportamientos que podemos observar al realizar distintas operaciones sobre él. Puede sonar abstracto, pero veamos un ejemplo rápido con una variable llamada `message`:
@@ -17,10 +16,10 @@ En la primera línea, accedemos a la propiedad `toLowerCase` y la invocamos. En 
 
 Pero si no sabemos cuál es el valor de `message`, no podemos predecir el resultado de forma confiable. Todo depende del tipo de valor que tenga:
 
-* ¿Es `message` una función?
-* ¿Tiene una propiedad llamada `toLowerCase`?
-* ¿Esa propiedad es una función?
-* Si lo es, ¿qué retorna al llamarla?
+- ¿Es `message` una función?
+- ¿Tiene una propiedad llamada `toLowerCase`?
+- ¿Esa propiedad es una función?
+- Si lo es, ¿qué retorna al llamarla?
 
 Normalmente, respondemos a estas preguntas mentalmente al escribir JavaScript. Pero a veces cometemos errores.
 
@@ -150,9 +149,9 @@ app.get("/", function (req, res) {
 
 Estas sugerencias inteligentes vienen gracias al sistema de tipos. También puedes obtener:
 
-* Navegación entre archivos
-* Refactorizaciones automáticas
-* Correcciones rápidas (quick fixes)
+- Navegación entre archivos
+- Refactorizaciones automáticas
+- Correcciones rápidas (quick fixes)
 
 ---
 
@@ -258,7 +257,9 @@ Se convierte en:
 
 ```js
 function greet(person, date) {
-  console.log("Hello ".concat(person, ", today is ").concat(date.toDateString(), "!"));
+  console.log(
+    "Hello ".concat(person, ", today is ").concat(date.toDateString(), "!"),
+  );
 }
 ```
 
@@ -286,7 +287,7 @@ Puedes usar `--target es2015` para evitar esa conversión si tu entorno lo sopor
 
 TypeScript permite ajustar el nivel de verificación mediante opciones como `--strict`. Esto activa:
 
-* `noImplicitAny`: evita que variables tengan tipo `any` por defecto.
-* `strictNullChecks`: obliga a manejar explícitamente `null` y `undefined`.
+- `noImplicitAny`: evita que variables tengan tipo `any` por defecto.
+- `strictNullChecks`: obliga a manejar explícitamente `null` y `undefined`.
 
 Recomendación: activar `strict: true` desde el inicio de un proyecto para evitar errores difíciles de detectar.

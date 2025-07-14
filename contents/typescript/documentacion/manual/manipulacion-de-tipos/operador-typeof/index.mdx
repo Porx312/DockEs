@@ -36,7 +36,7 @@ Si intentas usar `ReturnType` directamente sobre un nombre de función, TypeScri
 function f() {
   return { x: 10, y: 3 };
 }
-type P = ReturnType<f>;  
+type P = ReturnType<f>;
 // Error: 'f' es un valor, no un tipo. ¿Querías decir 'typeof f'?
 ```
 
@@ -66,8 +66,6 @@ let shouldContinue: typeof msgbox("¿Seguro que quieres continuar?");
 
 ### Resumen
 
-* `typeof` en tipos permite obtener el tipo de una variable o función ya declarada.
-* Es fundamental para trabajar con tipos derivados, como `ReturnType`.
-* Solo se puede usar sobre identificadores o propiedades, no expresiones complejas.
-
-
+- `typeof` en tipos permite obtener el tipo de una variable o función ya declarada.
+- Es fundamental para trabajar con tipos derivados, como `ReturnType`.
+- Solo se puede usar sobre identificadores o propiedades, no expresiones complejas.

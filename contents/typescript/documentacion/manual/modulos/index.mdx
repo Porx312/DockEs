@@ -11,8 +11,8 @@ Los módulos ES fueron añadidos oficialmente a JavaScript en 2015 y, desde 2020
 
 El manual de TypeScript se enfoca en:
 
-* **ES Modules**
-* **CommonJS** (precursor popular de los módulos ES)
+- **ES Modules**
+- **CommonJS** (precursor popular de los módulos ES)
 
 > Para otros patrones de módulos, consulta la sección de referencia [Modules](https://www.typescriptlang.org/docs/handbook/modules.html).
 
@@ -22,7 +22,7 @@ El manual de TypeScript se enfoca en:
 
 Un archivo que contiene una **instrucción `import` o `export` de nivel superior** es tratado como un **módulo**.
 
-* Si no contiene ninguna de estas, se trata como un **script**, cuyos contenidos se consideran **globales**.
+- Si no contiene ninguna de estas, se trata como un **script**, cuyos contenidos se consideran **globales**.
 
 > ✅ Módulos tienen su propio **ámbito**, por lo que variables, funciones o clases definidas en un módulo no son accesibles desde fuera, a menos que se **exporten** explícitamente.
 
@@ -30,8 +30,8 @@ Un archivo que contiene una **instrucción `import` o `export` de nivel superior
 
 ### ❗ Archivos no modulo (scripts)
 
-* Un archivo sin `import`/`export` es tratado como **script global**.
-* Se espera que uses múltiples etiquetas `<script>` o la opción `outFile` del compilador para combinar los archivos.
+- Un archivo sin `import`/`export` es tratado como **script global**.
+- Se espera que uses múltiples etiquetas `<script>` o la opción `outFile` del compilador para combinar los archivos.
 
 ✅ Si quieres que un archivo se trate como módulo aunque no exporte nada, puedes usar:
 
@@ -188,15 +188,15 @@ Permite que `import` funcione con módulos CommonJS de forma más fluida.
 
 TypeScript tiene dos estrategias de resolución:
 
-* **Classic**: (heredado, usado si `module` no es `commonjs`)
-* **Node**: imita cómo Node.js resuelve módulos
+- **Classic**: (heredado, usado si `module` no es `commonjs`)
+- **Node**: imita cómo Node.js resuelve módulos
 
 Configuraciones útiles:
 
-* `moduleResolution`
-* `baseUrl`
-* `paths`
-* `rootDirs`
+- `moduleResolution`
+- `baseUrl`
+- `paths`
+- `rootDirs`
 
 ---
 
@@ -259,5 +259,3 @@ namespace Geometry {
 | `esModuleInterop`            | Mejora compatibilidad entre ESModules y CommonJS                           |
 | `module`                     | Opción que define el formato de salida (`commonjs`, `es2020`, `umd`, etc.) |
 | `moduleResolution`           | Cómo se busca el archivo en disco                                          |
-
-

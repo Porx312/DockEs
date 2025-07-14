@@ -2,10 +2,11 @@
 title: Más sobre funciones en TypeScript
 description: Descubre cómo describir funciones en TypeScript usando tipos de funciones, firmas de llamada y construcción, y aprende a crear funciones genéricas que mantienen la relación entre tipos de entrada y salida para un código más seguro y reutilizable.
 ---
+
 ## Expresiones de Tipo Funcion
 
-* Se usan para describir funciones, con sintaxis similar a las funciones flecha.
-* Ejemplo:
+- Se usan para describir funciones, con sintaxis similar a las funciones flecha.
+- Ejemplo:
 
 ```go:ts
 function greeter(fn: (a: string) => void) {
@@ -17,8 +18,8 @@ function printToConsole(s: string) {
 greeter(printToConsole);
 ```
 
-* `(a: string) => void` significa: función con un parámetro `a` de tipo string que no retorna nada (`void`).
-* El nombre del parámetro es obligatorio para que TypeScript infiera bien el tipo. `(string) => void` es diferente (parámetro llamado `string` de tipo `any`).
+- `(a: string) => void` significa: función con un parámetro `a` de tipo string que no retorna nada (`void`).
+- El nombre del parámetro es obligatorio para que TypeScript infiera bien el tipo. `(string) => void` es diferente (parámetro llamado `string` de tipo `any`).
 
 ---
 
@@ -185,7 +186,7 @@ combine<string | number>([1, 2, 3], ["hello"]);
 
 ## Parametros Opcionales y Valores por Defecto
 
-* Parámetros opcionales con `?` implican que el tipo es unión con `undefined`.
+- Parámetros opcionales con `?` implican que el tipo es unión con `undefined`.
 
 ```go:ts
 function f(x?: number) { }
@@ -193,7 +194,7 @@ f();
 f(10);
 ```
 
-* Valores por defecto:
+- Valores por defecto:
 
 ```go:ts
 function f(x = 10) { }
@@ -246,7 +247,7 @@ const admins = db.filterUsers(function(this: User) {
 
 ## Parametros Rest y Spread
 
-* Parámetros rest:
+- Parámetros rest:
 
 ```go:ts
 function multiply(n: number, ...m: number[]) {
@@ -256,7 +257,7 @@ function multiply(n: number, ...m: number[]) {
 multiply(10, 1, 2, 3); // [10, 20, 30]
 ```
 
-* Spread para pasar elementos como argumentos:
+- Spread para pasar elementos como argumentos:
 
 ```go:ts
 const args = [8, 5] as const;
@@ -279,7 +280,7 @@ sum({ a: 1, b: 2, c: 3 });
 
 ## Tipos Especiales en Funciones
 
-* `void`: función sin valor de retorno.
-* `never`: función que nunca retorna (lanza error o termina proceso).
-* `unknown`: tipo seguro que requiere chequeo previo para usar.
-* Evitar `Function` genérico, usar tipos específicos.
+- `void`: función sin valor de retorno.
+- `never`: función que nunca retorna (lanza error o termina proceso).
+- `unknown`: tipo seguro que requiere chequeo previo para usar.
+- Evitar `Function` genérico, usar tipos específicos.

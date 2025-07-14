@@ -506,7 +506,7 @@ const s = new MySafe();
 console.log(s["secretKey"]); // ⚠️ Funciona, aunque no debería
 ```
 
-#### Campos privados "duros" con 
+#### Campos privados "duros" con
 
 TypeScript también admite la sintaxis de campos privados reales de JavaScript:
 
@@ -763,7 +763,7 @@ class DerivedBox extends Box {
 const base = new Box();
 const derived = new DerivedBox();
 
-derived.sameAs(base); 
+derived.sameAs(base);
 // ❌ Error: el parámetro debe ser un DerivedBox, no un Box
 ```
 
@@ -987,4 +987,3 @@ fn(window); // ✅
 fn({});     // ✅
 fn(fn);     // ✅
 ```
-
