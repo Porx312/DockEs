@@ -6,7 +6,6 @@ import Anchor from "./anchor";
 import { SheetLeftbar } from "./leftbar";
 import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
-import LoginButton from "./clerk/LoginButton";
 import HeaderProfileBtn from "./clerk/HeaderProfileBtn";
 
 export const NAVLINKS = [
