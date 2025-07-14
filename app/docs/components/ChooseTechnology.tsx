@@ -6,6 +6,7 @@ import gsap from "gsap"
 import Image from "next/image" // Importar el componente Image de Next.js
 import clsx from "clsx"
 import { useTheme } from "next-themes"
+import { Sparkles } from "lucide-react"
 
 // Definir el tipo para cada tecnología (asumiendo que viene de technologies.ts)
 export type Technology = {
@@ -112,26 +113,21 @@ export default function ChooseTechnologyClient({
                 </span>
               )}
               {tech.ispro && (
-                <button className="group absolute -top-5 -right-2">
-                  <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-75 blur transition duration-300 group-hover:opacity-100"></div>
-                  <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-75 blur transition duration-300 group-hover:opacity-100 animation-delay-200"></div>
-                  <span className="relative flex items-center gap-3 rounded-lg bg-black px-2 py-2 leading-none">
-                    <span className="ml-auto transform transition-transform duration-300 group-hover:scale-125">
-                      <svg className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                    </span>
-                    <div className="absolute -bottom-2 left-1/2 h-px w-5/6 -translate-x-1/2 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50 blur-sm transition-all duration-300 group-hover:w-full"></div>
-                  </span>
-                </button>
+                           <button
+  className="flex absolute -top-2 -right-2 z-10 items-center gap-2 px-4 py-1.5 mr-1 rounded-lg border 
+    border-amber-500/50 hover:border-amber-800/70 
+    bg-gradient-to-r from-amber-500/20 to-orange-500/10 
+    hover:from-amber-500/20 hover:to-orange-500/20 
+    transition-all duration-300"
+>
+  <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-500" />
+   <span className="text-sm font-medium text-amber-500 dark:text-amber-300 hover:text-amber-400">
+    Pro
+  </span>
+</button>
               )}
 
-              {tech.comingSoon ? (
+              {tech.comingSoon  ? (
                 <div className="flex flex-col items-center justify-center space-y-4 cursor-not-allowed">
                   <Image
                     src={theme === "dark" ? tech.iconDark : tech.iconLight || tech.iconDark}
