@@ -6,7 +6,7 @@ import gsap from "gsap";
 import Image from "next/image"; // Importar el componente Image de Next.js
 import clsx from "clsx";
 import { useTheme } from "next-themes";
-import { Sparkles } from "lucide-react";
+import BtnPricing from "../../../components/clerk/btnPricing";
 
 // Definir el tipo para cada tecnología (asumiendo que viene de technologies.ts)
 export type Technology = {
@@ -113,18 +113,7 @@ export default function ChooseTechnologyClient({
                 </span>
               )}
               {tech.ispro && (
-                <button
-                  className="flex absolute -top-2 -right-2 z-10 items-center gap-2 px-4 py-1.5 mr-1 rounded-lg border 
-    border-amber-500/50 hover:border-amber-800/70 
-    bg-gradient-to-r from-amber-500/20 to-orange-500/10 
-    hover:from-amber-500/20 hover:to-orange-500/20 
-    transition-all duration-300"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-500" />
-                  <span className="text-sm font-medium text-amber-500 dark:text-amber-300 hover:text-amber-400">
-                    Pro
-                  </span>
-                </button>
+                <BtnPricing className="absolute -top-2 -right-2 z-10" />
               )}
 
               {tech.comingSoon ? (

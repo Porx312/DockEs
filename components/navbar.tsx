@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { BookAIcon, AtSign} from "lucide-react";
+import { BookAIcon, AtSign } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
@@ -7,7 +7,7 @@ import { SheetLeftbar } from "./leftbar";
 import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
 import HeaderProfileBtn from "./clerk/HeaderProfileBtn";
-import ProLink from "./clerk/ProLink";
+import BtnNavbar from "./clerk/BtnNavbar";
 
 export const NAVLINKS = [
   {
@@ -56,7 +56,7 @@ export function Navbar() {
                 <AtSign className="h-[1.1rem] w-[1.1rem]" />
               </Link>
               <ModeToggle />
-              <ProLink />
+              <BtnNavbar />
               <HeaderProfileBtn />
             </div>
           </div>

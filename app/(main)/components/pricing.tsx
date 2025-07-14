@@ -1,8 +1,14 @@
+"use client";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 import React from "react";
 
 const Pricing = () => {
   return (
-    <div className="flex flex-col gap-8 items-center justify-center py-16 px-4 md:px-6 text-center max-w-5xl mx-auto">
+    <div
+      className="flex flex-col gap-8 items-center justify-center py-16 px-4 md:px-6 text-center max-w-5xl mx-auto "
+      id="pricing"
+    >
       <div className="max-w-2xl text-center">
         <h2 className="md:text-7xl text-4xl font-bold mb-4">DocsJS Premium</h2>
         <p className="text-lg dark:text-gray-200 text-gray-700">
@@ -27,13 +33,23 @@ const Pricing = () => {
             <span className="block text-gray-600 font-medium mb-6">
               por usuario / mes
             </span>
-            <a
-              href="https://docsjs.lemonsqueezy.com/buy/5e29cd24-b230-4729-8c42-ac5f8b0dd4aa?discount=0"
-              className="relative group inline-block w-full py-4 px-6 text-center text-gray-800 hover:text-white bg-yellow-300 font-semibold rounded-full overflow-hidden transition duration-200"
-            >
-              <div className="absolute top-0 right-full w-full h-full bg-gray-900 transform group-hover:translate-x-full group-hover:scale-105 transition duration-500"></div>
-              <span className="relative z-10">Comienza Prueba de 7 Días</span>
-            </a>
+            <SignedOut>
+              <SignInButton mode="modal" forceRedirectUrl={"/#pricing"}>
+                <button className="relative group inline-block w-full py-4 px-6 text-center text-gray-800 hover:text-white bg-yellow-300 font-semibold rounded-full overflow-hidden transition duration-200">
+                  <div className="absolute top-0 right-full w-full h-full bg-gray-900 transform group-hover:translate-x-full group-hover:scale-105 transition duration-500"></div>
+                  <span className="relative z-10">Registrate para probar</span>
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link
+                href="https://docsjs.lemonsqueezy.com/buy/5e29cd24-b230-4729-8c42-ac5f8b0dd4aa"
+                className="relative lemonsqueezy-button group inline-block w-full py-4 px-6 text-center text-gray-800 hover:text-white bg-yellow-300 font-semibold rounded-full overflow-hidden transition duration-200"
+              >
+                <div className="absolute top-0 right-full w-full h-full bg-gray-900 transform group-hover:translate-x-full group-hover:scale-105 transition duration-500"></div>
+                <span className="relative z-10">Empezar Prueba de 7 dias</span>
+              </Link>
+            </SignedIn>
           </div>
 
           <ul className="text-left">
