@@ -10,11 +10,6 @@ import { page_routes } from "./routes-config";
 import { visit } from "unist-util-visit";
 import matter from "gray-matter";
 import { getIconName, hasSupportedExtension } from "./utils";
-import { cache } from "react"; // Importar cache desde 'react'
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import { toString } from "mdast-util-to-string";
-// import remarkSlug from "remark-slug" // ¡ELIMINADO! Ya no necesitamos remark-slug aquí
 
 // custom components imports
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,117 +51,64 @@ const components = {
   t: TableCell,
 };
 
-// Tipos para los datos procesados de MDX
+// can be used for other pages like blogs, Guides etc
+async function parseMdx<Frontmatter>(rawMdx: string) {
+  return await compileMDX<Frontmatter>({
+    source: rawMdx,
+    options: {
+      parseFrontmatter: true,
+      mdxOptions: {
+        rehypePlugins: [
+          preProcess,
+          rehypeCodeTitles,
+          rehypeCodeTitlesWithLogo,
+          rehypePrism,
+          rehypeSlug,
+          rehypeAutolinkHeadings,
+          postProcess,
+        ],
+        remarkPlugins: [remarkGfm],
+      },
+    },
+    components,
+  });
+}
+
+// logic for docs
+
 export type BaseMdxFrontmatter = {
   title: string;
   description: string;
 };
 
-export type Heading = {
-  level: number;
-  text: string;
-  href: string;
-};
-
-export type ProcessedMdx = {
-  compiledMdx: Awaited<ReturnType<typeof compileMDX<BaseMdxFrontmatter>>>;
-  frontmatter: BaseMdxFrontmatter;
-  headings: Heading[];
-};
-
-// Nueva función para extraer encabezados de forma ligera
-async function extractHeadingsFromMdx(rawMdx: string): Promise<Heading[]> {
-  const { content } = matter(rawMdx); // Obtener solo el contenido sin el frontmatter
-
-  const headings: Heading[] = [];
-  // Usamos un pipeline de unified ligero solo para parsear
-  // No necesitamos remark-slug aquí, ya que generaremos el slug manualmente con sluggify
-  const tree = unified().use(remarkParse).parse(content);
-
-  visit(tree, "heading", (node) => {
-    const level = node.depth;
-    const text = toString(node);
-    const id = sluggify(text); // Generar el slug usando nuestra función sluggify
-
-    headings.push({
-      level,
-      text,
-      href: `#${id}`,
-    });
-  });
-
-  return headings;
-}
-
-// Función centralizada y cacheada para procesar MDX
-const getProcessedMdx = cache(
-  async (contentPath: string): Promise<ProcessedMdx> => {
-    const rawMdx = await fs.readFile(contentPath, "utf-8");
-
-    // Extraer encabezados por separado (operación ligera)
-    const headings = await extractHeadingsFromMdx(rawMdx);
-
-    // Compilar MDX (operación pesada, pero ahora cacheada)
-    const compiledMdx = await compileMDX<BaseMdxFrontmatter>({
-      source: rawMdx,
-      options: {
-        parseFrontmatter: true,
-        mdxOptions: {
-          rehypePlugins: [
-            preProcess,
-            rehypeCodeTitles,
-            rehypeCodeTitlesWithLogo,
-            rehypePrism,
-            rehypeSlug, // Mantener este para que los IDs se añadan al HTML renderizado
-            rehypeAutolinkHeadings,
-            postProcess,
-          ],
-          remarkPlugins: [remarkGfm], // remarkSlug ya no es necesario aquí tampoco
-        },
-      },
-      components,
-    });
-
-    return {
-      compiledMdx,
-      frontmatter: compiledMdx.frontmatter,
-      headings,
-    };
-  },
-);
-
-// Lógica para docs
 export async function getCompiledDocsForSlug(slug: string, name: string) {
   try {
     const contentPath = getDocsContentPath(slug, name);
-    const { compiledMdx } = await getProcessedMdx(contentPath);
-    return compiledMdx;
+    const rawMdx = await fs.readFile(contentPath, "utf-8");
+    return await parseMdx<BaseMdxFrontmatter>(rawMdx);
   } catch (err) {
-    console.error("Error compiling docs for slug:", err);
-    return undefined;
+    console.log(err);
   }
 }
 
 export async function getDocsTocs(slug: string, name: string) {
-  try {
-    const contentPath = getDocsContentPath(slug, name);
-    const { headings } = await getProcessedMdx(contentPath);
-    return headings;
-  } catch (err) {
-    console.error("Error getting docs TOCs:", err);
-    return [];
+  const contentPath = getDocsContentPath(slug, name);
+  const rawMdx = await fs.readFile(contentPath, "utf-8");
+  // captures between ## - #### can modify accordingly
+  const headingsRegex = /^(#{2,4})\s(.+)$/gm;
+  let match;
+  const extractedHeadings = [];
+  while ((match = headingsRegex.exec(rawMdx)) !== null) {
+    const headingLevel = match[1].length;
+    const headingText = match[2].trim();
+    const slug = sluggify(headingText);
+    extractedHeadings.push({
+      level: headingLevel,
+      text: headingText,
+      href: `#${slug}`,
+    });
   }
-}
-
-export async function getDocFrontmatter(path: string, name: string) {
-  try {
-    const contentPath = getDocsContentPath(path, name);
-    const { frontmatter } = await getProcessedMdx(contentPath);
-    return frontmatter;
-  } catch (err) {
-    console.error("Error getting doc frontmatter:", err);
-    return undefined;
-  }
+  return extractedHeadings;
 }
 
 export function getPreviousNext(path: string) {
@@ -214,7 +156,6 @@ export async function validateDocsPath(
     return false;
   }
 }
-
 // for copying the code in pre
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const preProcess = () => (tree: any) => {
@@ -255,8 +196,7 @@ export async function getAllBlogStaticPaths() {
     const res = await fs.readdir(blogFolder);
     return res.map((file) => file.split(".")[0]);
   } catch (err) {
-    console.error("Error getting all blog static paths:", err);
-    return [];
+    console.log(err);
   }
 }
 
@@ -283,27 +223,8 @@ export async function getCompiledBlogForSlug(slug: string) {
   const blogFile = path.join(process.cwd(), "/contents/blogs/", `${slug}.mdx`);
   try {
     const rawMdx = await fs.readFile(blogFile, "utf-8");
-    return await compileMDX<BlogMdxFrontmatter>({
-      source: rawMdx,
-      options: {
-        parseFrontmatter: true,
-        mdxOptions: {
-          rehypePlugins: [
-            preProcess,
-            rehypeCodeTitles,
-            rehypeCodeTitlesWithLogo,
-            rehypePrism,
-            rehypeSlug,
-            rehypeAutolinkHeadings,
-            postProcess,
-          ],
-          remarkPlugins: [remarkGfm],
-        },
-      },
-      components,
-    });
-  } catch (err) {
-    console.error("Error compiling blog for slug:", err);
+    return await parseMdx<BlogMdxFrontmatter>(rawMdx);
+  } catch {
     return undefined;
   }
 }
@@ -313,8 +234,17 @@ export async function getBlogFrontmatter(slug: string) {
   try {
     const rawMdx = await fs.readFile(blogFile, "utf-8");
     return justGetFrontmatterFromMD<BlogMdxFrontmatter>(rawMdx);
-  } catch (err) {
-    console.error("Error getting blog frontmatter:", err);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getDocFrontmatter(path: string, name: string) {
+  try {
+    const contentPath = getDocsContentPath(path, name);
+    const rawMdx = await fs.readFile(contentPath, "utf-8");
+    return justGetFrontmatterFromMD<BlogMdxFrontmatter>(rawMdx);
+  } catch {
     return undefined;
   }
 }
@@ -332,13 +262,16 @@ function rehypeCodeTitlesWithLogo() {
           (child: any) => child.type === "text",
         );
         if (!titleTextNode) return;
+
         // Extract filename and language
         const titleText = titleTextNode.value;
         const match = hasSupportedExtension(titleText);
         if (!match) return;
+
         const splittedNames = titleText.split(".");
         const ext = splittedNames[splittedNames.length - 1];
         const iconClass = `devicon-${getIconName(ext)}-plain text-[17px]`;
+
         // Insert icon before title text
         if (iconClass) {
           node.children.unshift({
