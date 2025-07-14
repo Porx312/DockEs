@@ -1,21 +1,22 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import gsap from "gsap";
-import { technologies } from "@/data/technologies";
-import clsx from "clsx";
-import { useTheme } from "next-themes";
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import gsap from "gsap" // Mantener por ahora, pero considerar carga dinámica si es un problema
+import Image from "next/image" // Importar el componente Image de Next.js
+import { technologies } from "@/data/technologies"
+import clsx from "clsx"
+import { useTheme } from "next-themes"
 
 export default function ChooseTechnology() {
-  const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const itemsRef = useRef<(HTMLDivElement | null)[]>([])
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   // Evitar hidratación mismatch
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (mounted) {
@@ -34,9 +35,9 @@ export default function ChooseTechnology() {
           stagger: 0.15,
           ease: "power4.out",
         },
-      );
+      )
     }
-  }, [mounted]);
+  }, [mounted])
 
   // Mostrar un fallback hasta que el componente esté montado
   if (!mounted) {
@@ -56,6 +57,7 @@ export default function ChooseTechnology() {
                 className="group border border-border rounded-2xl p-6 text-center cursor-pointer bg-card relative opacity-0"
               >
                 <div className="flex flex-col items-center justify-center space-y-4">
+                  {/* Fallback para la imagen con un placeholder animado */}
                   <div className="w-14 h-14 bg-gray-200 rounded animate-pulse" />
                   <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
                   <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
@@ -65,7 +67,7 @@ export default function ChooseTechnology() {
           )}
         </div>
       </section>
-    );
+    )
   }
 
   return (
@@ -82,7 +84,7 @@ export default function ChooseTechnology() {
             <div
               key={tech.slug}
               ref={(el) => {
-                itemsRef.current[index] = el;
+                itemsRef.current[index] = el
               }}
               className={clsx(
                 "group border border-border  rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out bg-card relative",
@@ -98,15 +100,9 @@ export default function ChooseTechnology() {
                 <button className="group absolute -top-5 -right-2">
                   <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-75 blur transition duration-300 group-hover:opacity-100"></div>
                   <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-75 blur transition duration-300 group-hover:opacity-100 animation-delay-200"></div>
-
                   <span className="relative flex items-center gap-3 rounded-lg bg-black px-2 py-2 leading-none">
                     <span className="ml-auto transform transition-transform duration-300 group-hover:scale-125">
-                      <svg
-                        className="h-5 w-5 text-cyan-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
+                      <svg className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -115,7 +111,6 @@ export default function ChooseTechnology() {
                         />
                       </svg>
                     </span>
-
                     <div className="absolute -bottom-2 left-1/2 h-px w-5/6 -translate-x-1/2 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50 blur-sm transition-all duration-300 group-hover:w-full"></div>
                   </span>
                 </button>
@@ -123,38 +118,32 @@ export default function ChooseTechnology() {
 
               {tech.comingSoon ? (
                 <div className="flex flex-col items-center justify-center space-y-4 cursor-not-allowed">
-                  <img
-                    src={
-                      theme === "dark"
-                        ? tech.iconDark
-                        : tech.iconLight || tech.iconDark
-                    }
+                  {/* Usar next/image para optimización */}
+                  <Image
+                    src={theme === "dark" ? tech.iconDark : tech.iconLight || tech.iconDark}
                     alt={tech.name}
+                    width={56} // Define el ancho intrínseco de tus iconos
+                    height={56} // Define el alto intrínseco de tus iconos
                     className="w-14 h-14 object-contain grayscale"
+                    priority={index < 3} // Cargar las primeras 3 imágenes con prioridad
                   />
-                  <h3 className="text-xl font-semibold text-gray-500">
-                    {tech.name}
-                  </h3>
-                  <p className="text-sm text-gray-400 text-balance">
-                    {tech.description}
-                  </p>
+                  <h3 className="text-xl font-semibold text-gray-500">{tech.name}</h3>
+                  <p className="text-sm text-gray-400 text-balance">{tech.description}</p>
                 </div>
               ) : (
                 <Link href={`${tech.slug}`}>
                   <div className="flex  flex-col items-center justify-center space-y-4">
-                    <img
-                      src={
-                        theme === "dark"
-                          ? tech.iconDark
-                          : tech.iconLight || tech.iconDark
-                      }
+                    {/* Usar next/image para optimización */}
+                    <Image
+                      src={theme === "dark" ? tech.iconDark : tech.iconLight || tech.iconDark}
                       alt={tech.name}
+                      width={56} // Define el ancho intrínseco de tus iconos
+                      height={56} // Define el alto intrínseco de tus iconos
                       className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
+                      priority={index < 3} // Cargar las primeras 3 imágenes con prioridad
                     />
                     <h3 className="text-xl font-semibold">{tech.name}</h3>
-                    <p className="text-sm text-muted-foreground text-balance">
-                      {tech.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground text-balance">{tech.description}</p>
                   </div>
                 </Link>
               )}
@@ -163,5 +152,5 @@ export default function ChooseTechnology() {
         )}
       </div>
     </section>
-  );
+  )
 }
