@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import gsap from "gsap"
-import Image from "next/image" // Importar el componente Image de Next.js
-import clsx from "clsx"
-import { useTheme } from "next-themes"
-import { Sparkles } from "lucide-react"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import gsap from "gsap";
+import Image from "next/image"; // Importar el componente Image de Next.js
+import clsx from "clsx";
+import { useTheme } from "next-themes";
+import { Sparkles } from "lucide-react";
 
 // Definir el tipo para cada tecnología (asumiendo que viene de technologies.ts)
 export type Technology = {
-  slug: string
-  name: string
-  description: string
-  iconDark: string
-  iconLight?: string
-  comingSoon?: boolean
-  ispro?: boolean
-}
+  slug: string;
+  name: string;
+  description: string;
+  iconDark: string;
+  iconLight?: string;
+  comingSoon?: boolean;
+  ispro?: boolean;
+};
 
 // El componente ahora acepta 'technologies' como prop
 export default function ChooseTechnologyClient({
   technologies,
 }: {
-  technologies: Technology[]
+  technologies: Technology[];
 }) {
-  const itemsRef = useRef<(HTMLDivElement | null)[]>([])
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // Evitar hidratación mismatch
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (mounted) {
@@ -51,9 +51,9 @@ export default function ChooseTechnologyClient({
           stagger: 0.15,
           ease: "power4.out",
         },
-      )
+      );
     }
-  }, [mounted])
+  }, [mounted]);
 
   // Mostrar un fallback hasta que el componente esté montado
   if (!mounted) {
@@ -83,7 +83,7 @@ export default function ChooseTechnologyClient({
           )}
         </div>
       </section>
-    )
+    );
   }
 
   return (
@@ -100,7 +100,7 @@ export default function ChooseTechnologyClient({
             <div
               key={tech.slug}
               ref={(el) => {
-                itemsRef.current[index] = el
+                itemsRef.current[index] = el;
               }}
               className={clsx(
                 "group border border-border  rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out bg-card relative",
@@ -113,38 +113,50 @@ export default function ChooseTechnologyClient({
                 </span>
               )}
               {tech.ispro && (
-                           <button
-  className="flex absolute -top-2 -right-2 z-10 items-center gap-2 px-4 py-1.5 mr-1 rounded-lg border 
+                <button
+                  className="flex absolute -top-2 -right-2 z-10 items-center gap-2 px-4 py-1.5 mr-1 rounded-lg border 
     border-amber-500/50 hover:border-amber-800/70 
     bg-gradient-to-r from-amber-500/20 to-orange-500/10 
     hover:from-amber-500/20 hover:to-orange-500/20 
     transition-all duration-300"
->
-  <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-500" />
-   <span className="text-sm font-medium text-amber-500 dark:text-amber-300 hover:text-amber-400">
-    Pro
-  </span>
-</button>
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500 dark:text-amber-300 hover:text-amber-400">
+                    Pro
+                  </span>
+                </button>
               )}
 
-              {tech.comingSoon  ? (
+              {tech.comingSoon ? (
                 <div className="flex flex-col items-center justify-center space-y-4 cursor-not-allowed">
                   <Image
-                    src={theme === "dark" ? tech.iconDark : tech.iconLight || tech.iconDark}
+                    src={
+                      theme === "dark"
+                        ? tech.iconDark
+                        : tech.iconLight || tech.iconDark
+                    }
                     alt={tech.name}
                     width={56}
                     height={56}
                     className="w-14 h-14 object-contain grayscale"
                     priority={index < 3}
                   />
-                  <h3 className="text-xl font-semibold text-gray-500">{tech.name}</h3>
-                  <p className="text-sm text-gray-400 text-balance">{tech.description}</p>
+                  <h3 className="text-xl font-semibold text-gray-500">
+                    {tech.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 text-balance">
+                    {tech.description}
+                  </p>
                 </div>
               ) : (
                 <Link href={`${tech.slug}`}>
                   <div className="flex  flex-col items-center justify-center space-y-4">
                     <Image
-                      src={theme === "dark" ? tech.iconDark : tech.iconLight || tech.iconDark}
+                      src={
+                        theme === "dark"
+                          ? tech.iconDark
+                          : tech.iconLight || tech.iconDark
+                      }
                       alt={tech.name}
                       width={56}
                       height={56}
@@ -152,7 +164,9 @@ export default function ChooseTechnologyClient({
                       priority={index < 3}
                     />
                     <h3 className="text-xl font-semibold">{tech.name}</h3>
-                    <p className="text-sm text-muted-foreground text-balance">{tech.description}</p>
+                    <p className="text-sm text-muted-foreground text-balance">
+                      {tech.description}
+                    </p>
                   </div>
                 </Link>
               )}
@@ -161,5 +175,5 @@ export default function ChooseTechnologyClient({
         )}
       </div>
     </section>
-  )
+  );
 }

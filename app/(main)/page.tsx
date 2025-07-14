@@ -10,7 +10,7 @@ export default function Home() {
       <HeroSection />
       <Feature />
       <ShowCaseSection />
-    <Pricing/>
+      <Pricing />
     </div>
   );
 }

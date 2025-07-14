@@ -57,7 +57,7 @@ export function Navbar() {
                 <AtSign className="h-[1.1rem] w-[1.1rem]" />
               </Link>
               <ModeToggle />
-                <ProLink/>
+              <ProLink />
               <HeaderProfileBtn />
             </div>
           </div>
