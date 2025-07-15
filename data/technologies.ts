@@ -7,6 +7,7 @@ export const technologies = [
     iconDark: "/icons/nextjs.svg",
     description:
       "Librería de React para construir interfaces de usuario interactivas.",
+    category: "frontend",
   },
   {
     name: "Zustand",
@@ -14,6 +15,7 @@ export const technologies = [
     iconDark: "/icons/zustand.svg",
     description:
       "Pequeña librería de gestión de estado para aplicaciones React.",
+    category: "state-management",
   },
   {
     name: "Prisma",
@@ -23,6 +25,7 @@ export const technologies = [
     iconDark: "/icons/prismad.svg",
     description:
       "ORM de próxima generación para Node.js y TypeScript con soporte para migraciones.",
+    category: "database",
   },
   {
     name: "TypeScript",
@@ -30,6 +33,7 @@ export const technologies = [
     iconDark: "/icons/TypeScript.png",
     description:
       "Superset de JavaScript que añade tipado estático al lenguaje.",
+    category: "other",
   },
   {
     name: "Node.js",
@@ -38,6 +42,7 @@ export const technologies = [
     iconDark: "/icons/nodejs.png",
     description:
       "Entorno de ejecución para JavaScript en el servidor basado en V8.",
+    category: "backend",
   },
   {
     name: "Express",
@@ -47,6 +52,7 @@ export const technologies = [
     iconLight: "/icons/express.png",
     description:
       "Framework minimalista para construir APIs y servidores con Node.js.",
+    category: "backend",
   },
   {
     name: "React",
@@ -55,6 +61,7 @@ export const technologies = [
     iconDark: "/icons/React.png",
     description:
       "Librería de JavaScript para construir interfaces de usuario reutilizables.",
+    category: "frontend",
   },
   {
     name: "Supabase",
@@ -63,6 +70,7 @@ export const technologies = [
     iconDark: "/icons/supabase.svg",
     description:
       "Plataforma backend como servicio que reemplaza Firebase usando PostgreSQL.",
+    category: "backend",
   },
   {
     name: "PostgreSQL",
@@ -71,6 +79,7 @@ export const technologies = [
     iconDark: "/icons/postgresql.svg",
     description:
       "Sistema de gestión de bases de datos relacional de código abierto.",
+    category: "database",
   },
   {
     name: "MongoDB",
@@ -79,6 +88,7 @@ export const technologies = [
     iconDark: "/icons/mongodb.svg",
     description:
       "Base de datos NoSQL orientada a documentos, altamente escalable y flexible.",
+    category: "database",
   },
   {
     name: "Drizzle ORM",
@@ -86,6 +96,7 @@ export const technologies = [
     slug: "/docs/drizzle/empezando/introduccion",
     iconDark: "/icons/drizzle.svg",
     description: "ORM moderno y tipado para bases de datos SQL en TypeScript.",
+    category: "database",
   },
   {
     name: "Clerk",
@@ -95,8 +106,8 @@ export const technologies = [
     iconLight: "/icons/clerkl.svg",
     description:
       "Plataforma completa de autenticación y gestión de usuarios para aplicaciones modernas.",
+    category: "authentication",
   },
-
   {
     name: "Auth.js",
     comingSoon: true,
@@ -104,6 +115,7 @@ export const technologies = [
     iconDark: "/icons/auth.png",
     description:
       "Solución flexible para autenticación en aplicaciones JavaScript modernas.",
+    category: "authentication",
   },
   {
     name: "JWT",
@@ -112,6 +124,7 @@ export const technologies = [
     iconDark: "/icons/jwt.svg",
     description:
       "Estándar abierto para la transmisión segura de información mediante tokens JSON.",
+    category: "authentication",
   },
   {
     name: "Stripe",
@@ -119,6 +132,7 @@ export const technologies = [
     slug: "/docs/stripe/empezando/introduccion",
     iconDark: "/icons/stripe.svg",
     description: "Plataforma de pagos para aplicaciones web y móviles.",
+    category: "other",
   },
   {
     name: "Socket.IO",
@@ -128,6 +142,7 @@ export const technologies = [
     iconLight: "/icons/socketl.svg",
     description:
       "Librería para aplicaciones web en tiempo real mediante WebSockets.",
+    category: "library",
   },
   {
     name: "NestJS",
@@ -136,5 +151,6 @@ export const technologies = [
     iconDark: "/icons/Nest.js.png",
     description:
       "Framework progresivo para construir aplicaciones backend eficientes y escalables con Node.js.",
+    category: "backend",
   },
 ];
