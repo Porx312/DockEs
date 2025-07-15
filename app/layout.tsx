@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.docsjs.com/", // https://dock-es.vercel.app/
   },
+  icons: {
+  icon: "/logos/favicon.ico", // Usa tu archivo SVG en la carpeta public
+},
+
 };
 
 export default function RootLayout({

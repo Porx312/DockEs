@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import { BookAIcon, AtSign } from "lucide-react";
+import {  AtSign } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
@@ -8,6 +8,7 @@ import { SheetClose } from "@/components/ui/sheet";
 import AlgoliaSearch from "./algolia-search";
 import HeaderProfileBtn from "./clerk/HeaderProfileBtn";
 import BtnNavbar from "./clerk/BtnNavbar";
+import { Logo } from "./Logo";
 
 export const NAVLINKS = [
   {
@@ -66,14 +67,7 @@ export function Navbar() {
   );
 }
 
-export function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-2.5">
-      <BookAIcon className="w-6 h-6 text-muted-foreground" strokeWidth={2} />
-      <h2 className="text-md font-bold font-code">DocsJs</h2>
-    </Link>
-  );
-}
+
 
 export function NavMenu({ isSheet = false }) {
   return (
