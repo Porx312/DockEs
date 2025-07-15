@@ -1,0 +1,104 @@
+---
+title: Ejecutar codigo TypeScript usando transpilacion
+description: Aprende a ejecutar código TypeScript compilándolo a JavaScript usando el compilador oficial tsc. Incluye pasos, ejemplos y manejo de errores de tipo.
+---
+
+La **transpilación** es el proceso de convertir código fuente de un lenguaje a otro. En el caso de TypeScript, significa convertir código TypeScript a JavaScript. Esto es necesario porque los navegadores y Node.js no ejecutan código TypeScript directamente.
+
+## compilar typescript a javascript
+
+La forma más común de ejecutar código TypeScript es **compilándolo previamente a JavaScript**. Para ello usamos el compilador oficial de TypeScript: `tsc`.
+
+### paso 1 escribir tu codigo typescript
+
+Escribe tu código en un archivo, por ejemplo `ejemplo.ts`:
+
+```go:main.js
+type User = {
+  name: string;
+  age: number;
+};
+function isAdult(user: User): boolean {
+  return user.age >= 18;
+}
+const justine = {
+  name: 'Justine',
+  age: 23,
+} satisfies User;
+const isJustineAnAdult = isAdult(justine);
+```
+
+### paso 2 instalar typescript
+
+Instala TypeScript localmente usando un gestor de paquetes. Aquí usamos `npm`:
+
+```go:bash
+npm i -D typescript
+```
+
+> Nota: `-D` es un alias de `--save-dev`
+
+### paso 3 compilar tu codigo
+
+Utiliza el comando `tsc` para compilar tu archivo `.ts`:
+
+```go:bash
+npx tsc ejemplo.ts
+```
+
+> `npx` te permite ejecutar paquetes sin instalarlos globalmente.
+> `tsc` es el compilador TypeScript y generará un archivo `ejemplo.js`.
+
+### paso 4 ejecutar tu codigo javascript
+
+Una vez compilado, ejecuta el archivo `.js` con Node.js:
+
+```go:bash
+node ejemplo.js
+```
+
+Verás la salida de tu programa en la terminal.
+
+## si hay errores de tipo
+
+Si tu código contiene errores de tipo, el compilador de TypeScript los detectará **antes de ejecutar el programa**.
+
+Vamos a modificar el ejemplo para provocar un error de tipo:
+
+```go:main.js
+type User = {
+  name: string;
+  age: number;
+};
+function isAdult(user: User): boolean {
+  return user.age >= 18;
+}
+const justine: User = {
+  name: 'Justine',
+  age: 'Secret!',
+};
+const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
+```
+
+Y TypeScript mostrará errores como estos:
+
+```go:bash
+example.ts:12:5 - error TS2322: Type 'string' is not assignable to type 'number'.
+12     age: 'Secret!',
+       ~~~
+  example.ts:3:5
+    3     age: number;
+          ~~~
+
+example.ts:15:7 - error TS2322: Type 'boolean' is not assignable to type 'string'.
+15 const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
+         ~~~~~~~~~~~~~~~~
+
+example.ts:15:51 - error TS2554: Expected 1 arguments, but got 2.
+15 const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
+                                                     ~~~~~~~~~~~~~~~~~~~~~~
+
+Found 3 errors in the same file, starting at: example.ts:12
+```
+
+Como puedes ver, TypeScript es muy útil para **prevenir errores antes de ejecutar el código**. Esta es una de las principales razones por las que tantos desarrolladores eligen TypeScript.

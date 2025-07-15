@@ -1,0 +1,244 @@
+---
+title: Seguridad en Node.js - Mejores Practicas para Proteger Aplicaciones
+
+description: Descubre las mejores practicas de seguridad para Node.js, incluyendo mitigaciones para ataques como DoS, DNS rebinding y prototype pollution.
+
+href: /seguridad-nodejs
+
+subtitle: Seguridad en Node.js
+---
+
+La seguridad es fundamental para cualquier aplicación Node.js, especialmente en producción. Este artículo detalla las mejores prácticas de seguridad específicas para Node.js, explica ataques comunes con ejemplos prácticos y ofrece estrategias para mitigar riesgos, desde denegación de servicio hasta ataques de cadena de suministro. Basado en el modelo de amenazas de Node.js y las recomendaciones de [OpenSSF](https://openssf.org/), esta guía te ayudará a proteger tus aplicaciones.
+
+## Mejores practicas de seguridad
+
+1. **Usa reverse proxies**: Implementa proxies como [NGINX](https://www.nginx.com/) para caching, balanceo de carga y filtrado de solicitudes maliciosas.
+2. **Configura timeouts**: Ajusta `headersTimeout`, `requestTimeout` y `keepAliveTimeout` en `http.Server` para cerrar conexiones lentas.
+3. **Limita sockets**: Configura `agent.maxSockets` y `server.maxRequestsPerSocket` para prevenir saturación.
+4. **Desactiva el inspector en producción**: Evita el uso de `--inspect` para prevenir DNS rebinding.
+5. **Valida paquetes npm**: Usa `npm publish --dry-run` y archivos `.npmignore` para evitar publicar datos sensibles.
+6. **Usa algoritmos seguros**: Emplea `crypto.timingSafeEqual` para comparaciones de contraseñas.
+7. **Fija dependencias**: Usa `package-lock.json` y `npm ci` para evitar actualizaciones no deseadas.
+8. **Usa Object.create(null)**: Crea objetos sin prototipo para prevenir prototype pollution.
+9. **Habilita --secure-heap**: Limita vulnerabilidades de memoria en entornos no compartidos.
+10. **Evita monkey patching**: Usa `--frozen-intrinsics` y `Object.freeze(globalThis)` para proteger objetos globales.
+
+## Ataques explicados
+
+### Denegacion de servicio (CWE-400)
+
+Los ataques de denegación de servicio (DoS) buscan hacer que una aplicación Node.js sea inaccesible. Un ejemplo común es **Slowloris**, donde solicitudes HTTP fragmentadas se envían lentamente, agotando los recursos del servidor.
+
+**Ejemplo vulnerable**:
+
+```javascript
+import net from "node:net";
+
+const server = net.createServer((socket) => {
+  socket.write("Echo server\r\n");
+  socket.pipe(socket);
+});
+server.listen(5000, "0.0.0.0");
+```
+
+Sin un manejador de errores, un socket malicioso puede colapsar el servidor. **Mitigación**:
+
+```javascript
+import net from "node:net";
+
+const server = net.createServer((socket) => {
+  socket.on("error", (err) => console.error("Socket error:", err));
+  socket.write("Echo server\r\n");
+  socket.pipe(socket);
+});
+server.listen(5000, "0.0.0.0");
+```
+
+**Mitigaciones adicionales**:
+
+- Usa un reverse proxy como NGINX para filtrar solicitudes.
+- Configura `server.setTimeout(10000)` para cerrar conexiones inactivas.
+- Limita sockets con `agent.maxSockets`.
+
+### DNS Rebinding (CWE-346)
+
+Este ataque explota el inspector de depuración (`--inspect`) para ejecutar código arbitrario. Un atacante puede usar DNS rebinding para hacer que solicitudes parezcan originarse localmente, sorteando la política de mismo origen.
+
+**Mitigaciones**:
+
+- Desactiva el inspector en producción: `process.on('SIGUSR1', () => {})`.
+- Usa túneles SSH para depuración remota en lugar de exponer puertos.
+
+### Exposicion de informacion sensible (CWE-552)
+
+Publicar un paquete npm puede exponer archivos sensibles si no se configuran correctamente.
+
+**Ejemplo**:
+
+```bash
+npm publish
+```
+
+**Mitigaciones**:
+
+- Usa `npm publish --dry-run` para revisar archivos antes de publicar.
+- Configura `.npmignore`:
+
+```
+node_modules/
+.env
+secrets/
+```
+
+- Define una lista permitida en `package.json`:
+
+```json
+{
+  "files": ["index.js", "lib/"]
+}
+```
+
+### HTTP Request Smuggling (CWE-444)
+
+Este ataque ocurre cuando un proxy y un servidor Node.js interpretan solicitudes HTTP ambiguas de manera diferente, permitiendo que un atacante "infiltre" datos maliciosos.
+
+**Mitigaciones**:
+
+- Desactiva `insecureHTTPParser` en `http.Server`.
+- Usa HTTP/2 y desactiva el downgrading a HTTP/1.1.
+- Normaliza solicitudes en el proxy (por ejemplo, NGINX).
+
+### Ataques de tiempo (CWE-208)
+
+Los ataques de tiempo revelan información sensible al medir el tiempo de respuesta. Por ejemplo, una comparación de contraseñas insegura:
+
+```javascript
+if (password === storedPassword) {
+  // Acceso concedido
+}
+```
+
+**Mitigación**:
+
+Usa `crypto.timingSafeEqual` para comparaciones de tiempo constante:
+
+```javascript
+import crypto from "crypto";
+
+const storedHash = Buffer.from(storedPassword);
+const inputHash = Buffer.from(inputPassword);
+if (crypto.timingSafeEqual(storedHash, inputHash)) {
+  // Acceso concedido
+}
+```
+
+### Modulos de terceros maliciosos (CWE-1357)
+
+Los paquetes npm pueden acceder a recursos como la red y el sistema de archivos, lo que los hace vulnerables a ataques como typosquatting o lockfile poisoning.
+
+**Ejemplo**:
+
+```json
+{
+  "dependencies": {
+    "expresss": "^4.17.1" // Error tipográfico (typosquatting)
+  }
+}
+```
+
+**Mitigaciones**:
+
+- Usa `npm ci` para respetar `package-lock.json`.
+- Fija versiones exactas:
+
+```json
+{
+  "dependencies": {
+    "express": "4.17.1"
+  }
+}
+```
+
+- Ejecuta `npm audit` para detectar vulnerabilidades.
+- Usa herramientas como [Socket](https://socket.dev/) para análisis estático.
+- Desactiva scripts de paquetes: `npm install --ignore-scripts`.
+
+### Ataques de memoria (CWE-284)
+
+En entornos compartidos, errores de gestión de memoria pueden exponer datos sensibles.
+
+**Mitigaciones**:
+
+- Usa `--secure-heap=524288` (512 KB) para limitar el heap.
+- Evita ejecutar aplicaciones en máquinas compartidas.
+
+### Monkey Patching (CWE-349)
+
+Modificar propiedades en tiempo de ejecución puede alterar el comportamiento esperado:
+
+```javascript
+Array.prototype.push = function () {
+  // Comportamiento malicioso
+};
+```
+
+**Mitigación**:
+
+Usa `--frozen-intrinsics` y congela globales:
+
+```javascript
+Object.freeze(globalThis);
+```
+
+### Prototype Pollution (CWE-1321)
+
+Modificar prototipos puede causar vulnerabilidades:
+
+```javascript
+const data = JSON.parse('{"__proto__": {"polluted": true}}');
+const obj = Object.assign({}, data);
+console.log(obj.polluted); // true
+```
+
+**Mitigaciones**:
+
+- Usa `Object.create(null)` para objetos sin prototipo.
+- Habilita `--disable-proto`.
+- Valida entradas con JSON Schema.
+
+### Elemento de ruta de busqueda no controlado (CWE-427)
+
+Node.js puede cargar módulos incorrectos si el directorio no está bien configurado:
+
+```javascript
+require("./auth"); // Carga "auth" en lugar de "auth.js"
+```
+
+**Mitigación**:
+
+Usa el mecanismo de políticas experimental:
+
+```json
+{
+  "resources": {
+    "./app/auth.js": {
+      "integrity": "sha256-iuGZ6SFVFpMuHUcJciQTIKpIyaQVigMZlvg9Lx66HV8="
+    }
+  }
+}
+```
+
+Ejecuta con:
+
+```bash
+node --experimental-policy=policy.json --policy-integrity=sha256-XYZ app.js
+```
+
+## Herramientas OpenSSF
+
+- **OpenSSF Scorecard**: Evalúa riesgos de seguridad en proyectos de código abierto. Úsalo para analizar dependencias ([Scorecard](https://securityscorecards.dev/)).
+- **OpenSSF Best Practices Badge**: Certifica proyectos que cumplen con prácticas de seguridad ([Best Practices](https://bestpractices.coreinfrastructure.org/)).
+
+## Conclusion
+
+Proteger aplicaciones Node.js requiere un enfoque proactivo, desde configurar servidores y manejar dependencias hasta prevenir ataques como DoS y prototype pollution. Siguiendo estas mejores prácticas y usando herramientas como [npm audit](https://docs.npmjs.com/cli/v10/commands/npm-audit) y [OpenSSF Scorecard](https://securityscorecards.dev/), puedes construir aplicaciones seguras y robustas. ¡Empieza a implementar estas estrategias hoy y consulta recursos como la [documentación de Node.js](https://nodejs.org/en/docs/) y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript) para más información!

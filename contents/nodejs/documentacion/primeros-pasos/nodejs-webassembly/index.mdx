@@ -1,0 +1,71 @@
+---
+title: Node.js con WebAssembly - Guia Practica para Desarrolladores
+description: Aprende a usar WebAssembly con Node.js, desde la creacion de modulos .wasm hasta su integracion para aplicaciones de alto rendimiento.
+---
+
+WebAssembly (Wasm) es un lenguaje de bajo nivel similar al ensamblador que permite ejecutar código de alto rendimiento en navegadores y Node.js. Compilado desde lenguajes como C, C++, Rust o AssemblyScript, WebAssembly es compatible con Chrome, Firefox, Safari, Edge y Node.js. En esta guía, exploraremos cómo usar WebAssembly con Node.js, desde la generación de módulos hasta su integración en aplicaciones, con ejemplos prácticos y recursos útiles para desarrolladores.
+
+## Que es WebAssembly
+
+WebAssembly es un formato binario diseñado para ejecutar código de manera eficiente y segura en múltiples plataformas. Se presenta en dos formatos:
+
+- **Módulo WebAssembly (.wasm)**: Un archivo binario compilado, listo para ejecutarse.
+- **Formato de texto WebAssembly (.wat)**: Una representación textual del código, útil para escritura manual o depuración.
+
+WebAssembly es ideal para tareas que requieren alto rendimiento, como cálculos intensivos o aplicaciones gráficas, y se integra perfectamente con JavaScript en Node.js a través del objeto global `WebAssembly`.
+
+## Conceptos clave de WebAssembly
+
+Para trabajar con WebAssembly en Node.js, es importante entender los siguientes conceptos:
+
+- **Módulo**: Un archivo `.wasm` compilado que contiene el código ejecutable.
+- **Memoria**: Un `ArrayBuffer` redimensionable que almacena datos accesibles desde JavaScript y WebAssembly.
+- **Tabla**: Un arreglo tipado redimensionable que contiene referencias, no almacenadas en la memoria.
+- **Instancia**: Una instancia de un módulo que incluye su memoria, tabla y variables.
+
+Node.js proporciona APIs para interactuar con WebAssembly a través del objeto `WebAssembly`, que incluye métodos como:
+
+```go:js
+console.log(WebAssembly);
+// Object [WebAssembly] {
+//   compile: [Function: compile],
+//   validate: [Function: validate],
+//   instantiate: [Function: instantiate]
+// }
+```
+
+## Como generar modulos WebAssembly
+
+Existen varias formas de generar módulos WebAssembly (`.wasm`):
+
+1. **Escribir WebAssembly manualmente**: Usa el formato texto `.wat` y conviértelo a binario con herramientas como [wabt](https://github.com/WebAssembly/wabt).
+2. **Usar Emscripten**: Compila aplicaciones C/C++ a WebAssembly con [Emscripten](https://emscripten.org/).
+3. **Usar wasm-pack**.
+
+```go:js
+import { parse } from 'graphql';
+const schema = parse(`
+  type Query {
+    hello: String
+  }
+`);
+console.log(schema);
+```
+
+Este código usa la biblioteca `graphql` para analizar un esquema GraphQL simple.
+
+### Usar WebAssembly con GraphQL
+
+Puedes combinar WebAssembly con GraphQL para tareas de alto rendimiento, como validación de esquemas o procesamiento de consultas. Por ejemplo, usa una biblioteca compilada a WebAssembly para optimizar el análisis de esquemas grandes.
+
+## Como empezar con WebAssembly en Node.js
+
+1. **Instala Node.js**: Descarga la versión LTS desde [nodejs.org](https://nodejs.org/).
+2. **Genera un módulo WebAssembly**: Usa herramientas como Emscripten, wasm-pack o AssemblyScript.
+3. **Integra con Node.js**: Usa el objeto `WebAssembly` para cargar e instanciar módulos, como en el ejemplo anterior.
+4. **Explora WASI**: Usa [Wasmtime](https://wasmtime.dev/) para acceder a funcionalidades del sistema operativo.
+5. **Consulta recursos**: Revisa la [documentación de WebAssembly](https://webassembly.org/), [MDN Web Docs](https://developer.mozilla.org/es/docs/WebAssembly) o la [documentación de Node.js](https://nodejs.org/en/docs/).
+
+## Conclusion
+
+WebAssembly abre nuevas posibilidades para aplicaciones de alto rendimiento en Node.js, permitiendo integrar código compilado desde lenguajes como C, C++ o Rust. Con el soporte nativo de Node.js para WebAssembly y herramientas como Emscripten, wasm-pack y Wasmtime, puedes crear aplicaciones rápidas y eficientes. ¡Empieza a experimentar con WebAssembly en Node.js hoy y lleva tus proyectos al siguiente nivel con la potencia de este tecnología!

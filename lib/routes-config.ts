@@ -2,6 +2,7 @@ import path from "path"; // Importar el módulo 'path' para la manipulación de 
 // Importar las rutas específicas de cada tecnología
 import {
   NEXTJS_ROUTES,
+  NODEJS_ROUTES,
   PRISMA_ROUTES,
   TS_ROUTES,
   ZUSTAND_ROUTES,
@@ -25,6 +26,7 @@ export const ROUTES: EachRoute[] = [
   ...(Array.isArray(NEXTJS_ROUTES) ? NEXTJS_ROUTES : [NEXTJS_ROUTES]),
   ...(Array.isArray(PRISMA_ROUTES) ? PRISMA_ROUTES : [PRISMA_ROUTES]),
   ...(Array.isArray(TS_ROUTES) ? TS_ROUTES : [TS_ROUTES]),
+  ...(Array.isArray(NODEJS_ROUTES) ? NODEJS_ROUTES : [NODEJS_ROUTES]),
 ];
 
 // Tipo para las páginas finales aplanadas

@@ -1,0 +1,222 @@
+---
+title: Publicar un paquete de TypeScript
+description: Aprende cómo preparar y publicar un paquete de TypeScript en npm, incluyendo generación de tipos, estructura de carpetas y configuración de CI.
+---
+
+Este artículo cubre **cómo publicar un paquete de TypeScript**, es decir, distribuirlo a través de un gestor de paquetes como `npm`. **No trata sobre compilar una aplicación para producción**, como un servidor o una PWA.
+
+> Nota: Todo lo explicado en [publicar un paquete JavaScript](publicar-paquete) también aplica aquí.
+
+---
+
+## consideraciones especificas de typescript
+
+### main apunta a javascript
+
+Cuando tu código TypeScript se transpila a JavaScript, lo que se publica es el JavaScript. Por lo tanto:
+
+```json
+"main": "main.js" // no main.ts
+```
+
+### los scripts usan extensiones de source
+
+Los scripts en `package.json`, como `test`, se refieren al código fuente y sí usan `.ts`:
+
+```json
+"scripts": {
+  "test": "node --test './src/**/*.test.ts'"
+}
+```
+
+### node stripea solo fuera de node modules
+
+Desde Node.js 23.6.0, se eliminan tipos (type stripping) automáticamente gracias a Amaro. Sin embargo:
+
+- Esto **no** se hace dentro de `node_modules`
+- Por eso **no se recomienda publicar TypeScript sin transpilar**
+
+### configura-erasableSyntaxOnly
+
+Para evitar que queden restos de sintaxis TypeScript que Node no entienda, activa esta opción en tu `tsconfig.json` (v5.8+):
+
+```json
+{
+  "compilerOptions": {
+    "erasableSyntaxOnly": true
+  }
+}
+```
+
+---
+
+## estructura de proyecto
+
+### repositorio
+
+```go:text
+example-ts-pkg/
+├ .github/
+│ ├ workflows/
+│ │ ├ ci.yml
+│ │ └ publish.yml
+│ └ dependabot.yml
+├ src/
+│ ├ foo.fixture.js
+│ ├ main.ts
+│ ├ main.test.ts
+│ ├ some-util.ts
+│ └ some-util.test.ts
+├ LICENSE
+├ package.json
+├ README.md
+└ tsconfig.json
+```
+
+### paquete publicado
+
+```go:text
+example-ts-pkg/
+├ LICENSE
+├ main.d.ts
+├ main.d.ts.map
+├ main.js
+├ package.json
+├ README.md
+├ some-util.d.ts
+├ some-util.d.ts.map
+└ some-util.js
+```
+
+---
+
+## donde poner los tests
+
+Hay tres patrones comunes:
+
+- **Archivos juntos**: tests y código en la misma carpeta.
+- **Juntos pero separados**: tests en `__tests__/` o `.test.ts` junto al código.
+- **Separados**: estructura `src/` y `test/` paralelas.
+
+---
+
+## trata los tipos como tests
+
+El propósito de los tipos es advertir sobre código incorrecto, igual que un test unitario:
+
+```ts
+const foo = "a";
+const bar: number = 1 + foo;
+//       ^^^ Error: Type 'string' is not assignable to type 'number'.
+```
+
+Ambos son complementarios: tipos detectan errores de forma y tests de comportamiento.
+
+---
+
+## validacion de tipos en ci
+
+Crea una acción de GitHub para validar los tipos automáticamente:
+
+```yaml:.github/workflows/ci.yml
+name: Tests
+on:
+  pull_request:
+    branches: ['*']
+jobs:
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: node --run types:check
+  get-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.set-matrix.outputs.requireds }}
+    steps:
+      - uses: ljharb/actions/node/matrix@main
+        id: set-matrix
+        with:
+          versionsAsRoot: true
+          type: majors
+          preset: '>= 22'
+  test:
+    needs: [get-matrix]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.get-matrix.outputs.latest) }}
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: node --run test
+```
+
+> ⚠️ Los archivos de test pueden usar un `tsconfig.json` separado.
+
+---
+
+## generar declaraciones de tipo
+
+Para que tu paquete JavaScript conserve los tipos:
+
+- Genera archivos `.d.ts` justo antes de publicar
+- **No los incluyas en Git**
+
+```yaml:.github/workflows/publish.yml
+name: Publish to npm
+on:
+  push:
+    tags:
+      - '**@*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      # - run: npm run build && npm publish
+```
+
+### publica solo lo necesario
+
+Para evitar publicar archivos innecesarios:
+
+- Usa `.npmignore` con una excepción para los `.d.ts`
+- O define `"files"` en `package.json` para incluir explícitamente
+
+```text:.npmignore
+src/
+test/
+*.test.ts
+!*.d.ts
+```
+
+---
+
+## conclusiones
+
+- Publica **JavaScript transpileado**, no TypeScript crudo.
+- Genera archivos `.d.ts` justo antes de `npm publish`.
+- Valida tus tipos como si fueran tests.
+- Excluye archivos innecesarios del paquete publicado.
+
+En el siguiente artículo veremos cómo **ejecutar `npm publish` de forma segura y automática**, incluyendo `prepack`, versiones y etiquetado.

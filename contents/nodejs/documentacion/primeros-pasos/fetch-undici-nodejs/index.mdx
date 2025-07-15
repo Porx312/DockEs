@@ -1,0 +1,191 @@
+---
+title: API Fetch con Undici en Node.js - Guia Practica para Desarrolladores
+
+description: Aprende a usar la API Fetch con Undici en Node.js para realizar solicitudes HTTP de alto rendimiento, con ejemplos de GET, POST y streaming.
+
+href: /fetch-undici-nodejs
+
+subtitle: Fetch con Undici
+---
+
+Undici es una librería cliente HTTP de alto rendimiento que potencia la API Fetch en Node.js. Diseñada desde cero, no depende del cliente HTTP nativo de Node.js y ofrece características avanzadas para aplicaciones escalables. Esta guía te muestra cómo usar la API Fetch con Undici, desde solicitudes básicas GET y POST hasta streaming y configuraciones avanzadas, con ejemplos prácticos para desarrolladores.
+
+## Que es Undici
+
+Undici es un cliente HTTP moderno para Node.js que implementa la API Fetch, similar a la disponible en navegadores. Es rápido, eficiente y compatible con características avanzadas como conexión pooling y streaming. A diferencia de otros clientes HTTP, Undici está optimizado para aplicaciones de alto rendimiento y se integra perfectamente con el ecosistema de Node.js. Para detalles sobre su conformidad con las especificaciones, consulta la [documentación de Undici](https://undici.nodejs.org/).
+
+## Uso basico de GET
+
+La API Fetch con Undici es fácil de usar para solicitudes GET, similar a su contraparte en navegadores. Aquí tienes un ejemplo que obtiene datos de una API pública:
+
+```javascript
+async function main() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const data = await response.json();
+  console.log(data);
+}
+main().catch(console.error);
+```
+
+Este código realiza una solicitud GET a una API de prueba y muestra los resultados en formato JSON. La salida será algo como:
+
+```go:json
+[
+  {
+    userId: 1,
+    id: 1,
+    title: "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+    body: "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+  },
+  ...
+]
+```
+
+## Uso basico de POST
+
+Para enviar datos al servidor, usa el método POST con un cuerpo JSON. Aquí tienes un ejemplo:
+
+```javascript
+const body = {
+  title: "foo",
+  body: "bar",
+  userId: 1,
+};
+
+async function main() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    headers: {
+      "User-Agent": "undici-stream-example",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  console.log(data);
+}
+main().catch(console.error);
+```
+
+Este código envía un objeto JSON y recibe una respuesta como:
+
+```go:json
+{ title: 'foo', body: 'bar', userId: 1, id: 101 }
+```
+
+## Personalizar la API Fetch con Undici
+
+Undici permite personalizar solicitudes mediante un objeto de opciones en la función `fetch`. Puedes configurar métodos, encabezados y cuerpos de solicitud. Por ejemplo, aquí se muestra cómo interactuar con la API de [Ollama](https://ollama.com/), una herramienta CLI para ejecutar modelos de lenguaje grandes (LLM) localmente.
+
+Primero, instala y ejecuta Ollama:
+
+```go:bash
+ollama run mistral
+```
+
+Luego, usa un pool de conexiones para mejorar el rendimiento:
+
+```javascript
+import { Pool } from "undici";
+
+const ollamaPool = new Pool("http://localhost:11434", {
+  connections: 10,
+});
+
+async function streamOllamaCompletion(prompt) {
+  const { statusCode, body } = await ollamaPool.request({
+    path: "/api/generate",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt: prompt, model: "mistral" }),
+  });
+
+  if (statusCode !== 200) {
+    throw new Error(`Ollama request failed with status ${statusCode}`);
+  }
+
+  let partial = "";
+  const decoder = new TextDecoder();
+  for await (const chunk of body) {
+    partial += decoder.decode(chunk, { stream: true });
+    console.log(partial);
+  }
+  console.log("Streaming complete.");
+}
+
+try {
+  await streamOllamaCompletion("What is recursion?");
+} catch (error) {
+  console.error("Error calling Ollama:", error);
+} finally {
+  console.log("Closing Ollama pool.");
+  await ollamaPool.close();
+}
+```
+
+Este ejemplo usa un pool de conexiones para reutilizar conexiones al servidor de Ollama, mejorando la eficiencia. Consulta la [documentación de la API de Ollama](https://github.com/ollama/ollama/blob/main/docs/api.md) para más detalles.
+
+## Streaming de respuestas con Undici
+
+Undici soporta streaming, ideal para manejar grandes cantidades de datos de forma eficiente. Aquí tienes un ejemplo que obtiene repositorios de GitHub y procesa la respuesta como un stream:
+
+```javascript
+import { Writable } from "stream";
+import { stream } from "undici";
+
+async function fetchGitHubRepos() {
+  const url = "https://api.github.com/users/nodejs/repos";
+  const { statusCode } = await stream(
+    url,
+    {
+      method: "GET",
+      headers: {
+        "User-Agent": "undici-stream-example",
+        Accept: "application/json",
+      },
+    },
+    () => {
+      let buffer = "";
+      return new Writable({
+        write(chunk, encoding, callback) {
+          buffer += chunk.toString();
+          try {
+            const json = JSON.parse(buffer);
+            console.log(
+              "Repository Names:",
+              json.map((repo) => repo.name),
+            );
+            buffer = "";
+          } catch (error) {
+            console.error("Error parsing JSON:", error);
+          }
+          callback();
+        },
+        final(callback) {
+          console.log("Stream processing completed.");
+          callback();
+        },
+      });
+    },
+  );
+  console.log(`Response status: ${statusCode}`);
+}
+
+fetchGitHubRepos().catch(console.error);
+```
+
+Este código procesa la respuesta en fragmentos, reduciendo el uso de memoria para datos grandes.
+
+## Mejores practicas para usar Undici
+
+1. **Usa pools de conexiones**: Mejora el rendimiento en aplicaciones con múltiples solicitudes al mismo servidor.
+2. **Maneja errores**: Usa bloques try-catch para gestionar fallos en las solicitudes.
+3. **Optimiza headers**: Incluye encabezados como `User-Agent` y `Content-Type` para cumplir con los requisitos de las APIs.
+4. **Aprovecha streaming**: Usa streaming para datos grandes o respuestas en tiempo real.
+5. **Consulta recursos**: Revisa la [documentación de Undici](https://undici.nodejs.org/), [Node.js](https://nodejs.org/en/docs/) y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/API/Fetch_API) para más detalles.
+
+## Conclusion
+
+Undici potencia la API Fetch en Node.js, ofreciendo una solución eficiente y moderna para solicitudes HTTP. Desde solicitudes GET y POST hasta streaming y pools de conexiones, Undici es ideal para aplicaciones de alto rendimiento. ¡Empieza a usar Undici en tus proyectos Node.js y explora su documentación y recursos como [Express.js](https://expressjs.com/) para construir aplicaciones robustas!

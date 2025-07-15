@@ -1,0 +1,156 @@
+---
+title: Depuracion en Node.js - Guia Completa para Desarrolladores
+description: Aprende a depurar aplicaciones Node.js con el Inspector, Chrome DevTools, Visual Studio Code y otros clientes, incluyendo configuraciones seguras.
+---
+
+La depuración es una habilidad esencial para cualquier desarrollador de Node.js. Ya sea que estés trabajando en aplicaciones locales o en producción, Node.js ofrece herramientas potentes para identificar y solucionar errores. Esta guía te ayudará a comenzar con la depuración en Node.js, desde el uso del Inspector hasta la integración con herramientas como Chrome DevTools y Visual Studio Code, con un enfoque en configuraciones seguras y mejores prácticas.
+
+## Habilitar el Inspector de Node.js
+
+El Inspector de Node.js permite depurar aplicaciones escuchando conexiones de clientes de depuración. Para activarlo, inicia tu aplicación con el flag `--inspect`:
+
+```go:bash
+node --inspect app.js
+```
+
+Por defecto, Node.js escucha en `127.0.0.1:9229` y asigna un UUID único a cada proceso. El cliente de depuración debe conocer la dirección, el puerto y el UUID para conectarse. Un ejemplo de URL completa sería:
+
+```
+ws://127.0.0.1:9229/0f2c936f-b1cd-4ac9-aab3-f63b0f33d55e
+```
+
+También puedes activar el Inspector enviando una señal `SIGUSR1` al proceso (no disponible en Windows). En Node.js 7 y anteriores, esto activa el antiguo Debugger API. Desde Node.js 8, usa el moderno Inspector API.
+
+### Opciones de linea de comandos
+
+Node.js ofrece varios flags para configurar la depuración:
+
+| Flag                    | Descripción                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `--inspect`             | Habilita el Inspector en `127.0.0.1:9229`.                                    |
+| `--inspect=[host:port]` | Especifica host y puerto (por ejemplo, `--inspect=0.0.0.0:9229`).             |
+| `--inspect-brk`         | Habilita el Inspector y pausa antes de ejecutar el código del usuario.        |
+| `--inspect-wait`        | Habilita el Inspector y espera a que un cliente se conecte antes de ejecutar. |
+
+Por ejemplo:
+
+```go:bash
+node --inspect-brk app.js
+```
+
+## Implicaciones de seguridad
+
+El Inspector tiene acceso completo al entorno de ejecución de Node.js, lo que plantea riesgos de seguridad si no se configura correctamente.
+
+### Peligros de exponer el puerto de depuracion
+
+Exponer el puerto de depuración (`9229`) a una IP pública o a `0.0.0.0` permite que cualquier cliente se conecte y ejecute código arbitrario, lo que representa un riesgo significativo. Por defecto, `--inspect` se vincula a `127.0.0.1` para limitar el acceso a conexiones locales. Si necesitas depuración remota, usa túneles SSH para mayor seguridad.
+
+### Acceso local al Inspector
+
+Las aplicaciones locales tienen acceso sin restricciones al Inspector cuando está vinculado a `127.0.0.1`. Esto es intencional para facilitar la depuración, pero asegúrate de que las aplicaciones locales sean confiables.
+
+### Politica de mismo origen
+
+Los navegadores aplican la política de mismo origen, lo que impide que sitios web se conecten directamente al Inspector mediante WebSocket. Node.js valida los encabezados `Host` para prevenir ataques de DNS rebinding, aceptando solo direcciones IP o `localhost`.
+
+## Clientes de depuracion
+
+Node.js soporta varios clientes de depuración, desde herramientas CLI hasta entornos integrados como Visual Studio Code.
+
+### Depurador CLI
+
+Node.js incluye un depurador CLI básico. Inicia tu script con:
+
+```go:bash
+node inspect app.js
+```
+
+Esto ejecuta el script bajo `--inspect` y conecta un cliente CLI en el proceso principal.
+
+### Chrome DevTools
+
+Conecta Chrome DevTools a Node.js:
+
+1. Abre `chrome://inspect` en Chrome o `edge://inspect` en Edge.
+2. Haz clic en "Configure" y añade `127.0.0.1:9229`.
+3. Selecciona tu proceso Node.js para empezar a depurar.
+
+Alternativamente, usa la URL `devtoolsFrontendUrl` proporcionada por:
+
+```go:bash
+curl http://127.0.0.1:9229/json/list
+```
+
+Más información en [Chrome DevTools](https://developer.chrome.com/docs/devtools/).
+
+### Visual Studio Code
+
+En VS Code:
+
+1. Abre el panel de depuración.
+2. Crea un archivo `.vscode/launch.json` con la configuración "Node.js".
+3. Inicia la depuración con F5.
+
+Más detalles en [VS Code](https://code.visualstudio.com/docs/nodejs/nodejs-debugging).
+
+### Otros clientes
+
+- **JetBrains WebStorm**: Crea una configuración de depuración Node.js y ejecuta con "Debug". Más en [WebStorm](https://www.jetbrains.com/help/webstorm/run-debug-configuration-node-js.html).
+- **chrome-remote-interface**: Biblioteca para conectar al Inspector Protocol. Ver [chrome-remote-interface](https://github.com/cyrus-and/chrome-remote-interface).
+- **Gitpod**: Inicia la depuración desde la vista de depuración. Más en [Gitpod](https://www.gitpod.io/docs/configure/debugging).
+- **Eclipse IDE**: Usa la extensión Wild Web Developer para depurar. Más en [Eclipse](https://www.eclipse.org/eclipseide/).
+
+## Depuracion remota segura
+
+Para depurar un proceso Node.js en una máquina remota (`remote.example.com`), sigue estos pasos:
+
+1. Inicia el proceso con:
+
+```go:bash
+node --inspect server.js
+```
+
+2. En tu máquina local, crea un túnel SSH:
+
+```go:bash
+ssh -L 9221:localhost:9229 user@remote.example.com
+```
+
+3. Conecta un cliente (como Chrome DevTools) a `localhost:9221`.
+
+Esto asegura que las conexiones sean seguras y no expongan el puerto de depuración públicamente.
+
+## Depurador antiguo
+
+El depurador antiguo, usado con `--debug` o `--debug-brk` en Node.js 7 y anteriores, está obsoleto. Usa `--inspect` y el Inspector moderno en su lugar.
+
+## Ejemplo practico
+
+Crea un archivo `app.js`:
+
+```javascript
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  const mensaje = "¡Hola desde Node.js!";
+  res.send(mensaje);
+});
+
+app.listen(3000, () => {
+  console.log("Servidor en http://localhost:3000");
+});
+```
+
+Inicia con depuración:
+
+```go:bash
+node --inspect-brk app.js
+```
+
+Abre Chrome, accede a `chrome://inspect`, y establece puntos de interrupción para inspeccionar el código.
+
+## Conclusion
+
+La depuración en Node.js es sencilla y potente gracias al Inspector y clientes como Chrome DevTools, Visual Studio Code y WebStorm. Configura el Inspector con `--inspect`, protege tu entorno con túneles SSH para depuración remota y evita exponer puertos públicos. Con herramientas modernas y prácticas seguras, puedes identificar y solucionar errores rápidamente. ¡Empieza a depurar tus aplicaciones Node.js hoy y explora recursos como la [documentación de Node.js](https://nodejs.org/en/docs/) o [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript)!

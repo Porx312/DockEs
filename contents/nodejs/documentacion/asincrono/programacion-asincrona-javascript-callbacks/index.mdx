@@ -1,0 +1,135 @@
+---
+title: Programacion asincrona en JavaScript y uso de callbacks
+description: Aprende como funciona la asincronía en JavaScript, el uso de callbacks, y por qué existen alternativas como Promesas y Async Await para evitar el anidamiento excesivo de funciones.
+---
+
+## Asincronía en los lenguajes de programacion
+
+Las computadoras son asincrónicas por diseño.
+
+"Asincrónico" significa que las cosas pueden ocurrir de forma independiente al flujo principal del programa.
+
+En las computadoras de consumo actuales, cada programa se ejecuta por un intervalo específico de tiempo y luego detiene su ejecución para dejar paso a otro programa. Este ciclo es tan rápido que no lo notamos, lo que nos da la ilusión de que muchos programas corren simultáneamente (excepto en máquinas con múltiples procesadores).
+
+Los programas usan internamente interrupciones, una señal enviada al procesador para captar la atención del sistema.
+
+No entraremos en detalles técnicos, pero es importante entender que es normal que los programas se comporten de forma asincrónica, pausando su ejecución cuando no se requiere atención y permitiendo al procesador hacer otras tareas mientras tanto. Por ejemplo, cuando un programa espera una respuesta de red, no puede detener el procesador hasta recibirla.
+
+## Lenguajes sincronicos y manejo de asincronia
+
+La mayoría de los lenguajes de programación son sincrónicos por defecto, pero ofrecen mecanismos para manejar la asincronía mediante librerías o características del lenguaje.
+
+Ejemplos: C, Java, C#, PHP, Go, Ruby, Swift y Python son sincrónicos, aunque pueden manejar operaciones asincrónicas mediante el uso de hilos (threads) o procesos paralelos.
+
+## JavaScript
+
+JavaScript es sincrónico y de un solo hilo por defecto. Esto significa que el código se ejecuta línea por línea, de forma secuencial, sin crear múltiples hilos.
+
+Ejemplo:
+
+```go:js
+const a = 1;
+const b = 2;
+const c = a * b;
+console.log(c);
+doSomething();
+```
+
+Pero JavaScript nació en el navegador, y su función principal era responder a acciones del usuario como `onClick`, `onMouseOver`, `onChange`, `onSubmit`, etc.
+
+¿Entonces cómo podía funcionar si era sincrónico?
+
+La clave está en el **entorno**. El navegador provee APIs que permiten manejar eventos de forma asincrónica. Node.js también amplió este concepto al permitir operaciones de I/O no bloqueantes como acceso a archivos, llamadas de red, etc.
+
+## Callbacks
+
+No se puede predecir cuándo un usuario hará clic en un botón. Por eso se define un _manejador de eventos_ que ejecuta una función cuando ese evento ocurre:
+
+```go:js
+document.getElementById('button').addEventListener('click', () => {
+  // se hizo clic
+});
+```
+
+Esa función es un **callback**.
+
+Un callback es una función que se pasa como argumento a otra función y se ejecuta solo cuando el evento sucede. Esto es posible porque JavaScript trata las funciones como ciudadanos de primera clase (first-class functions), lo que significa que se pueden pasar como valores.
+
+También es común ejecutar todo el código del cliente cuando la ventana termina de cargar:
+
+```go:js
+window.addEventListener('load', () => {
+  // la ventana se ha cargado
+});
+```
+
+Los callbacks no se usan solo con eventos del DOM. También se aplican en temporizadores, por ejemplo:
+
+```go:js
+setTimeout(() => {
+  // se ejecuta después de 2 segundos
+}, 2000);
+```
+
+Otro ejemplo son las peticiones XHR:
+
+```go:js
+const xhr = new XMLHttpRequest();
+xhr.onreadystatechange = () => {
+  if (xhr.readyState === 4) {
+    if (xhr.status === 200) {
+      console.log(xhr.responseText);
+    } else {
+      console.error('error');
+    }
+  }
+};
+xhr.open('GET', 'https://tusitio.com');
+xhr.send();
+```
+
+## Manejo de errores con callbacks
+
+¿Cómo manejamos errores? Una estrategia común es la adoptada por Node.js: los callbacks reciben el error como primer parámetro. Si no hay error, es `null`.
+
+```go:js
+const fs = require('node:fs');
+fs.readFile('/file.json', (err, data) => {
+  if (err) {
+    console.log(err); // manejar error
+    return;
+  }
+  console.log(data); // procesar datos
+});
+```
+
+## El problema de los callbacks
+
+Los callbacks son útiles para tareas simples.
+
+Pero cada callback agrega un nivel de anidamiento, y si se abusa de ellos, el código se vuelve complejo rápidamente.
+
+Ejemplo con múltiples niveles de anidamiento:
+
+```go:js
+window.addEventListener('load', () => {
+  document.getElementById('button').addEventListener('click', () => {
+    setTimeout(() => {
+      items.forEach(item => {
+        // tu código aquí
+      });
+    }, 2000);
+  });
+});
+```
+
+Esto es solo un código con 4 niveles, pero puede volverse mucho más profundo. A este problema se le llama **callback hell** o infierno de callbacks.
+
+## Alternativas a los callbacks
+
+Desde ES6, JavaScript introdujo mecanismos más elegantes para manejar asincronía sin depender de callbacks:
+
+- **Promises** (ES6)
+- **Async/Await** (ES2017)
+
+Estas características permiten escribir código asincrónico más legible y fácil de mantener.

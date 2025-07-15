@@ -1,0 +1,206 @@
+---
+title: Perfilado de Aplicaciones Node.js - Guia Completa para Optimizar Rendimiento
+description: Aprende a perfilar aplicaciones Node.js con el profiler integrado de V8 para identificar cuellos de botella y optimizar el rendimiento.
+---
+
+El perfilado (profiling) de aplicaciones Node.js es una técnica clave para medir el rendimiento, identificar cuellos de botella, detectar fugas de memoria y optimizar la eficiencia. Este artículo te guía a través del uso del profiler integrado de Node.js, que aprovecha el motor V8 para analizar métricas de CPU y memoria. Con ejemplos prácticos basados en una aplicación Express, aprenderás cómo diagnosticar problemas de rendimiento y mejorar la escalabilidad de tus aplicaciones.
+
+## Que es el perfilado en Node.js
+
+El perfilado consiste en analizar el comportamiento de una aplicación Node.js durante su ejecución, midiendo métricas como el uso de CPU, consumo de memoria y tiempos de ejecución de funciones. Esto ayuda a identificar:
+
+- **Cuellos de botella**: Funciones o procesos que ralentizan la aplicación.
+- **Fugas de memoria**: Uso excesivo o no liberado de memoria.
+- **Uso intensivo de CPU**: Operaciones que consumen recursos innecesariamente.
+
+Node.js incluye un profiler integrado basado en el motor V8, que toma muestras del stack a intervalos regulares y registra eventos como compilaciones JIT (Just-In-Time). Los resultados se almacenan en un archivo de ticks (por ejemplo, `isolate-0xnnnnnnnnnnnn-v8.log`).
+
+## Como usar el profiler integrado de Node.js
+
+El profiler integrado de Node.js es una herramienta sencilla y poderosa para analizar el rendimiento sin necesidad de herramientas de terceros. A continuación, usaremos una aplicación Express de ejemplo para ilustrar el proceso.
+
+### Aplicacion de ejemplo
+
+Considera una aplicación Express con dos endpoints: uno para agregar usuarios (`/newUser`) y otro para autenticación (`/auth`). Ambos usan funciones criptográficas síncronas, lo que puede causar latencia.
+
+```javascript
+const express = require("express");
+const crypto = require("crypto");
+const app = express();
+const users = {};
+
+app.get("/newUser", (req, res) => {
+  let username = req.query.username || "";
+  const password = req.query.password || "";
+  username = username.replace(/[^a-zA-Z0-9]/g, "");
+  if (!username || !password || users[username]) {
+    return res.sendStatus(400);
+  }
+  const salt = crypto.randomBytes(128).toString("base64");
+  const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, "sha512");
+  users[username] = { salt, hash };
+  res.sendStatus(200);
+});
+
+app.get("/auth", (req, res) => {
+  let username = req.query.username || "";
+  const password = req.query.password || "";
+  username = username.replace(/[^a-zA-Z0-9]/g, "");
+  if (!username || !password || !users[username]) {
+    return res.sendStatus(400);
+  }
+  const { salt, hash } = users[username];
+  const encryptHash = crypto.pbkdf2Sync(password, salt, 10000, 512, "sha512");
+  if (crypto.timingSafeEqual(hash, encryptHash)) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+app.listen(8080, () => console.log("Servidor en http://localhost:8080"));
+```
+
+**Nota**: Este código es solo para fines ilustrativos. No uses funciones criptográficas personalizadas en producción; opta por soluciones probadas como [Passport.js](https://www.passportjs.org/).
+
+### Paso 1 - Ejecutar la aplicacion con el profiler
+
+Para perfilar la aplicación, iníciala con el flag `--prof` en un entorno de producción:
+
+```go:bash
+NODE_ENV=production node --prof app.js
+```
+
+### Paso 2 - Generar carga
+
+Simula carga en el endpoint `/auth` usando ApacheBench (`ab`):
+
+```go:bash
+curl -X GET "http://localhost:8080/newUser?username=matt&password=password"
+ab -k -c 20 -n 250 "http://localhost:8080/auth?username=matt&password=password"
+```
+
+El resultado podría mostrar:
+
+```
+Requests per second:    5.33 [#/sec] (mean)
+Time per request:       3754.556 [ms] (mean)
+```
+
+Esto indica un rendimiento bajo, con solo 5.33 solicitudes por segundo y una latencia promedio de ~4 segundos.
+
+### Paso 3 - Procesar el archivo de ticks
+
+El flag `--prof` genera un archivo de ticks (por ejemplo, `isolate-0xnnnnnnnnnnnn-v8.log`). Procesa este archivo con:
+
+```go:bash
+node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
+```
+
+Abre `processed.txt` para analizar los resultados. La sección `[Summary]` podría mostrar:
+
+```
+[Summary]:
+   ticks  total  nonlib   name
+     79    0.2%    0.2%  JavaScript
+  36703   97.2%   99.2%  C++
+      7    0.0%    0.0%  GC
+    767    2.0%          Shared libraries
+    215    0.6%          Unaccounted
+```
+
+Esto indica que el 97.2% del tiempo se pasa en código C++, lo que sugiere que las funciones nativas son el foco principal.
+
+En la sección `[C++]`:
+
+```
+[C++]:
+   ticks  total  nonlib   name
+  19557   51.8%   52.9%  node::crypto::PBKDF2(v8::FunctionCallbackInfo<v8::Value> const&)
+   4510   11.9%   12.2%  _sha1_block_data_order
+   3165    8.4%    8.6%  _malloc_zone_malloc
+```
+
+La función `PBKDF2` consume el 51.8% del tiempo de CPU, seguida por otras funciones relacionadas.
+
+En la sección `[Bottom up (heavy) profile]`:
+
+```
+ticks parent  name
+  19557   51.8%  node::crypto::PBKDF2(v8::FunctionCallbackInfo<v8::Value> const&)
+  19557  100.0%    v8::internal::Builtins::~Builtins()
+  19557  100.0%      LazyCompile: ~pbkdf2 crypto.js:557:16
+   4510   11.9%  _sha1_block_data_order
+   4510  100.0%    LazyCompile: *pbkdf2 crypto.js:557:16
+   3165    8.4%  _malloc_zone_malloc
+   3161   99.9%    LazyCompile: *pbkdf2 crypto.js:557:16
+```
+
+Esto revela que `pbkdf2` es el principal consumidor de CPU, y que `_sha1_block_data_order` y `_malloc_zone_malloc` son llamados por esta función, sumando el 72.1% del tiempo total.
+
+### Paso 4 - Optimizar la aplicacion
+
+El análisis muestra que `crypto.pbkdf2Sync` bloquea el event loop, causando alta latencia. Cambiemos a la versión asíncrona `crypto.pbkdf2`:
+
+```javascript
+app.get("/auth", (req, res) => {
+  let username = req.query.username || "";
+  const password = req.query.password || "";
+  username = username.replace(/[^a-zA-Z0-9]/g, "");
+  if (!username || !password || !users[username]) {
+    return res.sendStatus(400);
+  }
+  crypto.pbkdf2(
+    password,
+    users[username].salt,
+    10000,
+    512,
+    "sha512",
+    (err, hash) => {
+      if (err) return res.sendStatus(500);
+      if (crypto.timingSafeEqual(users[username].hash, hash)) {
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(401);
+      }
+    },
+  );
+});
+```
+
+Vuelve a ejecutar el benchmark:
+
+```go:bash
+ab -k -c 20 -n 250 "http://localhost:8080/auth?username=matt&password=password"
+```
+
+Resultado:
+
+```
+Requests per second:    19.46 [#/sec] (mean)
+Time per request:       1027.689 [ms] (mean)
+```
+
+La aplicación ahora maneja ~20 solicitudes por segundo, con una latencia promedio de ~1 segundo, una mejora significativa.
+
+## Generar graficos de flama
+
+Los gráficos de flama (flame graphs) son una forma visual de analizar el perfilado. Usa herramientas como [0x](https://github.com/davidmarkclements/0x) para generarlos:
+
+```go:bash
+npx 0x app.js
+```
+
+Esto produce un gráfico interactivo que muestra el tiempo de CPU por función, facilitando la identificación de cuellos de botella.
+
+## Mejores practicas para el perfilado
+
+1. **Usa NODE_ENV=production**: Asegura optimizaciones activadas.
+2. **Evita funciones síncronas**: Prefiere métodos asíncronos para no bloquear el event loop.
+3. **Prueba con carga realista**: Usa herramientas como ApacheBench o [autocannon](https://www.npmjs.com/package/autocannon).
+4. **Analiza gráficos de flama**: Complementa el profiler de V8 con herramientas visuales.
+5. **Consulta recursos**: Explora la [documentación de Node.js](https://nodejs.org/en/docs/) y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript).
+
+## Conclusion
+
+El perfilado en Node.js, usando el profiler integrado de V8, es una herramienta poderosa para optimizar el rendimiento de tus aplicaciones. Al analizar archivos de ticks y usar herramientas como gráficos de flama, puedes identificar y solucionar cuellos de botella, como operaciones síncronas costosas. ¡Empieza a perfilar tus aplicaciones Node.js hoy y mejora su eficiencia con recursos como [Express.js](https://expressjs.com/) y la [documentación oficial](https://nodejs.org/en/docs/)!

@@ -1,0 +1,80 @@
+---
+title: Ejecutar TypeScript nativamente en Node.js
+description: Aprende cómo ejecutar código TypeScript directamente con Node.js sin necesidad de transpilar, gracias al soporte experimental de eliminación de tipos y transformación de sintaxis.
+---
+
+Desde la versión v23.6.0, Node.js habilita por defecto la **eliminación de tipos** (“type stripping”). Si estás usando v23.6.0 o una versión superior y tu código fuente solo contiene sintaxis TypeScript que puede eliminarse sin problemas, no necesitas realizar ninguna configuración adicional.
+
+## ejecutar-codigo-typescript-con-nodejs
+
+Desde la versión v22.6.0, Node.js ofrece soporte experimental para cierta sintaxis de TypeScript mediante la funcionalidad de **eliminación de tipos**. Esto significa que puedes escribir código válido de TypeScript directamente en Node.js sin necesidad de transpilarlo primero.
+
+Puedes ejecutar archivos `.ts` con el siguiente comando:
+
+```go:bash
+node --experimental-strip-types ejemplo.ts
+```
+
+¡Y eso es todo! Ahora puedes ejecutar código TypeScript directamente con Node.js sin necesidad de un proceso de compilación previo, y seguir aprovechando las ventajas del tipado estático.
+
+## soporte ampliado en v2270
+
+En la versión v22.7.0, este soporte experimental se amplió para transformar sintaxis exclusiva de TypeScript, como `enum` y `namespace`, mediante el uso del flag `--experimental-transform-types`.
+
+Al activar `--experimental-transform-types`, también se activa automáticamente `--experimental-strip-types`, por lo que no es necesario usar ambos:
+
+```go:bash
+node --experimental-transform-types otro-ejemplo.ts
+```
+
+## soporte predeterminado desde v2360
+
+Desde la versión v23.6.0, la eliminación de tipos se encuentra habilitada por defecto. Puedes desactivarla con `--no-experimental-strip-types`. Esto permite ejecutar archivos `.ts` con sintaxis soportada directamente:
+
+```go:main.js
+function foo(bar: number): string {
+  return 'hola';
+}
+```
+
+Puedes correrlo así:
+
+```go:bash
+node archivo.ts
+```
+
+Sin embargo, si el archivo contiene transformaciones como enums, aún deberás usar el flag correspondiente:
+
+```go:main.js
+enum MiEnum {
+  A,
+  B,
+}
+console.log(MiEnum.A);
+```
+
+```go:bash
+node --experimental-transform-types archivo-enum.ts
+```
+
+## futuras versiones de nodejs
+
+Se espera que versiones futuras de Node.js incluyan soporte completo para TypeScript sin necesidad de ningún flag en la línea de comandos.
+
+## limitaciones
+
+Al momento de escribir este artículo, el soporte experimental para TypeScript en Node.js presenta algunas limitaciones.
+
+Puedes consultar más información en la documentación oficial de la API.
+
+## configuracion
+
+El cargador TypeScript de Node.js (Amaro) **no necesita ni utiliza** un archivo `tsconfig.json` para ejecutar código TypeScript.
+
+Sin embargo, recomendamos configurar tu editor y `tsc` para reflejar el comportamiento de Node.js. Puedes hacerlo creando un archivo `tsconfig.json` con las opciones de compilador mencionadas en la documentación, y usando TypeScript versión 5.7 o superior.
+
+## notas importantes
+
+Agradecemos a todas las personas que contribuyeron para hacer posible esta funcionalidad. Esperamos que pronto esté disponible de forma estable en la versión LTS de Node.js.
+
+Entendemos que esta característica es experimental y tiene ciertas limitaciones. Si no se ajusta a tu caso de uso, te recomendamos usar otro enfoque o contribuir con una solución. También son bienvenidos los reportes de errores; ten en cuenta que este proyecto es mantenido por voluntarios y no ofrece garantías, así que ten paciencia si no puedes colaborar directamente.

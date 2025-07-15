@@ -33,8 +33,8 @@ export const technologies = [
   },
   {
     name: "Node.js",
-    comingSoon: true,
-    slug: "/docs/nodejs/empezando/introduccion",
+    comingSoon: false,
+    slug: "/docs/nodejs/documentacion/primeros-pasos/introduccion-a-nodejs",
     iconDark: "/icons/nodejs.png",
     description:
       "Entorno de ejecución para JavaScript en el servidor basado en V8.",

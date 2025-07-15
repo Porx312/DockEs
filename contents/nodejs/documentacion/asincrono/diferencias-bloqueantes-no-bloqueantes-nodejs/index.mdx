@@ -1,0 +1,108 @@
+---
+title: Diferencias entre llamadas bloqueantes y no bloqueantes en Node.js
+
+description: Aprende la diferencia entre funciones bloqueantes y no bloqueantes en Node.js, con ejemplos claros sobre rendimiento, concurrencia y errores comunes al usar operaciones de entrada y salida.
+---
+
+## Overview of Blocking vs Non Blocking
+
+Este artículo cubre la diferencia entre llamadas bloqueantes y no bloqueantes en Node.js. Se mencionará el event loop y libuv, pero no se requiere conocimiento previo sobre estos temas. Se asume que el lector tiene conocimientos básicos de JavaScript y del patrón de callbacks en Node.js.
+
+"I/O" se refiere principalmente a la interacción con el disco del sistema y la red, operaciones soportadas por libuv.
+
+## Que es una operacion bloqueante
+
+Una operación bloqueante ocurre cuando la ejecución de más código JavaScript debe esperar hasta que una operación no-JavaScript finalice. Esto sucede porque el event loop no puede continuar ejecutando mientras dicha operación ocurre.
+
+En Node.js, no se considera bloqueante a una función que tiene mal rendimiento por uso intensivo del CPU, sino a aquellas que detienen el event loop esperando una tarea externa, como el acceso a disco o red.
+
+Los métodos sincronizados en la librería estándar de Node.js (que suelen terminar en `Sync`) son las operaciones bloqueantes más comunes. También pueden existir funciones bloqueantes en módulos nativos.
+
+## Operaciones no bloqueantes en Node.js
+
+Todas las funciones de I/O en la librería estándar de Node.js tienen una versión asíncrona (no bloqueante) que acepta callbacks. Estas permiten continuar la ejecución del programa sin detener el event loop.
+
+### Comparacion entre codigos
+
+**Ejemplo bloqueante:**
+
+```go:js
+const fs = require('node:fs');
+const data = fs.readFileSync('/file.md'); // se bloquea aquí hasta que el archivo sea leído
+```
+
+**Ejemplo no bloqueante:**
+
+```go:js
+const fs = require('node:fs');
+fs.readFile('/file.md', (err, data) => {
+  if (err) throw err;
+});
+```
+
+Aunque el ejemplo sincrónico parece más simple, su desventaja es que detiene toda ejecución hasta que el archivo sea leído. Si ocurre un error, debe ser capturado o el proceso se caerá. En la versión asíncrona, el manejo del error depende del desarrollador.
+
+### Ejemplo expandido
+
+**Bloqueante:**
+
+```go:js
+const fs = require('node:fs');
+const data = fs.readFileSync('/file.md');
+console.log(data);
+moreWork(); // se ejecuta después del console.log
+```
+
+**No bloqueante:**
+
+```go:js
+const fs = require('node:fs');
+fs.readFile('/file.md', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+moreWork(); // se ejecuta antes que console.log
+```
+
+En el primer ejemplo, `console.log` se ejecuta antes que `moreWork()`. En el segundo, como `readFile` es asíncrono, `moreWork()` se ejecuta primero. Esto permite una mayor capacidad de procesamiento y rendimiento.
+
+## Concurrencia y rendimiento
+
+Node.js es de un solo hilo, por lo tanto, la concurrencia se basa en la capacidad del event loop para ejecutar funciones de callback cuando finaliza el trabajo externo.
+
+Por ejemplo, si cada petición web tarda 50 ms y 45 ms se utilizan en una consulta de base de datos asíncrona, el uso de funciones no bloqueantes permite manejar múltiples peticiones simultáneamente. Así se logra mayor capacidad de procesamiento.
+
+## Peligros de mezclar codigo bloqueante y no bloqueante
+
+Combinar ambos estilos puede causar errores sutiles. Veamos este ejemplo incorrecto:
+
+```go:js
+const fs = require('node:fs');
+fs.readFile('/file.md', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+fs.unlinkSync('/file.md');
+```
+
+En este caso, `unlinkSync` podría ejecutarse antes de que `readFile` termine, eliminando el archivo antes de leerlo.
+
+**Versión correcta:**
+
+```go:js
+const fs = require('node:fs');
+fs.readFile('/file.md', (readFileErr, data) => {
+  if (readFileErr) throw readFileErr;
+  console.log(data);
+  fs.unlink('/file.md', unlinkErr => {
+    if (unlinkErr) throw unlinkErr;
+  });
+});
+```
+
+Aquí, `fs.unlink()` se coloca dentro del callback de `readFile()`, asegurando el orden correcto de ejecución sin bloquear.
+
+## Recursos adicionales
+
+- [libuv](https://libuv.org)
+- [Documentación oficial de Node.js](https://nodejs.org)

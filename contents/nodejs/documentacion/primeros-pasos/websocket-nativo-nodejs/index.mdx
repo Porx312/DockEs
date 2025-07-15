@@ -1,0 +1,150 @@
+---
+title: Cliente WebSocket Nativo en Node.js - Guia Practica para Desarrolladores
+description: Aprende a usar el cliente WebSocket nativo en Node.js v22 con la API Fetch y Undici, con ejemplos de conexion y manejo de datos JSON.
+---
+
+Desde Node.js v21, la API WebSocket ha sido mejorada con la librería [Undici](https://undici.nodejs.org/), introduciendo un cliente WebSocket nativo que simplifica la comunicación en tiempo real. Estabilizada en Node.js v22.4.0, esta API está lista para producción, permitiendo a las aplicaciones Node.js actuar como clientes WebSocket sin dependencias externas. Esta guía explora cómo usar el cliente WebSocket nativo, con ejemplos prácticos para conexiones básicas y manejo de datos JSON.
+
+## Que es WebSocket
+
+WebSocket es un protocolo estandarizado que permite comunicación bidireccional y en tiempo real sobre una sola conexión TCP. A diferencia de HTTP, WebSocket es de doble vía (full-duplex), lo que lo hace ideal para aplicaciones como chats, juegos en línea o feeds de datos en tiempo real. Utiliza el encabezado HTTP `Upgrade` para cambiar de protocolo y opera en los puertos 80 (no seguro, `ws://`) o 443 (seguro, `wss://`). Esto asegura compatibilidad con navegadores y evita restricciones de cortafuegos.
+
+## Cliente WebSocket nativo en Node.js
+
+Desde Node.js v22, puedes crear conexiones WebSocket de cliente sin librerías externas como [ws](https://www.npmjs.com/package/ws) o [Socket.IO](https://socket.io/). La API nativa, potenciada por Undici, usa el constructor `WebSocket` estándar, alineado con las especificaciones web modernas, lo que mejora la interoperabilidad y reduce la necesidad de gestionar dependencias.
+
+### Conexion basica y manejo de mensajes
+
+Aquí tienes un ejemplo de cómo establecer una conexión WebSocket y manejar eventos básicos:
+
+```go:js
+const socket = new WebSocket('ws://localhost:8080');
+
+socket.addEventListener('open', event => {
+  console.log('Conexión WebSocket establecida!');
+  socket.send('¡Hola, servidor!');
+});
+
+socket.addEventListener('message', event => {
+  console.log('Mensaje del servidor:', event.data);
+});
+
+socket.addEventListener('close', event => {
+  console.log('Conexión cerrada:', event.code, event.reason);
+});
+
+socket.addEventListener('error', error => {
+  console.error('Error WebSocket:', error);
+});
+```
+
+Este código conecta a un servidor WebSocket en `ws://localhost:8080`, envía un mensaje al abrirse la conexión y maneja mensajes, cierres y errores.
+
+### Envio y recepcion de datos JSON
+
+El manejo de datos JSON es común en aplicaciones WebSocket. Este ejemplo muestra cómo enviar y recibir objetos JSON:
+
+```go:js
+const socket = new WebSocket('ws://localhost:8080');
+
+socket.addEventListener('open', () => {
+  const data = { type: 'message', content: '¡Hola desde Node.js!' };
+  socket.send(JSON.stringify(data));
+});
+
+socket.addEventListener('message', event => {
+  try {
+    const receivedData = JSON.parse(event.data);
+    console.log('JSON recibido:', receivedData);
+  } catch (error) {
+    console.error('Error al parsear JSON:', error);
+    console.log('Datos recibidos:', event.data);
+  }
+});
+```
+
+Este código convierte un objeto JavaScript a JSON con `JSON.stringify()` antes de enviarlo y usa `JSON.parse()` para procesar los mensajes recibidos, con manejo de errores para JSON inválido.
+
+## Limitaciones del soporte WebSocket nativo
+
+Aunque Node.js v22 ofrece un cliente WebSocket nativo, **no incluye un servidor WebSocket nativo**. Para crear un servidor WebSocket que acepte conexiones de navegadores o clientes, aún necesitas librerías como [ws](https://www.npmjs.com/package/ws) o [Socket.IO](https://socket.io/). Por ejemplo, un servidor WebSocket simple con `ws`:
+
+```go:js
+const WebSocket = require('ws');
+const server = new WebSocket.Server({ port: 8080 });
+
+server.on('connection', ws => {
+  ws.on('message', message => {
+    console.log('Mensaje recibido:', message.toString());
+    ws.send('Respuesta del servidor');
+  });
+});
+```
+
+## Ventajas del cliente WebSocket nativo
+
+- **Menos dependencias**: No necesitas instalar librerías externas, reduciendo el mantenimiento.
+- **Compatibilidad con estándares**: La API `WebSocket` sigue las especificaciones web modernas.
+- **Integración con Undici**: Aprovecha la eficiencia de Undici para conexiones de alto rendimiento.
+- **Simplicidad**: Usa una API familiar para desarrolladores web, similar a la de navegadores.
+
+## Mejores practicas para WebSocket en Node.js
+
+1. **Usa wss para conexiones seguras**: Prefiere `wss://` en producción para cifrado.
+2. **Maneja errores**: Incluye manejadores para eventos `error` y JSON inválido.
+3. **Cierra conexiones**: Usa `socket.close()` cuando ya no necesites la conexión.
+4. **Prueba con servidores reales**: Usa servicios como [WebSocket Echo Server](wss://echo.websocket.org) para pruebas.
+5. **Consulta recursos**: Revisa la [documentación de Node.js](https://nodejs.org/en/docs/), [Undici](https://undici.nodejs.org/), y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/API/WebSocket).
+
+## Ejemplo practico con un servidor de prueba
+
+Para probar el cliente WebSocket, configura un servidor de eco con `ws`:
+
+```go:js
+// server.js
+const WebSocket = require('ws');
+const server = new WebSocket.Server({ port: 8080 });
+
+server.on('connection', ws => {
+  ws.on('message', message => {
+    ws.send(`Eco: ${message}`);
+  });
+});
+```
+
+Inicia el servidor:
+
+```go:bash
+node server.js
+```
+
+Luego, usa el cliente nativo para conectarte:
+
+```go:js
+// client.js
+const socket = new WebSocket('ws://localhost:8080');
+
+socket.addEventListener('open', () => {
+  socket.send('¡Prueba de eco!');
+});
+
+socket.addEventListener('message', event => {
+  console.log('Respuesta del servidor:', event.data);
+});
+```
+
+Ejecuta el cliente:
+
+```bash
+node client.js
+```
+
+Salida esperada:
+
+```
+Respuesta del servidor: Eco: ¡Prueba de eco!
+```
+
+## Conclusion
+
+El cliente WebSocket nativo en Node.js v22, potenciado por Undici, simplifica la comunicación en tiempo real sin dependencias externas. Aunque Node.js no ofrece un servidor WebSocket nativo, puedes combinar el cliente nativo con librerías como `ws` para aplicaciones completas. ¡Empieza a usar el cliente WebSocket nativo en tus proyectos Node.js y explora recursos como la [documentación de Node.js](https://nodejs.org/en/docs/) y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/API/WebSocket) para profundizar!

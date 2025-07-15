@@ -1,0 +1,288 @@
+---
+title: Introduccion a TypeScript - Guia Completa para Desarrolladores
+description: Descubre TypeScript, sus beneficios, como escribir y ejecutar codigo con tipado estatico, y su integracion con Node.js y JavaScript.
+---
+
+TypeScript es un lenguaje de código abierto desarrollado por Microsoft que extiende JavaScript con tipado estático, mejorando la detección de errores y la mantenibilidad del código. Esta guía te introduce a TypeScript, sus características principales, cómo escribir y ejecutar código, y su integración con Node.js y bibliotecas JavaScript. Con ejemplos prácticos y mejores prácticas, aprenderás a usar TypeScript para crear aplicaciones robustas y escalables.
+
+## Que es TypeScript
+
+TypeScript es un superconjunto de JavaScript que añade tipado estático opcional y características avanzadas para mejorar la experiencia de desarrollo. Al compilarse a JavaScript puro, es compatible con cualquier entorno que ejecute JavaScript, como navegadores, Node.js o Deno. TypeScript permite detectar errores en el editor o en pipelines CI/CD, facilitando la escritura de código más seguro y mantenible.
+
+**Beneficios principales**:
+
+- **Detección temprana de errores**: Identifica problemas antes de la ejecución.
+- **Autocompletado mejorado**: Mejora la productividad en editores como [VS Code](https://code.visualstudio.com/).
+- **Código escalable**: Facilita la refactorización y colaboración en proyectos grandes.
+- **Compatibilidad con JavaScript**: Integra bibliotecas JavaScript mediante definiciones de tipos.
+
+## Primer codigo en TypeScript
+
+Veamos un ejemplo sencillo para entender cómo funciona TypeScript:
+
+```go:ts
+type User = {
+  name: string;
+  age: number;
+};
+
+function isAdult(user: User): boolean {
+  return user.age >= 18;
+}
+
+const justine = {
+  name: 'Justine',
+  age: 23,
+} satisfies User;
+
+const isJustineAnAdult = isAdult(justine);
+console.log(isJustineAnAdult); // true
+```
+
+### Desglose del ejemplo
+
+1. **Definición de tipo**: `type User` crea un tipo para objetos con `name` (string) y `age` (number).
+2. **Función tipada**: `isAdult` usa el tipo `User` para su parámetro y devuelve un `boolean`.
+3. **Operador satisfies**: Garantiza que `justine` cumple con el tipo `User` sin coerción.
+4. **Inferencia de tipos**: TypeScript infiere que `isJustineAnAdult` es `boolean` sin declaración explícita.
+
+Si intentas pasar un objeto con propiedades incorrectas (por ejemplo, `{ name: 'Justine', age: '23' }`), TypeScript mostrará un error en el editor, evitando problemas en tiempo de ejecución.
+
+## Componentes de TypeScript
+
+TypeScript se compone de dos elementos principales: el código TypeScript y las definiciones de tipos.
+
+### Codigo TypeScript
+
+El código TypeScript es JavaScript con anotaciones de tipo. Durante la compilación, las anotaciones se eliminan, generando JavaScript puro compatible con cualquier entorno. Ejemplo:
+
+```go:ts
+function greet(name: string): string {
+  return `Hola, ${name}!`;
+}
+console.log(greet('Mundo'));
+```
+
+Compilado a JavaScript:
+
+```go:js
+function greet(name) {
+  return `Hola, ${name}!`;
+}
+console.log(greet('Mundo'));
+```
+
+### Definiciones de tipos
+
+Las definiciones de tipos, almacenadas en archivos `.d.ts`, describen la estructura de código JavaScript sin implementación. Por ejemplo, para usar Node.js con TypeScript, instala las definiciones de tipos:
+
+```go:bash
+npm add --save-dev @types/node
+```
+
+Esto permite a TypeScript entender APIs de Node.js, como `fs.readFile`:
+
+```go:ts
+import * as fs from 'fs';
+
+fs.readFile('example.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+```
+
+Si usas un argumento incorrecto (por ejemplo, `'foo'` en lugar de `'utf8'`), TypeScript mostrará un error. Las definiciones de tipos para bibliotecas populares están disponibles en [DefinitelyTyped](https://www.npmjs.com/~types), mantenidas por la comunidad.
+
+## Capacidades de transformacion
+
+TypeScript no solo ofrece tipado estático, sino también transformaciones de código. Por ejemplo, convierte JSX (usado en [React](https://react.dev/)) a JavaScript:
+
+```go:ts
+const element = <h1>Hola, TypeScript!</h1>;
+```
+
+Compilado a:
+
+```go:js
+const element = React.createElement("h1", null, "Hola, TypeScript!");
+```
+
+Estas capacidades hacen de TypeScript una herramienta versátil para proyectos modernos, funcionando como un compilador y transformador similar a [Babel](https://babeljs.io/).
+
+## Como ejecutar codigo TypeScript
+
+Para ejecutar código TypeScript, sigue estos pasos:
+
+### Instalacion de TypeScript
+
+Instala TypeScript globalmente:
+
+```go:bash
+npm install -g typescript
+```
+
+### Crear y compilar un archivo
+
+Crea un archivo `app.ts`:
+
+```go:ts
+function greet(name: string): string {
+  return `Hola, ${name}!`;
+}
+console.log(greet('Mundo'));
+```
+
+Compílalo a JavaScript:
+
+```go:bash
+tsc app.ts
+```
+
+Ejecuta el archivo resultante `app.js`:
+
+```go:bash
+node app.js
+```
+
+### Usar ts-node
+
+Para ejecutar TypeScript directamente, instala [ts-node](https://www.npmjs.com/package/ts-node):
+
+```go:bash
+npm install -g ts-node
+```
+
+Ejecuta:
+
+```go:bash
+ts-node app.ts
+```
+
+### Configurar un proyecto
+
+Crea un archivo `tsconfig.json`:
+
+```go:bash
+tsc --init
+```
+
+Ejemplo de `tsconfig.json`:
+
+```go:json
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "./dist",
+    "esModuleInterop": true
+  }
+}
+```
+
+Compila el proyecto:
+
+```go:bash
+tsc
+```
+
+Ejecuta:
+
+```go:bash
+node dist/app.js
+```
+
+## Integracion con Node.js
+
+Para usar TypeScript con Node.js:
+
+1. Instala las definiciones de tipos:
+
+```go:bash
+npm add --save-dev @types/node
+```
+
+2. Crea un servidor HTTP:
+
+```go:main.ts
+import { createServer } from 'http';
+
+const server = createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Hola, TypeScript en Node.js!');
+});
+
+server.listen(3000, () => console.log('Servidor en http://localhost:3000'));
+```
+
+3. Compila y ejecuta:
+
+```go:bash
+tsc && node dist/main.js
+```
+
+## Mejores practicas
+
+1. **Habilita modo estricto**: Usa `"strict": true` en `tsconfig.json` para mayor seguridad.
+2. **Aprovecha la inferencia de tipos**: Evita declarar tipos innecesarios.
+3. **Usa satisfies**: Verifica tipos sin coerción, como en el ejemplo de `justine`.
+4. **Instala definiciones de tipos**: Usa `@types` para bibliotecas JavaScript.
+5. **Valida con linters**: Integra [ESLint](https://eslint.org/) con plugins como `eslint-plugin-typescript`.
+6. **Consulta recursos**: Explora la [documentación de TypeScript](https://www.typescriptlang.org/docs/), [Node.js](https://nodejs.org/en/docs/), y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript).
+
+## Ejemplo practico con Express
+
+Crea una API con [Express](https://expressjs.com/) y TypeScript:
+
+```go:main.ts
+import express, { Request, Response } from 'express';
+import { add } from './math';
+
+const app = express();
+
+app.get('/add', (req: Request, res: Response) => {
+  const a = Number(req.query.a) || 0;
+  const b = Number(req.query.b) || 0;
+  const result = add(a, b);
+  res.json({ result });
+});
+
+app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
+```
+
+Archivo `math.ts`:
+
+```go:ts
+export function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+Instala dependencias:
+
+```go:bash
+npm add express
+npm add --save-dev @types/express
+```
+
+Compila y ejecuta:
+
+```go:bash
+tsc && node dist/main.js
+```
+
+Prueba la API:
+
+```go:bash
+curl "http://localhost:3000/add?a=5&b=3"
+```
+
+Salida:
+
+```json
+{ "result": 8 }
+```
+
+## Conclusion
+
+TypeScript transforma el desarrollo en JavaScript al ofrecer tipado estático, detección temprana de errores y mejor mantenibilidad. Su integración con Node.js, soporte para bibliotecas JavaScript mediante [DefinitelyTyped](https://www.npmjs.com/~types), y capacidades de transformación como JSX lo convierten en una herramienta esencial para proyectos modernos. ¡Empieza a usar TypeScript hoy y mejora tus aplicaciones con recursos como la [documentación oficial](https://www.typescriptlang.org/docs/) y [MDN Web Docs](https://developer.mozilla.org/es/docs/Web/JavaScript)!
