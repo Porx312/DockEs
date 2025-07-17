@@ -1,0 +1,268 @@
+---
+title: Promesas en Node.js explicadas con ejemplos practicos
+description: Aprende como funcionan las promesas en Node.js con ejemplos claros y tecnicas avanzadas como async await y Promise.all
+---
+
+## Introduccion a las promesas en Node.js
+
+Una **promesa** es un objeto especial en JavaScript que representa la terminacion (o el fallo) eventual de una operacion asincrona y su valor resultante. Las promesas son fundamentales en el desarrollo moderno con Node.js debido a su capacidad para gestionar tareas asincronas de forma clara y estructurada.
+
+Imagina una promesa como pedir una pizza: no la recibes inmediatamente, pero alguien te promete traerla. El resultado puede ser que la pizza llegue (resuelta) o que algo salga mal (rechazada).
+
+## Estados de una promesa
+
+Una promesa puede encontrarse en uno de los siguientes tres estados:
+
+- **Pending**: Estado inicial, la operacion asincrona esta en progreso.
+- **Fulfilled**: La operacion se completo exitosamente.
+- **Rejected**: La operacion fallo con un error.
+
+Una vez que una promesa ha sido resuelta o rechazada, se considera **settled** (establecida) y no puede cambiar de estado.
+
+## Sintaxis basica de una promesa
+
+La forma mas comun de crear una promesa es usando el constructor `new Promise()`:
+
+```go:js
+const myPromise = new Promise((resolve, reject) => {
+  const success = true;
+  if (success) {
+    resolve('Operacion completada!');
+  } else {
+    reject('Algo salio mal.');
+  }
+});
+```
+
+## Manejo de promesas con then, catch y finally
+
+Las promesas cuentan con metodos para manejar su resultado:
+
+- **.then()** se ejecuta si la promesa se resuelve correctamente.
+- **.catch()** captura errores o rechazos.
+- **.finally()** se ejecuta sin importar si la promesa fue resuelta o rechazada.
+
+```go:js
+myPromise
+  .then(result => {
+    console.log(result);
+  })
+  .catch(error => {
+    console.error(error);
+  })
+  .finally(() => {
+    console.log('La promesa finalizo');
+  });
+```
+
+## Encadenamiento de promesas
+
+Puedes encadenar varias promesas para ejecutar tareas en secuencia:
+
+```go:js
+const { setTimeout: delay } = require('node:timers/promises');
+
+delay(1000).then(() => 'Tarea 1 completada')
+  .then(result => {
+    console.log(result);
+    return delay(1000).then(() => 'Tarea 2 completada');
+  })
+  .then(result => {
+    console.log(result);
+  })
+  .catch(error => {
+    console.error(error);
+  });
+```
+
+## Uso de async y await
+
+Los metodos `async` y `await` simplifican el trabajo con promesas, haciendo que el codigo asincrono luzca sincrono:
+
+```go:js
+async function realizarTareas() {
+  try {
+    const resultado1 = await delay(1000).then(() => 'Primera tarea');
+    console.log(resultado1);
+    const resultado2 = await delay(1000).then(() => 'Segunda tarea');
+    console.log(resultado2);
+  } catch (err) {
+    console.error(err);
+  }
+}
+realizarTareas();
+```
+
+## Await a nivel de modulo
+
+Con los ECMAScript Modules puedes usar `await` en el nivel superior:
+
+```go:js
+import { setTimeout as delay } from 'node:timers/promises';
+await delay(1000);
+```
+
+## APIs basadas en promesas en Node.js
+
+Modulos como `fs` ofrecen versiones basadas en promesas:
+
+```go:js
+const fs = require('node:fs').promises;
+
+async function leerArchivo() {
+  try {
+    const contenido = await fs.readFile('archivo.txt', 'utf8');
+    console.log(contenido);
+  } catch (error) {
+    console.error('Error al leer archivo:', error);
+  }
+}
+leerArchivo();
+```
+
+## Metodos avanzados de Promise
+
+### Promise.all
+
+Resuelve una vez que todas las promesas se cumplan, o rechaza si alguna falla:
+
+```go:js
+Promise.all([fetchData1, fetchData2])
+  .then(results => console.log(results))
+  .catch(error => console.error(error));
+```
+
+### Promise.allSettled
+
+Retorna el resultado de todas las promesas, hayan sido resueltas o rechazadas:
+
+```go:js
+Promise.allSettled([promise1, promise2]).then(results => {
+  console.log(results);
+});
+```
+
+### Promise.race
+
+Se resuelve o rechaza tan pronto como lo haga la primera promesa:
+
+```go:js
+Promise.race([task1, task2]).then(result => {
+  console.log(result);
+});
+```
+
+### Promise.any
+
+Se resuelve con la primera promesa que se cumpla, o falla si todas son rechazadas:
+
+```go:js
+Promise.any([api1, api2, api3])
+  .then(result => console.log(result))
+  .catch(error => console.error('Todas rechazadas:', error));
+```
+
+## Promise.resolve y Promise.reject
+
+Crea promesas resueltas o rechazadas inmediatamente:
+
+```go:js
+Promise.resolve('Ya esta resuelta').then(console.log);
+```
+
+## Promise.try
+
+Una forma segura de iniciar una promesa, incluso si la funcion lanza un error sincrono:
+
+```go:js
+function puedeFallar() {
+  if (Math.random() > 0.5) {
+    throw new Error('Ocurrio un error!');
+  }
+  return 'Exito!';
+}
+Promise.try(puedeFallar)
+  .then(console.log)
+  .catch(err => console.error(err.message));
+```
+
+## Promise.withResolvers
+
+Crea una promesa junto con sus funciones de resolucion y rechazo:
+
+```go:js
+const { promise, resolve, reject } = Promise.withResolvers();
+setTimeout(() => resolve('Resuelto!'), 1000);
+promise.then(value => console.log('Exito:', value));
+```
+
+## Manejo de errores
+
+Manejar errores es esencial para evitar fallos criticos:
+
+```go:js
+myPromise
+  .then(console.log)
+  .catch(console.error)
+  .finally(() => console.log('Operacion finalizada'));
+```
+
+Con `async/await`:
+
+```go:js
+async function realizarOperacion() {
+  try {
+    const resultado = await myPromise;
+    console.log(resultado);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    console.log('Todo finalizo');
+  }
+}
+realizarOperacion();
+```
+
+## Tareas en el event loop
+
+### queueMicrotask
+
+Ejecuta una tarea justo despues de la tarea actual y antes de cualquier I/O:
+
+```go:js
+queueMicrotask(() => console.log('Microtarea ejecutada'));
+console.log('Tarea sincrona');
+```
+
+### process.nextTick
+
+Ejecuta codigo tan pronto como el stack actual este vacio:
+
+```go:js
+process.nextTick(() => console.log('Callback inmediato'));
+console.log('Tarea sincrona ejecutada');
+```
+
+### setImmediate
+
+Programa una funcion para ejecutarse en la fase de verificacion del event loop:
+
+```go:js
+setImmediate(() => console.log('Callback inmediato'));
+console.log('Tarea sincrona');
+```
+
+## Cuando usar cada uno
+
+| Metodo             | Uso principal                         |
+| ------------------ | ------------------------------------- |
+| queueMicrotask()   | Despues de tarea actual, antes de I/O |
+| process.nextTick() | Antes de I/O, ideal para errores      |
+| setImmediate()     | Despues de eventos de I/O             |
+
+> Nota: Los errores en estas tareas asincronas deben ser manejados manualmente o mediante controladores globales como `process.on('uncaughtException')`.
+
+## Recursos relacionados
+
+- [Documentacion oficial de Promises en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+- [Eventos del Event Loop en Node.js (Articulo externo)](https://nodejs.org/es/docs/guides/event-loop-timers-and-nexttick/)

@@ -1,0 +1,127 @@
+---
+title: Como usar EventEmitter en Node.js
+description: Aprende a usar EventEmitter en Node.js para manejar eventos personalizados y mejorar la interactividad
+---
+
+El manejo de eventos es fundamental en aplicaciones interactivas, tanto en el navegador como en el servidor. En **Node.js**, el módulo **events** proporciona la clase **EventEmitter**, que permite crear y gestionar eventos personalizados de manera eficiente. En esta guía, exploraremos cómo usar **EventEmitter** para manejar eventos en tus aplicaciones backend, con ejemplos prácticos y consejos optimizados.
+
+## Que es EventEmitter en Node.js
+
+**EventEmitter** es una clase del módulo `events` de Node.js que permite emitir y escuchar eventos personalizados. Es ideal para manejar interacciones asíncronas, como respuestas a acciones del usuario o procesos del servidor. Por ejemplo, puedes usarlo para notificar cuando un proceso comienza o termina.
+
+Para comenzar, importa y crea una instancia de **EventEmitter**:
+
+```go:js
+const EventEmitter = require('node:events');
+const eventEmitter = new EventEmitter();
+```
+
+Este código inicializa un objeto **EventEmitter** que usaremos para definir y manejar eventos.
+
+## Como emitir y escuchar eventos
+
+El objeto **EventEmitter** ofrece dos métodos principales:
+
+- **`emit`**: Emite un evento, desencadenando las funciones asociadas.
+- **`on`**: Registra una función callback que se ejecuta cuando se emite el evento.
+
+### Ejemplo basico de EventEmitter
+
+Supongamos que queremos crear un evento llamado `inicio` que registre un mensaje en la consola:
+
+```go:js
+eventEmitter.on('inicio', () => {
+  console.log('El proceso ha comenzado');
+});
+
+eventEmitter.emit('inicio');
+```
+
+Al ejecutar `emit('inicio')`, el callback registrado con `on` se activa y muestra el mensaje en la consola.
+
+### Pasar argumentos a los eventos
+
+Puedes pasar argumentos al callback al emitir un evento. Por ejemplo:
+
+```go:js
+eventEmitter.on('inicio', (numero) => {
+  console.log(`El proceso comenzo con el numero ${numero}`);
+});
+
+eventEmitter.emit('inicio', 23);
+```
+
+**Salida**: `El proceso comenzó con el número 23`.
+
+También es posible pasar múltiples argumentos:
+
+```go:js
+eventEmitter.on('inicio', (inicio, fin) => {
+  console.log(`El proceso comenzo desde ${inicio} hasta ${fin}`);
+});
+
+eventEmitter.emit('inicio', 1, 100);
+```
+
+**Salida**: `El proceso comenzó desde 1 hasta 100`.
+
+## Metodos avanzados de EventEmitter
+
+Además de `on` y `emit`, **EventEmitter** ofrece métodos para gestionar eventos de manera más precisa:
+
+- **`once()`**: Registra un listener que se ejecuta solo una vez.
+- **`removeListener()` / `off()`**: Elimina un listener específico de un evento.
+- **`removeAllListeners()`**: Elimina todos los listeners de un evento.
+
+### Ejemplo de once()
+
+Para un evento que solo debe ejecutarse una vez:
+
+```go:js
+eventEmitter.once('conexion', () => {
+  console.log('Conexión establecida por primera vez');
+});
+
+eventEmitter.emit('conexion'); // Se ejecuta
+eventEmitter.emit('conexion'); // No se ejecuta
+```
+
+Consulta la [documentación oficial de Node.js](https://nodejs.org/api/events.html) para más detalles sobre estos métodos.
+
+## Casos practicos de EventEmitter
+
+**EventEmitter** es útil en escenarios como:
+
+- **Notificaciones en tiempo real**: Por ejemplo, emitir un evento cuando un usuario se conecta a una aplicación.
+- **Procesos asíncronos**: Gestionar tareas como la finalización de una carga de archivos.
+- **Aplicaciones modulares**: Comunicar módulos sin acoplarlos directamente.
+
+Por ejemplo, en una aplicación de chat, podrías usar **EventEmitter** para notificar nuevos mensajes:
+
+```go:js
+eventEmitter.on('nuevoMensaje', (usuario, mensaje) => {
+  console.log(`${usuario} dice: ${mensaje}`);
+});
+
+eventEmitter.emit('nuevoMensaje', 'Ana', '¡Hola, mundo!');
+```
+
+**Salida**: `Ana dice: ¡Hola, mundo!`.
+
+## Consejos para optimizar el uso de EventEmitter
+
+1. **Nombra eventos claramente**: Usa nombres descriptivos como `inicio`, `error` o `finalizado` para facilitar el mantenimiento.
+2. **Maneja errores**: Escucha el evento `error` para evitar que la aplicación falle inesperadamente:
+
+```go:js
+eventEmitter.on('error', (err) => {
+  console.error(`Error: ${err.message}`);
+});
+```
+
+3. **Limpia listeners**: Usa `removeListener` o `removeAllListeners` para evitar fugas de memoria en aplicaciones de larga ejecución.
+4. **Combina con otros módulos**: Integra **EventEmitter** con módulos como [Express](https://expressjs.com/es/) para aplicaciones web más robustas.
+
+## Conclusión
+
+**EventEmitter** es una herramienta poderosa en Node.js para manejar eventos personalizados de manera eficiente. Con métodos como `on`, `emit` y `once`, puedes crear aplicaciones interactivas y modulares. Aplica las mejores prácticas mencionadas para optimizar su uso y mejorar el rendimiento de tus proyectos.

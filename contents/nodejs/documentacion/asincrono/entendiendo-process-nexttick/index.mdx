@@ -1,0 +1,69 @@
+---
+title: Entendiendo process nextTick en Node.js
+description: Aprende como usar process nextTick en Node.js para ejecutar funciones asincronas con alta prioridad
+---
+
+## Que es process nextTick
+
+Al comprender el bucle de eventos de Node.js, una parte fundamental es `process.nextTick()`. Cada vez que el entorno de ejecucion llama de nuevo a JavaScript para manejar un evento, a ese ciclo lo llamamos un "tick".
+
+Cuando pasamos una funcion a `process.nextTick()`, le decimos al motor de JavaScript que ejecute esa funcion inmediatamente despues de que finalice la operacion actual, pero **antes** de que comience la siguiente fase del bucle de eventos.
+
+```go:js
+process.nextTick(() => {
+console.log("Esto se ejecuta antes del siguiente tick");
+});
+
+```
+
+## Como funciona process nextTick
+
+Durante la ejecucion del codigo actual, el bucle de eventos esta ocupado procesando esa tarea. Una vez que esa operacion termina, el motor de JavaScript ejecuta todas las funciones que se hayan pasado a `nextTick()` durante ese ciclo.
+
+Este metodo nos permite ejecutar una funcion de manera asincrona, **pero con la maxima prioridad posible**, justo antes de que comience el siguiente ciclo de eventos.
+
+## Diferencia entre process nextTick y setTimeout
+
+Es comun pensar que `setTimeout(() => {}, 0)` tiene un efecto similar, pero en realidad hay una diferencia clave:
+
+- `process.nextTick()` ejecuta la funcion **antes** del siguiente tick del bucle de eventos.
+- `setTimeout()` ejecuta la funcion **al final** del siguiente tick, lo que implica una espera mayor.
+
+```go:js
+setTimeout(() => {
+console.log("Esto se ejecuta despues de nextTick");
+}, 0);
+
+process.nextTick(() => {
+console.log("Esto se ejecuta primero");
+});
+
+```
+
+Salida:
+
+```
+
+Esto se ejecuta primero
+Esto se ejecuta despues de nextTick
+
+```
+
+## Cuando usar process nextTick
+
+Usa `nextTick()` cuando necesitas que una funcion asincrona se ejecute lo antes posible, justo despues de la operacion actual, pero sin bloquear el hilo principal.
+
+Es especialmente util cuando:
+
+- Necesitas asegurarte de que un callback se ejecute despues de cierta logica, pero antes de otros eventos asincronos.
+- Quieres dividir una tarea compleja en pasos mas pequenos sin salir del mismo ciclo de eventos.
+
+## Recursos adicionales
+
+Para aprender mas sobre la ejecucion del bucle de eventos y el orden de las operaciones en Node.js, te recomendamos leer este articulo detallado de la documentacion oficial:
+
+👉 [Understanding the Node.js Event Loop](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick)
+
+Tambien puedes revisar nuestra guia completa sobre asincronismo en Node.js:
+
+🔗 [Guia de asincronismo en Node.js](/guia-asincronismo-nodejs)

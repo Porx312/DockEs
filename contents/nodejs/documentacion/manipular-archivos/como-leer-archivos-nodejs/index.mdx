@@ -1,0 +1,139 @@
+---
+title: Como leer archivos en Node.js
+description: Aprende a leer archivos en Node.js con fs.readFile, readFileSync y streams para optimizar memoria
+---
+
+Leer archivos es una tarea común en aplicaciones backend con **Node.js**. El módulo `fs` (File System) ofrece métodos como `fs.readFile`, `fs.readFileSync` y `fsPromises.readFile` para leer archivos, además de streams para manejar archivos grandes. Esta guía explica cómo usar estos métodos, con ejemplos prácticos y consejos para optimizar el rendimiento.
+
+## Como leer archivos con fs.readFile (asincrono)
+
+El método `fs.readFile` lee el contenido completo de un archivo de forma asíncrona, recibiendo la ruta, la codificación (por ejemplo, `utf8`) y una función callback.
+
+### Ejemplo de fs.readFile
+
+```go:js
+import fs from 'node:fs';
+
+fs.readFile('/ruta/archivo.txt', 'utf8', (err, data) => {
+  if (err) {
+    console.error('Error:', err.message);
+    return;
+  }
+  console.log('Contenido:', data);
+});
+```
+
+Este método es ideal para archivos pequeños, ya que carga todo el contenido en memoria.
+
+## Como leer archivos con fs.readFileSync (sincrono)
+
+El método `fs.readFileSync` es una versión síncrona que bloquea el hilo hasta que el archivo se lee por completo. Úsalo con precaución, ya que puede afectar el rendimiento en aplicaciones de alto tráfico.
+
+### Ejemplo de fs.readFileSync
+
+```go:js
+import fs from 'node:fs';
+
+try {
+  const data = fs.readFileSync('/ruta/archivo.txt', 'utf8');
+  console.log('Contenido:', data);
+} catch (err) {
+  console.error('Error:', err.message);
+}
+```
+
+## Como leer archivos con promesas
+
+El módulo `fs/promises` ofrece `fsPromises.readFile`, que usa promesas para un enfoque más moderno con `async/await`. Es ideal para un código limpio y legible.
+
+### Ejemplo de fsPromises.readFile
+
+```go:js
+import fs from 'node:fs/promises';
+
+async function leerArchivo() {
+  try {
+    const data = await fs.readFile('/ruta/archivo.txt', { encoding: 'utf8' });
+    console.log('Contenido:', data);
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+leerArchivo();
+```
+
+## Leer archivos grandes con streams
+
+Los métodos anteriores cargan el archivo completo en memoria, lo que puede ser problemático para archivos grandes. Para optimizar el uso de memoria, usa **streams** con `fs.createReadStream`. Esto lee el archivo en fragmentos (chunks), reduciendo el impacto en el rendimiento.
+
+### Ejemplo de lectura con streams
+
+El siguiente ejemplo descarga un archivo desde una URL y lo lee usando un stream:
+
+```go:js
+import fs from 'node:fs';
+import { pipeline } from 'node:stream/promises';
+import path from 'node:path';
+
+const fileUrl = 'https://www.gutenberg.org/files/2701/2701-0.txt';
+const outputFilePath = path.join(process.cwd(), 'moby.md');
+
+async function descargarArchivo(url, outputPath) {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new Error(`Error al descargar ${url}. Estado: ${response.status}`);
+  }
+  const fileStream = fs.createWriteStream(outputPath);
+  console.log(`Descargando archivo de ${url} a ${outputPath}`);
+  await pipeline(response.body, fileStream);
+  console.log('Archivo descargado con éxito');
+}
+
+async function leerArchivo(filePath) {
+  const readStream = fs.createReadStream(filePath, { encoding: 'utf8' });
+  try {
+    for await (const chunk of readStream) {
+      console.log('--- Inicio de fragmento ---');
+      console.log(chunk);
+      console.log('--- Fin de fragmento ---');
+    }
+    console.log('Lectura de archivo finalizada');
+  } catch (err) {
+    console.error('Error al leer archivo:', err.message);
+  }
+}
+
+async function ejecutar() {
+  try {
+    await descargarArchivo(fileUrl, outputFilePath);
+    await leerArchivo(outputFilePath);
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+ejecutar();
+```
+
+Este código usa `fs.createReadStream` para leer el archivo en fragmentos, mostrando cada uno en la consola.
+
+## Cuándo usar cada método
+
+| Método | Ventajas | Desventajas | Caso de uso |
+|--------|----------|-------------|-------------|
+| `fs.readFile` | Asíncrono, fácil de usar | Carga todo en memoria | Archivos pequeños |
+| `fs.readFileSync` | Simple, síncrono | Bloquea el event loop | Scripts rápidos, no críticos |
+| `fsPromises.readFile` | Moderno, usa promesas | Carga todo en memoria | Código limpio con async/await |
+| `fs.createReadStream` | Eficiente para archivos grandes | Más complejo | Archivos grandes, alto rendimiento |
+
+## Consejos para optimizar la lectura de archivos
+
+1. **Usa streams para archivos grandes**: Reduce el consumo de memoria al procesar datos en fragmentos.
+2. **Especifica la codificación**: Usa `utf8` para evitar manejar buffers crudos.
+3. **Maneja errores**: Incluye siempre bloques `try/catch` o callbacks para errores.
+4. **Combina con otros módulos**: Usa el módulo [path](https://nodejs.org/api/path.html) para construir rutas compatibles o [Express](https://expressjs.com/es/) para servir archivos.
+
+## Conclusión
+
+Leer archivos en Node.js es sencillo con los métodos del módulo `fs`. Usa `fs.readFile` o `fsPromises.readFile` para archivos pequeños, y `fs.createReadStream` para archivos grandes. Con estas herramientas, puedes optimizar el rendimiento de tus aplicaciones backend. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html#fsreadfilepath-options-callback) para más detalles y explora nuestro [tutorial sobre Node.js](http://localhost/ruta-nodejs) para seguir aprendiendo.

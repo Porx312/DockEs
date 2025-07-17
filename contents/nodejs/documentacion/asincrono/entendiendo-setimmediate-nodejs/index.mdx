@@ -1,0 +1,108 @@
+---
+title: Entendiendo setImmediate en Node.js
+description: Descubre como funciona setImmediate en Node.js y en que se diferencia de process nextTick y setTimeout
+---
+
+## Que es setImmediate en Node.js
+
+Cuando quieres ejecutar codigo de forma asincrona pero **tan pronto como sea posible**, puedes usar la funcion `setImmediate()` que proporciona Node.js:
+
+```go:js
+setImmediate(() => {
+console.log("Este codigo se ejecuta en el siguiente ciclo de eventos");
+});
+
+```
+
+Cualquier funcion que se pase como argumento a `setImmediate()` se ejecutara en la **siguiente iteracion** del bucle de eventos.
+
+## Diferencias con process nextTick, setTimeout y Promise then
+
+A continuacion se explican las diferencias clave entre `setImmediate()`, `setTimeout()`, `process.nextTick()` y `Promise.then()`:
+
+- `process.nextTick()` se ejecuta **en el mismo ciclo** del bucle de eventos, justo despues de la operacion actual.
+- `Promise.then()` se agrega a la **cola de microtareas** y se ejecuta **despues** de `nextTick()`.
+- `setImmediate()` se agrega a la **cola de macrotareas** y se ejecuta en la siguiente iteracion del bucle.
+- `setTimeout(() => {}, 0)` se comporta de manera similar a `setImmediate()`, pero su orden de ejecucion puede variar segun el contexto.
+
+### Orden de prioridad en la ejecucion de tareas
+
+El bucle de eventos en Node.js sigue este orden:
+
+1. Cola de `process.nextTick()`
+2. Cola de microtareas (`Promise.then`)
+3. Cola de macrotareas (`setTimeout`, `setImmediate`)
+
+## Ejemplo practico del orden de ejecucion
+
+```go:js
+const baz = () => console.log('baz');
+const foo = () => console.log('foo');
+const zoo = () => console.log('zoo');
+
+const start = () => {
+console.log('start');
+
+setImmediate(baz);
+
+new Promise((resolve, reject) => {
+resolve('bar');
+}).then(resolve => {
+console.log(resolve);
+process.nextTick(zoo);
+});
+
+process.nextTick(foo);
+};
+
+start();
+
+```
+
+### Salida esperada en CommonJS:
+
+```
+
+start
+foo
+bar
+zoo
+baz
+
+```
+
+### Explicacion paso a paso
+
+1. Se ejecuta `start()`.
+2. `foo()` se encola en `process.nextTick()` y se ejecuta tras finalizar la operacion actual.
+3. Se resuelve la promesa, se imprime `bar`, y se encola `zoo()` en `process.nextTick()`.
+4. `zoo()` se ejecuta a continuacion.
+5. Finalmente, se ejecuta `baz()` desde la cola de macrotareas (`setImmediate()`).
+
+## Diferencias en ES Modules
+
+En archivos `.mjs` o modulos ES, el orden de ejecucion puede variar porque el modulo se carga como una operacion asincrona, lo que cambia la prioridad de las tareas:
+
+### Salida esperada en ES Modules:
+
+```
+
+start
+bar
+foo
+zoo
+baz
+
+```
+
+Esto ocurre porque el modulo completo ya esta en la cola de microtareas, y Node.js intenta vaciar esa cola completamente antes de continuar con otras colas.
+
+## Conclusiones
+
+- Usa `setImmediate()` cuando desees ejecutar codigo asincrono en el **siguiente ciclo** del bucle de eventos sin interferir con las microtareas.
+- Para tareas que deben ejecutarse **antes** del siguiente ciclo, considera usar `process.nextTick()` o `Promise.then()` segun la prioridad que necesites.
+
+## Recursos recomendados
+
+👉 [Documentacion oficial sobre el bucle de eventos de Node.js](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick)  
+🔗 [Como funciona process.nextTick en Node.js](/entendiendo-process-nexttick)

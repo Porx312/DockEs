@@ -1,0 +1,114 @@
+---
+title: Como manejar rutas de archivos en Node.js
+description: Aprende a usar el modulo path en Node.js para manejar rutas de archivos de forma eficiente
+---
+
+En **Node.js**, el módulo `path` es esencial para trabajar con rutas de archivos de manera portable y eficiente, especialmente porque los sistemas operativos como Linux, macOS y Windows usan formatos de rutas diferentes. Esta guía te explica cómo usar el módulo `path` para manipular rutas, extraer información y garantizar la compatibilidad multiplataforma.
+
+## Que es el modulo path en Node.js
+
+El módulo `path` proporciona herramientas para trabajar con rutas de archivos y directorios, resolviendo diferencias entre sistemas como Linux/macOS (por ejemplo, `/users/joe/file.txt`) y Windows (por ejemplo, `C:\users\joe\file.txt`). Esto es crucial para evitar errores en aplicaciones que se ejecutan en múltiples plataformas.
+
+Para usar el módulo, impórtalo:
+
+```go:js
+import path from 'node:path';
+```
+
+## Extraer informacion de una ruta
+
+El módulo `path` ofrece métodos para obtener detalles de una ruta de archivo:
+
+- **`path.dirname(ruta)`**: Devuelve la carpeta padre.
+- **`path.basename(ruta)`**: Devuelve el nombre del archivo.
+- **`path.extname(ruta)`**: Devuelve la extensión del archivo.
+
+### Ejemplo de extraccion de informacion
+
+```go:js
+import path from 'node:path';
+const ruta = '/users/joe/notas.txt';
+
+console.log(path.dirname(ruta)); // /users/joe
+console.log(path.basename(ruta)); // notas.txt
+console.log(path.extname(ruta)); // .txt
+```
+
+Para obtener el nombre del archivo sin la extensión, pasa la extensión como segundo argumento a `basename`:
+
+```go:js
+console.log(path.basename(ruta, path.extname(ruta))); // notas
+```
+
+## Trabajar con rutas de archivos
+
+El módulo `path` incluye métodos para construir y normalizar rutas de manera eficiente.
+
+### Unir rutas con path.join
+
+El método `path.join` combina múltiples partes de una ruta, asegurando compatibilidad entre sistemas operativos:
+
+```go:js
+const nombre = 'joe';
+const rutaCompleta = path.join('/', 'users', nombre, 'notas.txt');
+console.log(rutaCompleta); // /users/joe/notas.txt
+```
+
+### Calcular rutas absolutas con path.resolve
+
+El método `path.resolve` calcula una ruta absoluta a partir de una relativa, basándose en el directorio de trabajo actual:
+
+```go:js
+console.log(path.resolve('joe.txt')); // /Users/joe/joe.txt (si se ejecuta desde /Users/joe)
+```
+
+Si especificas una carpeta como base, `resolve` la usa como punto de partida:
+
+```go:js
+console.log(path.resolve('tmp', 'joe.txt')); // /Users/joe/tmp/joe.txt
+```
+
+Para rutas absolutas, usa una barra inicial:
+
+```go:js
+console.log(path.resolve('/etc', 'joe.txt')); // /etc/joe.txt
+```
+
+### Normalizar rutas con path.normalize
+
+El método `path.normalize` elimina especificadores relativos como `.` o `..` y corrige rutas con barras dobles:
+
+```go:js
+console.log(path.normalize('/users/joe/..//test.txt')); // /users/test.txt
+```
+
+**Nota**: Ni `resolve` ni `normalize` verifican si la ruta existe; solo calculan la ruta basada en la entrada.
+
+## Casos practicos de path en Node.js
+
+El módulo `path` es útil en escenarios como:
+
+- **Construcción de rutas dinámicas**: Generar rutas para guardar o leer archivos según el usuario.
+- **Compatibilidad multiplataforma**: Evitar errores al trabajar en diferentes sistemas operativos.
+- **Procesamiento de archivos**: Extraer nombres o extensiones para procesar archivos específicos.
+
+Por ejemplo, para generar una ruta dinámica para guardar un archivo:
+
+```go:js
+import path from 'node:path';
+const usuario = 'joe';
+const archivo = 'datos.json';
+const rutaGuardado = path.join('data', usuario, archivo);
+console.log(rutaGuardado); // data/joe/datos.json
+```
+
+## Consejos para optimizar el uso de path
+
+1. **Usa path.join para rutas**: Evita concatenar rutas manualmente con `/` o `\`, ya que `path.join` garantiza compatibilidad.
+2. **Valida rutas**: Combina `path` con el módulo [fs](https://nodejs.org/api/fs.html) para verificar si una ruta existe.
+3. **Normaliza rutas dinámicas**: Usa `path.normalize` para limpiar entradas de usuarios que puedan incluir `..` o `./`.
+4. **Integra con frameworks**: Usa `path` con [Express](https://expressjs.com/es/) para manejar rutas de archivos en aplicaciones web.
+
+## Conclusión
+
+El módulo `path` de Node.js es una herramienta esencial para manejar rutas de archivos de manera eficiente y portable. Con métodos como `dirname`, `basename`, `join` y `resolve`, puedes construir aplicaciones robustas y compatibles con cualquier sistema operativo. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/path.html) para más detalles y explora nuestro [tutorial sobre Node.js](http://localhost/ruta-nodejs) para seguir aprendiendo.

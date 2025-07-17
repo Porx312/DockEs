@@ -1,0 +1,130 @@
+---
+title: Como funciona el Event Loop en Node.js explicacion completa
+description: Descubre que es el Event Loop en Node.js sus fases y como permite la programacion asincrona y eficiente
+---
+
+## Que es el event loop en Node.js
+
+El **event loop** es el mecanismo central que permite a Node.js operar de forma **asincrona y no bloqueante** usando un solo hilo principal para ejecutar JavaScript, mientras delega operaciones complejas al sistema operativo y su kernel. Esto hace posible atender miles de conexiones simultaneas y gestionar tareas como lecturas de archivos, solicitudes de red y temporizadores sin bloquear el hilo principal[1][2][4].
+
+## Como funciona el event loop
+
+Al iniciar una aplicacion Node.js:
+
+1. Se ejecuta el main script (codigo sincrono).
+2. Se procesan microtareas: **Promises** y `process.nextTick`.
+3. Se ejecutan los temporizadores (callbacks de `setTimeout` y `setInterval`).
+4. Se procesan las callbacks de operaciones I/O (archivos, red).
+5. Se ejecutan los callbacks de `setImmediate`.
+6. Se manejan eventos de cierre (por ejemplo, `socket.on('close')`).
+
+Entre cada una de estas fases, Node.js ejecuta **microtareas** en el siguiente orden de prioridad: primero las de `process.nextTick`, luego las de Promises[1][3].
+
+## Fases del event loop
+
+El event loop tiene varias fases, cada una con su propio conjunto de tareas o "cola de callbacks" que ejecuta en orden FIFO:
+
+| Fase              | Que maneja                                                                  |
+| ----------------- | --------------------------------------------------------------------------- |
+| Timers            | Callbacks de `setTimeout` y `setInterval`                                   |
+| Pending Callbacks | Callbacks de operaciones del sistema pendientes (TCP, errores de red)       |
+| Idle, Prepare     | Uso interno de Node.js                                                      |
+| Poll              | Recupera nuevos eventos I/O, ejecuta sus callbacks (archivos, sockets, red) |
+| Check             | Callbacks de `setImmediate`                                                 |
+| Close Callbacks   | Callbacks de cierre, ej: `socket.on('close')`                               |
+
+> Entre fases, Node.js ejecuta microtareas: primero `process.nextTick()`, luego Promesas (`Promise.then`, etc.)[1][3].
+
+### Esquema grafico del event loop
+
+```plaintext
+┌──────────────┐
+│   timers     │     // setTimeout, setInterval
+└──────┬───────┘
+       │
+┌──────▼────────┐
+│pending cbs    │     // system callbacks
+└──────┬────────┘
+       │
+┌──────▼───────┐
+│ idle,prepare │
+└──────┬───────┘
+       │
+┌──────▼─────┐           ┌─────────────┐
+│   poll     ││ incoming I/O│
+└──────┬─────┘           └─────────────┘
+       │
+┌──────▼──────┐
+│   check     │     // setImmediate
+└──────┬──────┘
+       │
+┌──────▼─────────┐
+│close callbacks │     // socket, streams
+└────────────────┘
+```
+
+## Orden de ejecucion: ejemplo practico
+
+```go:js
+console.log('Primero');
+setTimeout(() => console.log('Tercero'), 0);
+Promise.resolve().then(() => console.log('Segundo'));
+console.log('Cuarto');
+```
+
+**Secuencia del output:**
+
+```
+Primero
+Cuarto
+Segundo   // Microtarea: Promesa
+Tercero   // Timer: setTimeout
+```
+
+- El codigo sincrono se ejecuta primero[1][3]
+- Luego las microtareas (`Promise`)
+- Finalmente los temporizadores
+
+Otro ejemplo mostrando todas las fases principales:
+
+```go:js
+console.log('1. Start');
+process.nextTick(() => console.log('2. Next tick'));
+Promise.resolve().then(() => console.log('3. Promise'));
+setTimeout(() => console.log('4. Timeout'), 0);
+setImmediate(() => console.log('5. Immediate'));
+console.log('6. End');
+```
+
+**Resultado:**
+
+```
+1. Start
+6. End
+2. Next tick
+3. Promise
+4. Timeout
+5. Immediate
+```
+
+Prioridad: Sync > nextTick > Promesas > Timers > setImmediate > Close[1][3].
+
+## Relacion con libuv y el kernel
+
+Node.js utiliza la libreria **libuv** para implementar el event loop, manejar la delegacion de operaciones pesadas a otros hilos (thread pool) y unificar comportamientos en diferentes sistemas operativos[2][4]. Cuando hay tareas de I/O (ej: leer archivos), libuv distribuye el trabajo a threads secundarios. Cuando terminan, notifican al hilo principal JavaScript y su callback entra al event loop para ejecutarse en el momento correcto.
+
+## Diferencias clave entre process.nextTick, setTimeout y setImmediate
+
+| Metodo             | Cuando se ejecuta                              | Uso principal                 |
+| ------------------ | ---------------------------------------------- | ----------------------------- |
+| process.nextTick() | Antes de salir de la fase actual del loop      | Acciones criticas/microtareas |
+| setTimeout()       | Fase timers, puede estar ligeramente retrasado | Ejecutar tras n ms            |
+| setImmediate()     | Fase check, justo despues de la fase de I/O    | Tras I/O intensivo/bloqueante |
+
+> Recomendacion: usar preferentemente `setImmediate()` en vez de `process.nextTick()` salvo casos puntuales, ya que es mas facil de razonar y evita bloqueos del event loop[1][5].
+
+## Recursos recomendados
+
+- [Visual guide to Node.js Event Loop (Builder.io)](https://www.builder.io/blog/visual-guide-to-nodejs-event-loop)
+- [Explicacion oficial en Node.js (en ingles)](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
+- [Node.js event loop explicado (w3schools)](https://www.w3schools.com/nodejs/nodejs_event_loop.asp)

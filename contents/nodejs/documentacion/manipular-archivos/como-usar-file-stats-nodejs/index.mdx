@@ -1,0 +1,141 @@
+---
+title: Como usar file stats en Node.js
+description: Aprende a usar el metodo stat en Node.js para obtener detalles de archivos como tamano y tipo
+href: /como-usar-file-stats-nodejs
+subtitle: Guia de file stats en Node.js
+---
+
+
+En **Node.js**, el módulo `fs` (File System) permite interactuar con el sistema de archivos, incluyendo la obtención de detalles sobre archivos mediante el método `stat`. Esta guía te explica cómo usar `stat` para inspeccionar propiedades de archivos, como su tamaño o tipo, con ejemplos prácticos y enfoques síncronos y asíncronos.
+
+## Que es el metodo stat en Node.js
+
+El método `stat` del módulo `fs` proporciona información detallada sobre un archivo, como si es un archivo regular, un directorio o un enlace simbólico, además de su tamaño en bytes. Este método es esencial para tareas como validar la existencia de un archivo o gestionar sistemas de archivos en aplicaciones backend.
+
+Para usar `stat`, importa el módulo `fs`:
+
+```go:js
+import fs from 'node:fs';
+```
+
+## Como usar stat de manera asincrona
+
+El método `fs.stat` es asíncrono y recibe una ruta de archivo y una función callback con dos parámetros: un posible error y un objeto `stats` con los detalles del archivo.
+
+### Ejemplo basico de fs.stat
+
+```go:js
+import fs from 'node:fs';
+
+fs.stat('/ruta/archivo.txt', (err, stats) => {
+  if (err) {
+    console.error('Error:', err.message);
+    return;
+  }
+  console.log('Es archivo?', stats.isFile()); // true
+  console.log('Es directorio?', stats.isDirectory()); // false
+  console.log('Es enlace simbólico?', stats.isSymbolicLink()); // false
+  console.log('Tamaño:', stats.size, 'bytes'); // Ejemplo: 1024000 bytes
+});
+```
+
+En este ejemplo, verificamos si el archivo es un archivo regular, un directorio o un enlace simbólico, y mostramos su tamaño.
+
+## Uso del metodo statSync (sincrono)
+
+Si prefieres un enfoque síncrono, usa `fs.statSync`, que bloquea el hilo hasta que los detalles del archivo están disponibles. Es útil para operaciones rápidas, pero evita usarlo en aplicaciones de alto rendimiento para no bloquear el event loop.
+
+```go:js
+import fs from 'node:fs';
+
+try {
+  const stats = fs.statSync('/ruta/archivo.txt');
+  console.log('Es archivo?', stats.isFile()); // true
+  console.log('Es directorio?', stats.isDirectory()); // false
+  console.log('Es enlace simbólico?', stats.isSymbolicLink()); // false
+  console.log('Tamaño:', stats.size, 'bytes'); // Ejemplo: 1024000 bytes
+} catch (err) {
+  console.error('Error:', err.message);
+}
+```
+
+## Uso de stat con promesas
+
+El módulo `fs/promises` ofrece `fsPromises.stat`, que permite usar `async/await` para un código más limpio y moderno:
+
+```go:js
+import fs from 'node:fs/promises';
+
+async function obtenerStats() {
+  try {
+    const stats = await fs.stat('/ruta/archivo.txt');
+    console.log('Es archivo?', stats.isFile()); // true
+    console.log('Es directorio?', stats.isDirectory()); // false
+    console.log('Es enlace simbólico?', stats.isSymbolicLink()); // false
+    console.log('Tamaño:', stats.size, 'bytes'); // Ejemplo: 1024000 bytes
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+obtenerStats();
+```
+
+## Propiedades clave del objeto stats
+
+El objeto `stats` contiene información útil, incluyendo:
+
+- `stats.isFile()`: Devuelve `true` si es un archivo regular.
+- `stats.isDirectory()`: Devuelve `true` si es un directorio.
+- `stats.isSymbolicLink()`: Devuelve `true` si es un enlace simbólico.
+- `stats.size`: Tamaño del archivo en bytes.
+
+Por ejemplo, para verificar el tipo de archivo y su tamaño:
+
+```go:js
+import fs from 'node:fs';
+
+fs.stat('/ruta/archivo.txt', (err, stats) => {
+  if (err) {
+    console.error('Error:', err.message);
+    return;
+  }
+  console.log(`Tipo: ${stats.isFile() ? 'Archivo' : 'No es archivo'}`);
+  console.log(`Tamaño: ${stats.size / 1024} KB`);
+});
+```
+
+## Casos practicos de file stats
+
+El método `stat` es útil en escenarios como:
+
+- **Validación de archivos**: Comprobar si un archivo existe antes de procesarlo.
+- **Gestión de directorios**: Verificar si una ruta es un directorio para operaciones como listar archivos.
+- **Monitoreo de tamaño**: Controlar el tamaño de archivos para optimizar almacenamiento.
+
+Por ejemplo, para verificar si una carpeta existe antes de guardar un archivo:
+
+```go:js
+import fs from 'node:fs';
+
+fs.stat('/ruta/carpeta', (err, stats) => {
+  if (err) {
+    console.error('La carpeta no existe');
+    return;
+  }
+  if (stats.isDirectory()) {
+    console.log('La carpeta existe, puedes guardar archivos');
+  }
+});
+```
+
+## Consejos para optimizar el uso de stat
+
+1. **Usa el enfoque asíncrono**: Prefiere `fs.stat` o `fsPromises.stat` en aplicaciones de alto tráfico para evitar bloqueos.
+2. **Maneja errores**: Siempre incluye manejo de errores con `try/catch` o callbacks.
+3. **Combina con otros módulos**: Usa `stat` con módulos como [Express](https://expressjs.com/es/) para gestionar archivos en aplicaciones web.
+4. **Optimiza rutas**: Asegúrate de que las rutas de archivo sean correctas para evitar errores.
+
+## Conclusión
+
+El método `stat` de Node.js es una herramienta poderosa para obtener información sobre archivos y directorios. Ya sea con callbacks, promesas o de forma síncrona, puedes usarlo para validar archivos, gestionar tamaños y optimizar aplicaciones backend. Explora la [documentación oficial de Node.js](https://nodejs.org/api/fs.html#fsstatpath-options-callback) para más detalles y consulta nuestro [tutorial sobre Node.js](http://localhost/ruta-nodejs) para seguir aprendiendo.

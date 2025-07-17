@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/theme-toggle";
-import {  AtSign } from "lucide-react";
+import { AtSign } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
 import Anchor from "./anchor";
@@ -66,8 +66,6 @@ export function Navbar() {
     </nav>
   );
 }
-
-
 
 export function NavMenu({ isSheet = false }) {
   return (

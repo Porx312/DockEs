@@ -1,0 +1,67 @@
+---
+title: Como evitar bloquear el Event Loop y el Worker Pool en Node.js
+description: Recomendaciones para no bloquear el Event Loop ni el Worker Pool en Node.js manteniendo alto rendimiento y evitando ataques de denegacion de servicio
+href: /no-bloquear-event-loop-nodejs
+subtitle: No bloquear Event Loop
+---
+
+## Por que no se debe bloquear el event loop en Node.js
+
+Node.js es eficiente porque utiliza un **event loop** de un solo hilo para gestionar multiples clientes y tareas. Si bloqueas el event loop (ejecutando tareas pesadas sincronicamente), **nadie mas recibira atencion** hasta que finalice esa tarea. Esto afecta el **rendimiento** y la **seguridad** de la aplicacion, ya que permite ataques de denegacion de servicio (DoS) si un usuario envia datos que provocan bloqueos prolongados.
+
+## Reglas basicas para no bloquear el event loop
+
+- **Evita ejecutar codigo que consume mucho CPU** (calculos intensivos, bucles grandes, operaciones costosas) en callbacks del event loop.
+- Siempre que sea posible, **usa funciones asincronas** y deja que las APIs de Node.js deleguen I/O en el Worker Pool.
+- **Cuida el uso de await, Promise.then o cualquier callback**: si contienen operaciones pesadas, bloquean igual que una funcion sincrona.
+
+### Ejemplo de bloqueo
+
+```go:js
+app.get('/bloquea', (req, res) => {
+  for (let i = 0; i  console.log('Suma:', resultado));
+```
+
+### 3. Cuida el uso de expresiones regulares
+
+- Evita **expresiones regulares vulnerables a REDOS**; pueden bloquear el event loop ante entradas maliciosas.
+- Si validas cadenas complejas, usa alternativas como `indexOf`, validadores o engines como re2 para tareas criticas.
+
+### 4. No uses APIs sincrónicas que bloquean
+
+- Evita en servidores las APIs sincronas de **fs, crypto, zlib, child_process** y similares.
+- Usa **solo versiones asincronas** para operaciones de filesystem, crypto, compresion y procesos hijos.
+
+Ejemplo malo:
+
+```go:js
+const datos = fs.readFileSync('archivo.txt'); // Bloquea el event loop
+```
+
+### 5. Limita la complejidad y el tamaño de los datos procesados
+
+- Si el tiempo de ejecucion depende del tamaño de la entrada, pon limites razonables y valida antes de procesar.
+- Aplica esto tanto para bucles como manipulacion de JSON, buffers, arreglos y strings.
+
+## Buenas practicas adicionales
+
+- Puedes usar **modulos npm** como `worker_threads` para computo paralelo, `JSONStream` o `Big-Friendly JSON` para manipular JSON de gran tamaño sin bloquear.
+- Analiza bibliotecas de terceros antes de usarlas: un modulo asincrono puede esconder operaciones costosas en un worker pool o en el propio hilo principal.
+- Si necesitas alto rendimiento CPU, considera alternativas como delegar esa parte a servicios escritos en otros lenguajes (Go, Rust, C++).
+
+## cuando usar cada enfoque
+
+| Tipo de tarea               | Como delegar para evitar bloqueo                    |
+| --------------------------- | --------------------------------------------------- |
+| I/O asincrono               | Deja que Node lo maneje, no bloquea                 |
+| Computo y tareas CPU        | Usa worker threads o divide/particiona la tarea     |
+| Validacion compleja (regex) | Usa engines seguros o limita la longitud de entrada |
+| Operaciones costosas sync   | Evitalas: reemplaza por versiones asincronas        |
+
+> Node.js es excelente para aplicaciones I/O intensivas, pero **debes evitar el bloqueo** del event loop y de los workers para mantener la escalabilidad y disponibilidad del servidor.
+
+## Recursos relacionados
+
+- [Node.js: Don't Block the Event Loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
+- [Estrategias: Particion de tareas, threads y cluster](https://betterprogramming.pub/three-strategies-to-address-node-jss-event-loop-blocking-9dedd0a233ac)
+- [Como prevenir bloqueo en tareas CPU intensivas](https://2coffee.dev/en/articles/two-techniques-to-prevent-blocking-the-event-loop-when-handling-cpu-intensive-tasks)

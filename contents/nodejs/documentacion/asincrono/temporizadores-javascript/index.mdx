@@ -1,0 +1,124 @@
+---
+title: Temporizadores en JavaScript Guia de setTimeout y setInterval
+description: Descubre como funcionan los temporizadores setTimeout y setInterval en JavaScript ejemplos practicos y diferencias clave
+---
+
+## Que es setTimeout en JavaScript
+
+La funcion **setTimeout** permite **programar la ejecucion de una funcion tras un cierto tiempo** (milisegundos). Es muy util para retrasar la ejecucion de un bloque de codigo o realizar tareas asincronas simples.
+
+```go:js
+setTimeout(() => {
+  // Se ejecuta despues de 2 segundos
+}, 2000);
+
+setTimeout(() => {
+  // Se ejecuta despues de 50 ms
+}, 50);
+```
+
+Tambien puedes pasar una funcion existente con parametros:
+
+```go:js
+const miFuncion = (param1, param2) => {
+  // hacer algo
+};
+setTimeout(miFuncion, 2000, valor1, valor2);
+```
+
+En **Node.js**, setTimeout retorna una instancia de Timeout; en el navegador, retorna un ID numerico. Ambas pueden usarse para cancelar la funcion antes de que se ejecute con **clearTimeout**:
+
+```go:js
+const temporizador = setTimeout(() => {
+  // Deberia ejecutarse en 2 segundos
+}, 2000);
+// Cancelar la ejecucion
+clearTimeout(temporizador);
+```
+
+### Retraso cero
+
+Si indicas un retardo de **0 ms**, la funcion se ejecuta lo antes posible, pero solo **despues de finalizar la ejecucion actual**:
+
+```go:js
+setTimeout(() => {
+  console.log('despues');
+}, 0);
+console.log('antes');
+```
+
+Esto imprime:
+
+```
+antes
+despues
+```
+
+Este patron resulta util para **desbloquear el hilo principal** permitiendo que otras tareas se ejecuten antes de continuar.
+
+## Que es setInterval en JavaScript
+
+La funcion **setInterval** te permite **ejecutar una funcion de manera repetitiva cada cierto intervalo de tiempo**.
+
+```go:js
+setInterval(() => {
+  // Se ejecuta cada 2 segundos
+}, 2000);
+```
+
+Al igual que con setTimeout, puedes cancelar la ejecucion usando **clearInterval**:
+
+```go:js
+const intervalo = setInterval(() => {
+  // Se ejecuta cada 2 segundos
+}, 2000);
+// Detener el intervalo cuando quieras
+clearInterval(intervalo);
+```
+
+### Detener intervalos segun condiciones
+
+Un caso comun es detener el intervalo cuando se cumpla una condicion especifica:
+
+```go:js
+const intervalo = setInterval(() => {
+  if (App.estado === 'listo') {
+    clearInterval(intervalo);
+  }
+  // Hacer otras cosas
+}, 100);
+```
+
+## Recursive setTimeout para control total
+
+**setInterval** ejecuta la funcion cada n milisegundos independientemente si la anterior ya termino, lo que puede causar solapamientos. Si necesitas esperar a que la ejecucion finalice antes de programar la siguiente, usa **setTimeout de manera recursiva**:
+
+```go:js
+const miFuncion = () => {
+  // hacer algo
+  setTimeout(miFuncion, 1000);
+};
+setTimeout(miFuncion, 1000);
+```
+
+Esto garantiza que cada ejecucion espere a que la anterior termine.
+
+## Diferencias clave entre setTimeout y setInterval
+
+| Metodo      | Ejecuta                    | Puede cancelar con | Solapamiento        |
+| ----------- | -------------------------- | ------------------ | ------------------- |
+| setTimeout  | Una vez tras el retardo    | clearTimeout       | No                  |
+| setInterval | Repetidamente cada retardo | clearInterval      | Si, puede solaparse |
+
+## Consideraciones adicionales
+
+- **setTimeout(func, 0)** ejecuta la tarea lo antes posible pero tras finalizar el codigo en ejecucion actual[1][4].
+- Ambos metodos son compatibles nativamente en **navegadores y Node.js**[1][3].
+- En navegadores, tras varias llamadas anidadas con timeout 0, el retardo minimo puede aumentar por seguridad[4].
+- Existen otros metodos como **setImmediate()** (en Node.js) para tareas inmediatas, pero no es estandar en navegadores[8][9].
+- El valor maximo para delays es 2,147,483,647 ms (~24,8 dias); superar ese valor causa que el timeout se ejecute inmediatamente[4].
+
+## Recursos para profundizar
+
+- [Documentacion oficial setTimeout y setInterval en MDN](https://developer.mozilla.org/es/docs/Web/API/Window/setTimeout)
+- [Guia avanzada: Planificacion de tareas en JavaScript](https://es.javascript.info/settimeout-setinterval)
