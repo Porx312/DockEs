@@ -1,0 +1,134 @@
+---
+title: Como publicar un paquete Node.js segun mejores practicas y modulos modernos
+description: Descubre las mejores practicas para publicar paquetes Node.js en CJS y ESM, evitando el dual-package hazard y configurando correctamente package.json.
+href: /publicar-paquete-nodejs-mejores-practicas
+subtitle: Publicar paquetes Nodejs
+---
+
+## Publicar un paquete Nodejs: CJS, ESM y evitacion de problemas duales
+
+Publicar un paquete en Node.js en 2025 implica tomar decisiones inteligentes sobre el formato de distribucion del modulo, la configuracion de tu package.json y la compatibilidad con el ecosistema. A continuacion se presentan las mejores practicas y ejemplos claros para lograr una publicacion exitosa.
+
+## Opciones principales de distribucion
+
+Existen **dos opciones recomendadas** para la mayoria de los usos:
+
+- **Publicar solo en formato CJS**  
+  - Escriba el codigo fuente y distribuya en CommonJS (requiere(); es compatible con todos los Node.js y con ESM en versiones modernas)[5][7].
+- **Publicar solo en formato ESM**  
+  - Escriba el codigo fuente y distribuya en ECMAScript Modules (import; sin top-level await); es compatible con ESM y, desde Node.js v22.12.0 y v23, tambien se puede requerir desde CJS[5].
+
+> ⚠️ Se recomienda **no publicar CJS y ESM a la vez**: Publicar ambos formatos puede causar el "dual-package hazard", donde dos instancias paralelas del modulo pueden coexistir, generando bugs dificiles de rastrear[5].
+
+## Tabla resumen: Estrategias de publicacion
+
+| Fuente que tu escribes | Consumidor escribe su codigo en | Opciones recomendadas |
+|------------------------|----------------------------------|--------------------------|
+| CJS (require)          | ESM (import)                     | CJS fuente y solo distribucion ESM |
+| CJS & ESM              | CJS o ESM                        | CJS fuente y ambas distro (recomendado solo si es necesario) |
+| ESM (import)           | CJS (requiere top-level await)   | ESM fuente y solo distribucion CJS |
+| CJS & ESM              | CJS o ESM                        | ESM fuente y ambas distro (solo si es necesario) |
+
+## Ejemplos de configuracion package.json
+
+### 1. Solo CJS: fuente y distribucion
+
+```json
+{
+  "name": "cjs-source-and-distribution"
+}
+```
+
+### 2. Solo ESM: fuente y distribucion
+
+```json
+{
+  "name": "esm-source-and-distribution",
+  "type": "module"
+}
+```
+
+### 3. CJS fuente y solo distribucion ESM
+
+```json
+{
+  "name": "cjs-source-with-esm-distribution",
+  "main": "./dist/index.mjs"
+}
+```
+
+### 4. CJS fuente y doble distro clara
+
+```json
+{
+  "name": "cjs-with-full-dual-distro",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  }
+}
+```
+
+### 5. ESM fuente, distribucion CJS & ESM
+
+```json
+{
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.cjs"
+    }
+  }
+}
+```
+
+## Buenas practicas en la publicacion
+
+- **Incluya "name" y "version"** en package.json: son obligatorios para publicar en cualquier registro[1][2][5].
+- **Configura la propiedad "exports"** para controlar que archivos son visibles externamente y evitar acceso indebido a codigo interno[5][7].
+- **Incluye "./package.json" en "exports"** para hacer posible la importacion de los metadatos del paquete si es relevante para los consumidores[5].
+- **Utiliza el campo "type"** con cuidado:  
+  - `"type":"module"` hace que todos los archivos .js se interpreten como ESM.
+  - Sin el campo o con `"type":"commonjs"` .js se interpreta como CJS[5][7].
+- **Agrega "engines"** para especificar la version minima de Node.js soportada. Ejemplo:
+```json
+"engines": {
+  "node": ">=16.0.0"
+}
+```
+- **Usa archivo .npmignore** para excluir archivos/carpetas no deseadas del paquete publicado[2][3][5].
+
+## Pasos para publicar un paquete
+
+1. **Preparar la cuenta de npm**: Inicia sesion con `npm login`[2][3][6].
+2. **Ejecutar una compilacion y pruebas** (si procede): `npm run build`, `npm test`[6].
+3. **Realizar un prechequeo** de lo que se publicara:
+   - `npx pack --dry-run`
+   - `npm publish --dry-run`[4].
+4. **Publicar:**
+   - Para paquetes con scope: `npm publish --access=public`[2][3][4][6].
+   - Para paquetes simples/descopeados: `npm publish`.
+
+## Riesgos: el dual-package hazard
+
+> Cuando un paquete se publica en ambos formatos CJS y ESM, aplicaciones diferentes (o dependencias de una misma app) pueden cargar cada formato por separado, creando **dos instancias paralelas e independientes del mismo modulo**[5]. Esto es especialmente problemático para paquetes con estado interno. Por eso, publica siempre en un solo formato salvo razones fundadas.
+
+## Recursos y herramientas adicionales
+
+- [npmjs Docs sobre package.json](https://docs.npmjs.com/files/package.json)[1]
+- [Guia de mejores practicas npm en 2025](https://snyk.io/blog/best-practices-create-modern-npm-package/)[4]
+- [Tipo de modulos Node.js y distribucion en 2025](https://lirantal.com/blog/typescript-in-2025-with-esm-and-cjs-npm-publishing)[5]
+- [Guia completa para primer paquete en npm (LinkedIn)](https://www.linkedin.com/pulse/complete-guide-publishing-your-first-npm-package-chan-meng-srrec)[6]
+
+## Resumen clave
+
+- Elige **un solo formato** (CJS o ESM) siempre que sea posible para minimizar problemas.
+- Configura el package.json con "exports" explicitos.
+- Usa "type" y extensiones (.js, .mjs, .cjs) de forma consciente.
+- Realiza pruebas secas (`--dry-run`) antes de publicar definitivamente.
+- Publica usando `npm publish --access=public` para paquetes con scope.
+

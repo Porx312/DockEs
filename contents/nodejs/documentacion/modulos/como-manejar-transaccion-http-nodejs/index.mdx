@@ -1,0 +1,148 @@
+---
+title: Como manejar transaccion HTTP en Node.js
+description: Aprende a crear y gestionar servidores HTTP en Node.js con ejemplos practicos
+href: /como-manejar-transaccion-http-nodejs
+subtitle: Servidor HTTP en Node.js
+---
+
+
+Crear y gestionar servidores HTTP en Node.js es esencial para aplicaciones web. Este artículo detalla cómo manejar transacciones HTTP usando el módulo `http`, desde la creación del servidor hasta el enrutamiento y la gestión de errores, con ejemplos claros y prácticos.
+
+## Por que entender las transacciones HTTP
+
+El módulo `http` de Node.js permite construir servidores web que manejan solicitudes y respuestas HTTP. Comprender este proceso es clave para desarrollar aplicaciones robustas, desde APIs simples hasta servidores complejos, aprovechando `EventEmitter` y `Streams`.
+
+## Crear un servidor HTTP
+
+Usa `http.createServer` para iniciar un servidor. El manejador de solicitudes se ejecuta por cada petición recibida:
+
+```go:js
+const http = require('node:http');
+const server = http.createServer((req, res) => {
+  // Maneja la solicitud aquí
+});
+server.listen(8080); // Escucha en el puerto 8080
+```
+
+Alternativamente, usa `EventEmitter` explícitamente:
+
+```go:js
+const http = require('node:http');
+const server = http.createServer();
+server.on('request', (req, res) => {
+  // Maneja la solicitud aquí
+});
+server.listen(8080);
+```
+
+Consulta la [documentación de `http`](https://nodejs.org/api/http.html) para más opciones.
+
+## Obtener metodo URL y cabeceras
+
+Accede al método, URL y cabeceras desde el objeto `req` (instancia de `IncomingMessage`):
+
+```go:js
+const { method, url, headers } = req;
+const userAgent = headers['user-agent'];
+console.log(`Método: ${method}, URL: ${url}, User-Agent: ${userAgent}`);
+```
+
+**Notas**:
+- Las cabeceras se convierten a minúsculas para facilitar su manejo.
+- Usa `rawHeaders` para cabeceras sin procesar si necesitas preservar el formato original.
+
+## Procesar el cuerpo de la solicitud
+
+Para solicitudes POST o PUT, el cuerpo se lee desde el flujo `req` (instancia de `ReadableStream`):
+
+```go:js
+let body = [];
+req
+  .on('data', chunk => {
+    body.push(chunk); // Acumula fragmentos
+  })
+  .on('end', () => {
+    body = Buffer.concat(body).toString(); // Convierte a string
+    console.log('Cuerpo:', body);
+  })
+  .on('error', err => {
+    console.error('Error en solicitud:', err); // Maneja errores
+  });
+```
+
+**Consejo**: Usa módulos como `body-parser` o `concat-stream` para simplificar este proceso.
+
+## Configurar la respuesta
+
+El objeto `res` (instancia de `ServerResponse`) permite enviar códigos de estado, cabeceras y cuerpo:
+
+```go:js
+res.statusCode = 200; // Código de estado
+res.setHeader('Content-Type', 'application/json'); // Cabecera
+res.write(JSON.stringify({ mensaje: '¡Hola, mundo!' })); // Cuerpo
+res.end(); // Finaliza la respuesta
+```
+
+O usa `writeHead` para configurar todo en una línea:
+
+```go:js
+res.writeHead(200, { 'Content-Type': 'application/json' });
+res.end(JSON.stringify({ mensaje: '¡Hola, mundo!' }));
+```
+
+**Nota**: Configura el estado y cabeceras antes de enviar el cuerpo.
+
+## Enrutamiento basico y servidor echo
+
+Un servidor "echo" devuelve el cuerpo de la solicitud si se cumplen condiciones específicas (ej., método POST y URL `/echo`):
+
+```go:js
+const http = require('node:http');
+http
+  .createServer((req, res) => {
+    req.on('error', err => {
+      console.error('Error:', err);
+      res.statusCode = 400; // Bad Request
+      res.end();
+    });
+    res.on('error', err => {
+      console.error('Error:', err);
+    });
+    if (req.method === 'POST' && req.url === '/echo') {
+      req.pipe(res); // Redirige el flujo de entrada a la salida
+    } else {
+      res.statusCode = 404; // Not Found
+      res.end();
+    }
+  })
+  .listen(8080);
+```
+
+**Ventaja**: Usar `pipe` simplifica el manejo de flujos, ideal para servidores echo.
+
+## Comparacion de metodos clave
+
+| Método | Uso | Ejemplo |
+|--------|-----|---------|
+| createServer | Crear servidor | `http.createServer((req, res) => {})` |
+| req.on('data') | Leer cuerpo | `req.on('data', chunk => body.push(chunk))` |
+| res.writeHead | Configurar cabeceras | `res.writeHead(200, { 'Content-Type': 'json' })` |
+| req.pipe | Redirigir flujo | `req.pipe(res)` |
+
+## Casos de uso practicos
+
+- **APIs simples**: Maneja solicitudes POST para procesar formularios.
+- **Servidores echo**: Devuelve datos recibidos para pruebas o depuración.
+- **Enrutamiento**: Usa condicionales o frameworks como `express` para rutas complejas.
+- **Depuración**: Registra cabeceras y métodos para analizar solicitudes.
+
+## Buenas practicas
+
+- **Manejo de errores**: Siempre añade listeners para eventos `error` en `req` y `res`.
+- **Frameworks**: Considera `express` para enrutamiento avanzado y middleware.
+- **Validación**: Verifica `method` y `url` antes de procesar solicitudes.
+- **Documentación**: Consulta la [documentación de `http`](https://nodejs.org/api/http.html) y [Streams](https://nodejs.org/api/stream.html) para más detalles.
+
+## Conclusión
+
+Manejar transacciones HTTP en Node.js con el módulo `http` es directo pero poderoso. Crea servidores con `createServer`, procesa solicitudes con `req`, y envía respuestas con `res`. Usa `pipe` para flujos eficientes y maneja errores para robustez. Explora frameworks como `express` para aplicaciones complejas y consulta la [documentación de Node.js](https://nodejs.org/api/http.html) para profundizar.

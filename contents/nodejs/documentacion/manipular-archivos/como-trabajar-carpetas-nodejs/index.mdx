@@ -1,0 +1,169 @@
+---
+title: Como trabajar con carpetas en Node.js
+description: Aprende a crear, leer, renombrar y eliminar carpetas en Node.js con fs
+href: /como-trabajar-carpetas-nodejs
+subtitle: Gestion de carpetas en Node.js
+---
+
+
+El módulo `fs` de Node.js proporciona herramientas esenciales para gestionar carpetas en tus aplicaciones. Este artículo te muestra cómo verificar, crear, leer, renombrar y eliminar carpetas usando métodos asíncronos, síncronos y basados en promesas, optimizando tu código para 2025.
+
+## Por que gestionar carpetas con Node.js
+
+La manipulación de carpetas es clave en tareas como organización de archivos, automatización de scripts o gestión de proyectos. Con el módulo `fs`, puedes realizar estas operaciones de manera eficiente. A continuación, exploramos los métodos principales.
+
+## Verificar si una carpeta existe
+
+Usa `fs.access` o `fsPromises.access` para comprobar si una carpeta existe y si Node.js tiene permisos para acceder a ella.
+
+```go:js
+import fs from 'node:fs';
+async function verificarCarpeta() {
+  try {
+    await fs.access('./test');
+    console.log('La carpeta existe');
+  } catch (err) {
+    console.error('La carpeta no existe o no es accesible:', err);
+  }
+}
+verificarCarpeta();
+```
+
+**Nota**: Usa `fs.accessSync` para una versión síncrona, pero evita su uso en aplicaciones con alta concurrencia.
+
+## Crear una nueva carpeta
+
+Crea carpetas con `fs.mkdir`, `fs.mkdirSync` o `fsPromises.mkdir`. Verifica primero si la carpeta existe para evitar errores.
+
+```go:js
+const fs = require('node:fs');
+const carpeta = './test';
+try {
+  if (!fs.existsSync(carpeta)) {
+    fs.mkdirSync(carpeta);
+    console.log('Carpeta creada con éxito');
+  } else {
+    console.log('La carpeta ya existe');
+  }
+} catch (err) {
+  console.error('Error:', err);
+}
+```
+
+**Ejemplo con promesas**:
+
+```go:js
+import fs from 'node:fs';
+async function crearCarpeta() {
+  try {
+    await fs.mkdir('./test');
+    console.log('Carpeta creada con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+crearCarpeta();
+```
+
+## Leer el contenido de una carpeta
+
+Usa `fs.readdir`, `fs.readdirSync` o `fsPromises.readdir` para listar archivos y subcarpetas. Puedes filtrar solo archivos usando `fs.lstatSync`.
+
+```go:js
+const fs = require('node:fs');
+const path = require('node:path');
+const carpeta = './test';
+try {
+  const archivos = fs.readdirSync(carpeta).map(nombre => {
+    return path.join(carpeta, nombre);
+  }).filter(nombre => fs.lstatSync(nombre).isFile());
+  console.log('Archivos:', archivos);
+} catch (err) {
+  console.error('Error:', err);
+}
+```
+
+**Ejemplo con promesas**:
+
+```go:js
+import fs from 'node:fs';
+const path = require('node:path');
+async function leerCarpeta() {
+  try {
+    const archivos = await fs.readdir('./test');
+    const rutasCompletas = archivos.map(nombre => path.join('./test', nombre));
+    console.log('Contenido:', rutasCompletas);
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+leerCarpeta();
+```
+
+## Renombrar una carpeta
+
+Renombra carpetas con `fs.rename`, `fs.renameSync` o `fsPromises.rename`. Especifica la ruta actual y la nueva.
+
+```go:js
+import fs from 'node:fs';
+async function renombrarCarpeta() {
+  try {
+    await fs.rename('./test', './nueva-carpeta');
+    console.log('Carpeta renombrada con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+renombrarCarpeta();
+```
+
+## Eliminar una carpeta
+
+Elimina carpetas vacías con `fs.rmdir` o `fsPromises.rmdir`. Para carpetas con contenido, usa `fs.rm` con `{ recursive: true }`.
+
+```go:js
+const fs = require('node:fs');
+const carpeta = './test';
+fs.rm(carpeta, { recursive: true, force: true }, (err) => {
+  if (err) {
+    console.error('Error:', err);
+  } else {
+    console.log('Carpeta eliminada con éxito');
+  }
+});
+```
+
+**Ejemplo con promesas**:
+
+```go:js
+import fs from 'node:fs';
+async function eliminarCarpeta() {
+  try {
+    await fs.rm('./test', { recursive: true, force: true });
+    console.log('Carpeta eliminada con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+eliminarCarpeta();
+```
+
+## Comparacion de metodos
+
+| Método | Tipo | Uso recomendado |
+|--------|------|-----------------|
+| fs.access | Asíncrono | Verificar acceso sin bloquear |
+| fs.mkdirSync | Síncrono | Scripts simples |
+| fsPromises.readdir | Promesas | Código moderno y legible |
+| fs.rm | Asíncrono | Eliminar carpetas con contenido |
+
+## Casos de uso practicos
+
+- **Organización de proyectos**: Crea carpetas para separar código, assets o logs.
+- **Automatización**: Lee y procesa archivos en carpetas dinámicamente.
+- **Limpieza de datos**: Elimina carpetas temporales con `fs.rm`.
+
+## Conclusión
+
+El módulo `fs` de Node.js facilita la gestión de carpetas con métodos como `fs.mkdir`, `fs.readdir` y `fs.rm`. Usa promesas para un código moderno, métodos asíncronos para mejor rendimiento y métodos síncronos para tareas simples. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html) para más detalles y optimiza tus proyectos en 2025.
+

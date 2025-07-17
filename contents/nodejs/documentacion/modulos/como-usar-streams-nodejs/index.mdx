@@ -1,0 +1,389 @@
+---
+title: Como usar streams en Node.js para datos grandes 
+description: Aprende a usar streams Readable, Writable, Duplex y Transform en Node.js
+href: /como-usar-streams-nodejs
+subtitle: Streams en Node.js
+---
+
+Los Streams en Node.js son esenciales para procesar grandes volúmenes de datos de forma eficiente, manejándolos en fragmentos para optimizar memoria y rendimiento. Este artículo explora los tipos de Streams (Readable, Writable, Duplex, Transform), cómo operarlos con `pipe` y `pipeline`, y cómo usar iteradores asíncronos, con ejemplos prácticos.
+
+## Por que usar streams en Node.js
+
+Los Streams procesan datos incrementalmente, ideales para archivos grandes, solicitudes de red o entrada en tiempo real. Al heredar de `EventEmitter`, emiten eventos como `data`, `end` y `error`, integrándose con la arquitectura basada en eventos de Node.js.
+
+### Ventajas principales
+- **Eficiencia de memoria**: Procesa fragmentos sin cargar todo en memoria.
+- **Respuesta rápida**: Maneja datos al llegar, reduciendo latencia.
+- **Escalabilidad**: Ideal para aplicaciones en tiempo real con grandes volúmenes de datos.
+
+**Nota**: Evita Streams si los datos ya están en memoria, para no añadir complejidad innecesaria.
+
+## Tipos de streams
+
+Node.js ofrece cuatro tipos de Streams, todos basados en `EventEmitter`:
+
+| Tipo | Descripción | Ejemplo |
+|------|-------------|---------|
+| Readable | Lee datos secuencialmente | `fs.createReadStream`, `process.stdin` |
+| Writable | Escribe datos secuencialmente | `fs.createWriteStream`, `process.stdout` |
+| Duplex | Lee y escribe simultáneamente | `net.Socket` |
+| Transform | Transforma datos entre entrada/salida | `zlib.createGzip` |
+
+## Streams Readable
+
+Los Streams Readable leen datos de una fuente, como archivos o solicitudes HTTP. Ejemplo básico:
+
+```go:js
+const { Readable } = require('node:stream');
+class MiStream extends Readable {
+  #contador = 0;
+  _read() {
+    this.push(':-)'); // Empuja datos al buffer
+    if (++this.#contador === 5) {
+      this.push(null); // Fin del stream
+    }
+  }
+}
+const stream = new MiStream();
+stream.on('data', chunk => {
+  console.log(chunk.toString()); // Imprime: :-)
+});
+stream.on('end', () => console.log('Stream finalizado'));
+```
+
+**Control avanzado con `readable`**:
+
+```go:js
+const stream = new MiStream({ highWaterMark: 1 }); // Buffer pequeño
+stream.on('readable', () => {
+  console.count('Evento readable');
+  let chunk;
+  while ((chunk = stream.read()) !== null) {
+    console.log(chunk.toString()); // Procesa fragmento
+  }
+});
+stream.on('end', () => console.log('Fin del stream'));
+```
+
+**Salida**:
+
+```go:bash
+Evento readable: 1
+:-)
+Evento readable: 2
+:-)
+Evento readable: 3
+:-)
+Evento readable: 4
+:-)
+Evento readable: 5
+:-)
+Evento readable: 6
+Fin del stream
+```
+
+## Streams Writable
+
+Los Streams Writable escriben datos en un destino, como archivos o `process.stdout`. Ejemplo:
+
+```go:js
+const { Writable } = require('node:stream');
+const { once } = require('node:events');
+class MiStream extends Writable {
+  constructor() {
+    super({ highWaterMark: 10 }); // Buffer de 10 bytes
+  }
+  _write(data, encoding, cb) {
+    process.stdout.write(data.toString().toUpperCase() + '\n', cb);
+  }
+}
+async function main() {
+  const stream = new MiStream();
+  for (let i = 0; i < 10; i++) {
+    const esperaDrenaje = !stream.write('hola');
+    if (esperaDrenaje) {
+      console.log('Esperando drenaje');
+      await once(stream, 'drain');
+    }
+  }
+  stream.end('mundo'); // Finaliza con un último dato
+}
+main().catch(console.error);
+```
+
+**Salida** (puede variar):
+
+```go:bash
+HOLA
+Esperando drenaje
+HOLA
+HOLA
+Esperando drenaje
+HOLA
+HOLA
+Esperando drenaje
+HOLA
+HOLA
+Esperando drenaje
+HOLA
+HOLA
+Esperando drenaje
+HOLA
+MUNDO
+```
+
+## Streams Duplex
+
+Los Streams Duplex combinan Readable y Writable, permitiendo leer y escribir simultáneamente. Un ejemplo es un socket TCP:
+
+### Servidor TCP
+
+```go:js
+const net = require('node:net');
+const server = net.createServer(socket => {
+  socket.write('¡Hola desde el servidor!\n'); // Escribe al cliente
+  socket.on('data', data => {
+    console.log(`Cliente dice: ${data.toString()}`); // Lee del cliente
+  });
+  socket.on('end', () => {
+    console.log('Cliente desconectado');
+  });
+});
+server.listen(8080, () => {
+  console.log('Servidor en puerto 8080');
+});
+```
+
+### Cliente TCP
+
+```go:js
+const net = require('node:net');
+const client = net.createConnection({ port: 8080 }, () => {
+  client.write('¡Hola desde el cliente!\n'); // Escribe al servidor
+});
+client.on('data', data => {
+  console.log(`Servidor dice: ${data.toString()}`); // Lee del servidor
+});
+client.on('end', () => {
+  console.log('Desconectado del servidor');
+});
+```
+
+## Streams Transform
+
+Los Streams Transform, un tipo de Duplex, transforman la entrada antes de escribirla. Ejemplo que convierte texto a mayúsculas:
+
+```go:js
+const { Transform } = require('node:stream');
+const upper = new Transform({
+  transform(data, enc, cb) {
+    this.push(data.toString().toUpperCase()); // Transforma a mayúsculas
+    cb();
+  }
+});
+const fs = require('node:fs');
+fs.createReadStream(__filename).pipe(upper).pipe(process.stdout);
+```
+
+## Operar con streams
+
+### Usar pipe
+
+El método `pipe` conecta un Stream Readable a un Writable o Transform, pero requiere manejo manual de errores:
+
+```go:js
+const fs = require('node:fs');
+const { Transform } = require('node:stream');
+let errorCount = 0;
+const upper = new Transform({
+  transform(data, enc, cb) {
+    if (errorCount === 10) {
+      return cb(new Error('¡BOOM!'));
+    }
+    errorCount++;
+    this.push(data.toString().toUpperCase());
+    cb();
+  }
+});
+const readStream = fs.createReadStream(__filename, { highWaterMark: 1 });
+readStream
+  .pipe(upper)
+  .pipe(process.stdout)
+  .on('error', err => console.error('Error:', err.message));
+readStream.on('close', () => console.log('Readable cerrado'));
+upper.on('close', () => console.log('Transform cerrado'));
+```
+
+**Salida**:
+
+```go:bash
+CONST FS =
+Error: ¡BOOM!
+Transform cerrado
+```
+
+### Usar pipeline
+
+El método `pipeline` es más seguro, manejando errores y cierres automáticamente:
+
+```go:js
+const { pipeline } = require('node:stream');
+const fs = require('node:fs');
+let errorCount = 0;
+const upper = new Transform({
+  transform(data, enc, cb) {
+    if (errorCount === 10) {
+      return cb(new Error('¡BOOM!'));
+    }
+    errorCount++;
+    this.push(data.toString().toUpperCase());
+    cb();
+  }
+});
+pipeline(
+  fs.createReadStream(__filename, { highWaterMark: 1 }),
+  upper,
+  process.stdout,
+  err => {
+    if (err) console.error('Pipeline error:', err.message);
+    else console.log('Pipeline completado');
+  }
+);
+```
+
+**Salida**:
+
+```go:bash
+CONST FS =
+Transform cerrado
+Pipeline error: ¡BOOM!
+Readable cerrado
+```
+
+### Usar pipeline asíncrono
+
+La versión asíncrona de `pipeline` usa promesas:
+
+```go:js
+const { pipeline } = require('node:stream/promises');
+const fs = require('node:fs');
+async function main() {
+  try {
+    await pipeline(
+      fs.createReadStream(__filename),
+      async function* (source) {
+        for await (let chunk of source) {
+          yield chunk.toString().toUpperCase(); // Transforma sin Stream explícito
+        }
+      },
+      process.stdout
+    );
+    console.log('Pipeline completado');
+  } catch (err) {
+    console.error('Pipeline error:', err.message);
+  }
+}
+main();
+```
+
+## Iteradores asincronos
+
+Los Streams Readable son iterables asíncronos, ideales para un código más legible:
+
+```go:js
+const fs = require('node:fs');
+async function main() {
+  const stream = fs.createReadStream(__filename);
+  for await (const chunk of stream) {
+    console.log(chunk.toString().toUpperCase());
+  }
+}
+main().catch(console.error);
+```
+
+**Ventajas**:
+- Código más claro con `for await...of`.
+- Manejo de errores simple con `try/catch`.
+- Control automático de contrapresión.
+
+## Modo objeto
+
+Habilita el modo objeto con `objectMode: true` para manejar objetos en lugar de buffers:
+
+```go:js
+const { Readable } = require('node:stream');
+const readable = Readable({
+  objectMode: true,
+  read() {
+    this.push({ hola: 'mundo' }); // Empuja objeto
+    this.push(null); // Fin del stream
+  }
+});
+readable.on('data', obj => console.log(obj)); // Imprime: { hola: 'mundo' }
+```
+
+**Nota**: `highWaterMark` cuenta objetos, no bytes, en modo objeto.
+
+## Contrapresion
+
+La contrapresión evita que el productor sobrecargue al consumidor. Si `write()` devuelve `false`, el Stream pausa hasta que se emita el evento `drain`:
+
+```go:js
+const { Writable } = require('node:stream');
+const stream = new Writable({
+  write(chunk, encoding, cb) {
+    console.log(chunk.toString());
+    cb();
+  }
+});
+const esperaDrenaje = !stream.write('Datos');
+if (esperaDrenaje) {
+  stream.once('drain', () => console.log('Listo para más datos'));
+}
+```
+
+Consulta la [guía de contrapresión](https://nodejs.org/en/docs/guides/backpressuring-in-streams/) para más detalles.
+
+## Streams vs Web Streams
+
+Los Web Streams (basados en el estándar WHATWG) son diferentes pero interoperables con los Streams de Node.js. Usa `toWeb` y `fromWeb` para convertir:
+
+```go:js
+const { Duplex } = require('node:stream');
+const duplex = Duplex({
+  read() {
+    this.push('mundo');
+    this.push(null);
+  },
+  write(chunk, encoding, cb) {
+    console.log('Escrito:', chunk);
+    cb();
+  }
+});
+const { readable, writable } = Duplex.toWeb(duplex);
+writable.getWriter().write('hola');
+readable.getReader().read().then(({ value }) => {
+  console.log('Leído:', value); // Imprime: mundo
+});
+```
+
+## Buenas practicas
+
+- **Usa `pipeline`**: Prefiere `pipeline` sobre `pipe` para manejo automático de errores.
+- **Maneja errores**: Escucha el evento `error` en todos los Streams:
+
+```go:js
+stream.on('error', err => console.error('Error:', err));
+```
+
+- **Ajusta `highWaterMark`**: Configura según el tamaño de los datos.
+- **Usa iteradores asíncronos**: Simplifican el código y mejoran la legibilidad.
+- **Documentación**: Consulta la [documentación de Streams](https://nodejs.org/api/stream.html).
+
+## Casos de uso practicos
+
+- **Sockets TCP**: Usa Duplex para comunicación bidireccional cliente-servidor.
+- **Compresión de datos**: Aplica Transform para comprimir archivos con `zlib`.
+- **Procesamiento de archivos**: Lee y escribe archivos grandes con Streams.
+- **APIs de streaming**: Maneja datos HTTP en tiempo real.
+

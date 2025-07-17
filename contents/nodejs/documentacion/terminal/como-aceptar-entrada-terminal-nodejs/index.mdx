@@ -1,0 +1,129 @@
+---
+title: Como aceptar entrada en terminal con Node.js 
+description: Aprende a usar el modulo readline en Node.js para entrada interactiva
+---
+
+
+Crear programas CLI interactivos en Node.js es fácil con el módulo `readline`, disponible desde la versión 7. Este módulo permite leer entrada del usuario desde la terminal (`process.stdin`) línea por línea. Este artículo te guía para usar `readline`, capturar entradas y manejar contraseñas de forma segura en 2025.
+
+## Por que usar readline para entrada interactiva
+
+El módulo `readline` es ideal para aplicaciones CLI que requieren interacción, como formularios, herramientas de configuración o autenticación. Lee datos desde `process.stdin` y envía salida a `process.stdout`, facilitando la creación de interfaces de terminal dinámicas.
+
+## Capturar entrada basica
+
+Usa `readline.createInterface` para configurar la entrada y salida, y `rl.question` para solicitar datos al usuario:
+
+```go:js
+const readline = require('node:readline');
+const rl = readline.createInterface({
+  input: process.stdin, // Entrada desde la terminal
+  output: process.stdout // Salida a la terminal
+});
+rl.question('¿Cuál es tu nombre? ', (nombre) => {
+  console.log(`¡Hola, ${nombre}!`);
+  rl.close(); // Cierra la interfaz
+});
+```
+
+Ejecuta el script:
+
+```go:bash
+node app.js
+```
+
+El método `question` muestra una pregunta, espera la entrada del usuario y ejecuta la función callback con la respuesta.
+
+## Capturar contraseñas sin eco
+
+Para entradas sensibles como contraseñas, usa `readline.createInterface` con un output personalizado que oculte los caracteres. Aquí un ejemplo que muestra `*` por cada carácter:
+
+```go:js
+const readline = require('node:readline');
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+rl.question('Ingresa tu contraseña: ', (contrasena) => {
+  console.log('Contraseña recibida (oculta por seguridad)');
+  rl.close();
+});
+// Oculta la entrada reemplazando caracteres por *
+rl._writeToOutput = function(string) {
+  if (string === '\r\n' || string === '\n') {
+    rl.output.write('\n');
+  } else {
+    rl.output.write('*');
+  }
+};
+```
+
+**Nota**: Este enfoque mejora la seguridad al no mostrar contraseñas en la terminal. Considera bibliotecas como `prompt` para soluciones más robustas.
+
+## Metodos adicionales de readline
+
+El módulo `readline` ofrece métodos útiles para interfaces CLI avanzadas:
+
+| Método | Descripción |
+|--------|-------------|
+| question | Solicita entrada y ejecuta un callback |
+| prompt | Muestra el prompt para entrada continua |
+| close | Cierra la interfaz readline |
+| write | Escribe en la salida sin esperar entrada |
+| line | Evento emitido por cada línea ingresada |
+
+Ejemplo con entrada continua usando `prompt`:
+
+```go:js
+const readline = require('node:readline');
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+rl.setPrompt('Escribe un comando> ');
+rl.prompt();
+rl.on('line', (entrada) => {
+  console.log(`Recibido: ${entrada}`);
+  if (entrada === 'salir') {
+    rl.close();
+  } else {
+    rl.prompt(); // Continúa solicitando entrada
+  }
+});
+rl.on('close', () => {
+  console.log('Interfaz cerrada');
+});
+```
+
+## Casos de uso practicos
+
+- **Herramientas CLI**: Crea interfaces interactivas para configuración o comandos.
+- **Autenticación**: Solicita credenciales seguras sin mostrarlas.
+- **Scripts de prueba**: Captura entrada para probar lógica dinámicamente.
+- **Formularios en terminal**: Recolecta datos como nombres o preferencias.
+
+## Buenas practicas
+
+- **Cerrar la interfaz**: Usa `rl.close()` para liberar recursos.
+- **Manejo de errores**: Valida entradas para evitar errores inesperados:
+
+```go:js
+rl.question('Ingresa tu edad: ', (edad) => {
+  const numEdad = parseInt(edad);
+  if (isNaN(numEdad)) {
+    console.log('Por favor, ingresa un número válido');
+  } else {
+    console.log(`Tu edad es ${numEdad}`);
+  }
+  rl.close();
+});
+```
+
+- **Seguridad**: Evita mostrar datos sensibles en la terminal.
+- **Documentación**: Consulta la [documentación de `readline`](https://nodejs.org/api/readline.html) para más métodos y eventos.
+
+## Conclusión
+
+El módulo `readline` de Node.js permite crear programas CLI interactivos al capturar entrada desde la terminal. Usa `question` para entradas simples, personaliza la salida para contraseñas y aprovecha métodos como `prompt` para interacciones continuas. Optimiza tus herramientas CLI con estas técnicas y explora la [documentación de Node.js](https://nodejs.org/api/readline.html) para más detalles.
+
+¿Listo para crear tu CLI? Prueba estos ejemplos en tu terminal.

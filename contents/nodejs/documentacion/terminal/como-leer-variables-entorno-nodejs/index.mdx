@@ -1,0 +1,100 @@
+---
+title: Como leer variables de entorno en Node.js en 2025
+description: Aprende a leer variables de entorno en Node.js con process.env y .env
+---
+
+
+Las variables de entorno son esenciales para configurar aplicaciones en Node.js, permitiendo gestionar claves, puertos y otros datos sensibles. Este artículo explica cómo leer variables de entorno usando `process.env`, configurarlas desde la terminal y usar archivos `.env` en Node.js 20+.
+
+## Por que usar variables de entorno
+
+Las variables de entorno permiten configurar aplicaciones sin modificar el código, facilitando entornos de desarrollo, pruebas y producción. El módulo `process` de Node.js, disponible globalmente, proporciona acceso a estas variables.
+
+## Leer variables desde la terminal
+
+Puedes establecer variables de entorno al ejecutar un script con el comando `node`.
+
+```go:bash
+USER_ID=239482 USER_KEY=foobar node app.js
+```
+
+Accede a las variables en tu código con `process.env`:
+
+```go:js
+console.log(process.env.USER_ID); // "239482"
+console.log(process.env.USER_KEY); // "foobar"
+```
+
+**Nota**: Las variables definidas en la terminal tienen prioridad sobre otras fuentes. Usa scripts bash para configuraciones permanentes en producción.
+
+## Usar archivos .env en Node.js 20+
+
+Desde Node.js 20, puedes cargar variables desde un archivo `.env` usando la bandera `--env-file`. Ejemplo de archivo `.env`:
+
+```go:bash
+# .env
+PORT=3000
+API_KEY=secret123
+```
+
+Accede a las variables en tu script:
+
+```go:js
+console.log(process.env.PORT); // "3000"
+console.log(process.env.API_KEY); // "secret123"
+```
+
+Ejecuta el script con el archivo `.env`:
+
+```go:bash
+node --env-file=.env app.js
+```
+
+**Múltiples archivos `.env`**:
+Puedes cargar varios archivos; los últimos sobrescriben variables previas:
+
+```go:bash
+node --env-file=.env --env-file=.development.env app.js
+```
+
+## Leer .env opcionalmente
+
+Si el archivo `.env` es opcional, usa `--env-file-if-exists` para evitar errores si no existe:
+
+```go:bash
+node --env-file-if-exists=.env app.js
+```
+
+**Nota**: Las variables definidas en la terminal siempre tienen prioridad sobre las de los archivos `.env`.
+
+## Comparacion de metodos
+
+| Método | Ventaja | Caso de uso |
+|--------|---------|-------------|
+| Terminal | Prioridad alta, configuración rápida | Pruebas rápidas |
+| .env con `--env-file` | Centralizado, reusable | Desarrollo y producción |
+| .env con `--env-file-if-exists` | Evita errores si falta el archivo | Configuraciones opcionales |
+
+## Buenas practicas
+
+- **Seguridad**: No incluyas claves sensibles en el código ni en repositorios públicos. Usa `.env` y añádelo a `.gitignore`.
+- **Entornos múltiples**: Usa archivos como `.env.development` y `.env.production` para diferentes configuraciones.
+- **Validación**: Verifica que las variables existan antes de usarlas:
+
+```go:js
+const port = process.env.PORT || 3000; // Valor por defecto
+console.log(`Servidor en puerto ${port}`);
+```
+
+- **Documentación**: Consulta la [documentación de Node.js](https://nodejs.org/api/process.html#processenv) para más detalles sobre `process.env`.
+
+## Casos de uso practicos
+
+- **Configuración de servidores**: Define `PORT` o `HOST` para aplicaciones web.
+- **Claves API**: Almacena claves seguras en `.env` para servicios externos.
+- **Entornos de prueba**: Usa variables para alternar entre bases de datos de desarrollo y producción.
+- **Automatización**: Configura scripts CI/CD con variables de entorno.
+
+## Conclusión
+
+Leer variables de entorno en Node.js es simple con `process.env` y flexible con archivos `.env` en Node.js 20+. Usa la terminal para pruebas rápidas, archivos `.env` para configuraciones reutilizables y `--env-file-if-exists` para casos opcionales. Sigue las mejores prácticas para mantener tu aplicación segura y escalable.

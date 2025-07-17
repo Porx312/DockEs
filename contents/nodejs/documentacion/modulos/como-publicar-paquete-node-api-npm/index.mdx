@@ -1,0 +1,99 @@
+---
+title: Como publicar paquete Node-API y no Node-API en npm 
+description: Aprende a publicar versiones Node-API y no Node-API de un paquete npm
+---
+
+
+Publicar versiones Node-API y no Node-API de un paquete en npm permite a los desarrolladores ofrecer compatibilidad con diferentes entornos de Node.js. Este artículo te guía paso a paso para publicar ambas versiones, gestionar dependencias y seguir mejores prácticas, usando el ejemplo de `iotivity-node`.
+
+## Por que publicar ambas versiones
+
+Node-API (anteriormente N-API) ofrece estabilidad ABI, permitiendo que los complementos funcionen en múltiples versiones de Node.js sin recompilar. Publicar una versión no Node-API junto con una Node-API asegura compatibilidad con usuarios que no requieren Node-API, manteniendo flexibilidad.
+
+## Publicar la version no Node-API
+
+Sigue estos pasos para publicar la versión no Node-API:
+
+1. **Actualiza la versión**: Modifica el campo `version` en `package.json`. Por ejemplo, para `iotivity-node`, usa `1.2.0-2`.
+2. **Verifica el checklist**: Asegúrate de que las pruebas, demos y documentación estén actualizados.
+3. **Publica el paquete**:
+
+```go:bash
+npm publish
+```
+
+Esto instala la versión no Node-API como predeterminada al ejecutar `npm install iotivity-node`.[](https://nodejs.org/en/learn/modules/publishing-node-api-modules)
+
+## Publicar la version Node-API
+
+Para publicar la versión Node-API con una etiqueta específica:
+
+1. **Actualiza la versión**: Usa un esquema de prelanzamiento (SemVer), como `1.2.0-napi` o `1.2.0-3`.
+2. **Verifica el checklist**: Confirma que las pruebas, demos y documentación sean compatibles con Node-API.
+3. **Publica con etiqueta**:
+
+```go:bash
+npm publish --tag n-api
+```
+
+La etiqueta `n-api` asegura que `npm install iotivity-node` instale la versión no Node-API, mientras que `npm install iotivity-node@n-api` instala la versión Node-API.[](https://nodejs.org/en/learn/modules/publishing-node-api-modules)
+
+## Gestionar dependencias Node-API
+
+Para agregar la versión Node-API como dependencia en `package.json`, usa la etiqueta:
+
+```go:js
+{
+  "dependencies": {
+    "iotivity-node": "n-api"
+  }
+}
+```
+
+**Nota**: Las etiquetas no admiten rangos de versión como `^2.0.0`, ya que apuntan a una versión específica. Si se actualiza la etiqueta `n-api` a una nueva versión, `npm update` instalará la más reciente. Para una versión exacta, especifica:
+
+```go:js
+{
+  "dependencies": {
+    "iotivity-node": "1.2.0-3"
+  }
+}
+```
+
+Consulta la [documentación de npm sobre dist-tags](https://docs.npmjs.com/using-npm/dist-tags) para más detalles.[](https://nodejs.org/en/learn/modules/publishing-node-api-modules)
+
+## Comparacion de metodos de publicacion
+
+| Método | Comando | Instalación por defecto | Uso |
+|--------|---------|-------------------------|-----|
+| No Node-API | `npm publish` | `npm install paquete` | Usuarios estándar |
+| Node-API | `npm publish --tag n-api` | `npm install paquete@n-api` | Usuarios que requieren estabilidad ABI |
+
+## Buenas practicas
+
+- **Usa SemVer**: Sigue el versionado semántico para claridad (ej., `1.2.0-napi` para Node-API).[](https://docs.npmjs.com/cli/v8/commands/npm-publish/)
+- **Prueba localmente**: Usa `npm link` para probar el paquete antes de publicarlo:
+
+```go:bash
+cd paquete
+npm link
+cd proyecto-de-prueba
+npm link iotivity-node
+```
+
+- **Documentación**: Incluye un `README.md` claro y usa JSDoc para documentar el API.[](https://www.sphereinc.com/blogs/how-to-create-an-npm-package-from-scratch/)
+- **Checklist de publicación**: Verifica pruebas, linters y compatibilidad con Node.js 18+ para Node-API.[](https://www.npmjs.com/package/node-addon-api)
+- **Seguridad**: Usa `.npmignore` para excluir archivos sensibles y verifica permisos con `--access=public` para paquetes con ámbito.[](https://docs.npmjs.com/cli/v8/commands/npm-publish/)
+- **Automatización**: Configura scripts `prepublishOnly` en `package.json` para ejecutar pruebas automáticamente.
+
+## Casos de uso practicos
+
+- **Complementos nativos**: Publica versiones Node-API para complementos en C++ que necesiten estabilidad ABI.
+- **Compatibilidad amplia**: Ofrece una versión no Node-API para usuarios con versiones antiguas de Node.js.
+- **Proyectos grandes**: Usa etiquetas para gestionar dependencias específicas en entornos CI/CD.
+
+## Conclusion
+
+Publicar versiones Node-API y no Node-API en npm permite atender a diferentes necesidades de los usuarios. Usa `npm publish` para la versión estándar y `npm publish --tag n-api` para Node-API, asegurando claridad con etiquetas y versionado SemVer. Prueba localmente con `npm link` y sigue las mejores prácticas para un paquete robusto. Explora la [documentación de Node.js](https://nodejs.org/api/n-api.html) y [npm](https://docs.npmjs.com/) para más detalles.
+
+¿Listo para publicar? Configura tu `package.json` y comparte tu paquete con el mundo.

@@ -1,0 +1,56 @@
+---
+title: Que son las Userland Migrations en Node.js y como utilizarlas
+description: Aprende sobre Userland Migrations en Node.js, como automatizan cambios en el codigo fuente y facilitan la adopcion de nuevas caracteristicas.
+---
+
+## Introduccion a userland migrations en nodejs
+
+Las **userland migrations** en Node.js son herramientas que automatizan la modificacion del codigo fuente de los proyectos creados por los usuarios. Su proposito es facilitar la adopcion de nuevas caracteristicas del lenguaje y ayudar en la actualizacion de codigo ante cambios incompatibles introducidos en Node.js[1].
+
+Estas migraciones se desarrollan en colaboracion con la comunidad y la herramienta **codemod**, famosa por su uso en proyectos como Next.js, React y Tailwind. El repositorio oficial de estas migraciones es `nodejs/userland-migrations`, bajo la supervision del equipo `@nodejs/userland-migrations`.
+
+## Caracteristicas principales
+
+- **Automatizacion de cambios**: Permiten modificar automaticamente el codigo fuente del usuario, adaptandolo a nuevos estandares o patrones recomendados.
+- **Soporte oficial y no oficial**:
+  - Las migraciones **oficiales** son publicadas bajo el namespace `@nodejs` en el registry de codemod, garantizando que han sido revisadas o creadas por miembros del equipo de Node.js.
+  - Las migraciones **no oficiales** estan disponibles pero no han sido revisadas por dicho equipo.
+- **Compatibilidad con codemod**: Codemod es la herramienta que ejecuta las migraciones y asegura que se apliquen de forma consistente en diferentes proyectos.
+
+## Como funcionan las userland migrations
+
+Una migracion automatizada puede aplicar patrones de diseño modernos en el codigo, facilitando tareas como la correccion de imports y la adaptacion a cambios de ECMAScript o Node.js. Por ejemplo, para transformar imports de TypeScript antiguos a especificadores compatibles con los estandares, se puede usar:
+
+```go:shell
+cd path/to/your/project
+npx codemod@latest @nodejs/correct-ts-specifiers
+```
+
+### Ejemplo de transformacion
+
+Antes (import legacy):
+```go:ts
+import Foo from './foo';
+```
+
+Despues (specifiers modernos, segun la migracion aplicada):
+```go:ts
+import Foo from './foo.js';
+```
+
+## Beneficios de usar userland migrations
+
+- **Reduccion de errores manuales**: Automatizan cambios repetitivos y complejos, evitando errores humanos.
+- **Facilitan actualizaciones**: Adaptan proyectos existentes a nuevas recomendaciones sin reescritura manual.
+- **Apoyo de la comunidad**: Las migraciones oficiales reciben el respaldo y revision de la comunidad Node.js[1].
+
+## Buenas practicas y recomendaciones
+
+- Verifica que las migraciones utilizadas provengan de la organizacion `@nodejs` para asegurar su calidad y confiabilidad.
+- Antes de ejecutar migraciones, realiza un respaldo del proyecto.
+- Consulta la documentacion oficial y el repositorio `nodejs/userland-migrations` para revisar guias y casos de uso frecuentes[1].
+
+## Recursos relacionados
+
+- Aprende mas en el repositorio oficial de migraciones de Node.js y la documentacion de codemod.
+- Para casos especificos de gestion de dependencias y migraciones de paquetes, revisa la documentacion de npm y proyectos afines.

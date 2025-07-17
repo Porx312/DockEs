@@ -1,0 +1,98 @@
+---
+title: Como garantizar estabilidad ABI en Node.js 
+description: Aprende sobre estabilidad ABI y N-API en Node.js para addons nativos
+---
+
+La estabilidad de la Interfaz Binaria de Aplicación (ABI) es clave para que los complementos nativos de Node.js funcionen sin recompilar en diferentes versiones. Este artículo explica qué es la estabilidad ABI, cómo Node.js la gestiona con N-API y cómo aplicarla en tus proyectos.
+
+## Que es la estabilidad ABI
+
+Una ABI define cómo los programas compilados interactúan, especificando direcciones, parámetros y estructuras de memoria. La estabilidad ABI asegura que un complemento compilado con una versión de Node.js funcione en otras sin recompilar, reduciendo la carga de mantenimiento.
+
+## Estabilidad ABI en Node.js
+
+Node.js usa versionado semántico (SemVer) para garantizar que los complementos nativos compilados para una versión mayor funcionen en todas sus versiones menores y de parche. Por ejemplo, un complemento compilado para Node.js 18.x funcionará en 18.y.z.
+
+Sin embargo, los cambios en cabeceras como `v8.h` (mantenidas por el equipo de V8) pueden romper la compatibilidad entre versiones mayores, requiriendo recompilación de complementos nativos.
+
+## Introduccion a N-API
+
+N-API, introducido en Node.js 8.6.0 y estabilizado en 8.12.0, ofrece una API independiente del motor JavaScript (como V8), garantizando compatibilidad ABI a través de versiones mayores de Node.js. Usa las cabeceras `node_api.h` y `node_api_types.h`.
+
+Ejemplo de uso de N-API:
+
+```go:js
+#include <node_api.h>
+napi_value SayHello(napi_env env, napi_callback_info info) {
+  napi_value greeting;
+  napi_create_string_utf8(env, "¡Hola, mundo!", NAPI_AUTO_LENGTH, &greeting);
+  return greeting;
+}
+```
+
+**Ventajas**:
+- Los complementos N-API no requieren recompilación al actualizar Node.js.
+- Compatibilidad con implementaciones alternativas de Node.js.
+- Preparado para futuros motores JavaScript.
+
+Consulta la [documentación de N-API](https://nodejs.org/api/n-api.html) para más detalles.
+
+## Versionado de N-API
+
+N-API es versionado de forma acumulativa, similar a versiones menores en SemVer. Cada nueva versión de N-API es compatible con versiones anteriores, y las APIs experimentales se marcan como tales:
+
+```go:bash
+# Instalar una versión específica de un complemento N-API
+npm install paquete@n-api
+```
+
+**Nota**: Las APIs experimentales no garantizan compatibilidad ABI hasta que se estabilizan.
+
+## Comparacion de caracteristicas
+
+| Característica | Node.js estándar | N-API |
+|----------------|------------------|-------|
+| Compatibilidad ABI | Dentro de la misma versión mayor | A través de versiones mayores |
+| Dependencia de V8 | Sí | No |
+| Recompilación requerida | Por versión mayor | No necesaria |
+| Cabeceras | `node.h`, `v8.h` | `node_api.h`, `node_api_types.h` |
+
+## Buenas practicas
+
+- **Usa N-API**: Prefiere N-API para nuevos complementos nativos para garantizar compatibilidad futura.
+- **Prueba en múltiples versiones**: Verifica tu complemento en Node.js 18+ usando herramientas como `nvm`:
+
+```go:bash
+nvm use 18
+npm test
+nvm use 20
+npm test
+```
+
+- **Documentación clara**: Usa JSDoc y un `README.md` detallado para explicar la compatibilidad N-API.
+- **Publica con etiquetas**: Usa `npm publish --tag n-api` para distinguir versiones N-API (ver [publicación de paquetes](#)).
+- **Manejo de errores**: Implementa manejo robusto de errores en tus complementos:
+
+```go:js
+napi_value MyFunction(napi_env env, napi_callback_info info) {
+  napi_status status;
+  napi_value result;
+  status = napi_create_int32(env, 42, &result);
+  if (status != napi_ok) {
+    napi_throw_error(env, NULL, "Error al crear entero");
+    return NULL;
+  }
+  return result;
+}
+```
+
+## Casos de uso practicos
+
+- **Complementos nativos**: Crea módulos en C++ compatibles con múltiples versiones de Node.js.
+- **Ecosistemas alternativos**: Usa N-API en proyectos no basados en V8, como Deno.
+- **Mantenimiento reducido**: Evita recompilar complementos en actualizaciones de Node.js.
+- **Distribución de paquetes**: Publica complementos N-API en npm para máxima compatibilidad.
+
+## Conclusion
+
+La estabilidad ABI en Node.js, especialmente con N-API, simplifica el desarrollo y mantenimiento de complementos nativos. Usa N-API para garantizar compatibilidad a través de versiones mayores, prueba tus complementos en múltiples entornos y sigue las mejores prácticas para un ecosistema robusto. Explora la [documentación de Node.js](https://nodejs.org/api/n-api.html) para profundizar en N-API.

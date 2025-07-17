@@ -1,0 +1,155 @@
+---
+title: Backpressure en Node.js con Streams
+description: Aprende que es el backpressure y como los Streams en Node.js lo resuelven para optimizar el manejo de datos
+---
+
+## Introduccion a backpressure en Node.js
+
+Durante la transferencia de datos, puede producirse un problema conocido como **backpressure**, que se refiere a una acumulacion de datos en un buffer cuando el receptor no puede procesarlos con la misma rapidez con la que llegan. En sistemas como Unix o TCP, esto se gestiona mediante el **control de flujo**. En Node.js, la solucion adoptada es el uso de **Streams**.
+
+Este articulo explica en detalle que es el backpressure, como Node.js lo maneja internamente mediante Streams, y ofrece buenas practicas para que tu aplicacion sea eficiente y segura al usarlos.
+
+## Problemas comunes al manejar datos
+
+Cuando los datos se transfieren entre procesos usando tuberias o sockets, pueden acumularse si uno de los extremos es mas lento. En Node.js, tanto `process.stdin` como `process.stdout` son Streams, y pueden usarse de la siguiente forma:
+
+```go:js
+const readline = require('node:readline');
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+rl.question('Por que deberias usar streams? ', answer => {
+  console.log(`Tal vez es ${answer}, o porque simplemente son geniales!`);
+  rl.close();
+});
+```
+
+## Ejemplo de optimizacion usando Streams
+
+Comprimir un archivo de 9 GB con `zip` puede causar errores, mientras que usar Streams con `zlib` de Node.js evita corrupciones:
+
+```go:js
+const gzip = require('node:zlib').createGzip();
+const fs = require('node:fs');
+const inp = fs.createReadStream('The.Matrix.1080p.mkv');
+const out = fs.createWriteStream('The.Matrix.1080p.mkv.gz');
+inp.pipe(gzip).pipe(out);
+```
+
+### Usar `pipeline` en lugar de `pipe`
+
+Desde Node.js 10, se recomienda `pipeline` para manejar errores correctamente:
+
+```go:js
+const { pipeline } = require('node:stream');
+const fs = require('node:fs');
+const zlib = require('node:zlib');
+
+pipeline(
+  fs.createReadStream('The.Matrix.1080p.mkv'),
+  zlib.createGzip(),
+  fs.createWriteStream('The.Matrix.1080p.mkv.gz'),
+  err => {
+    if (err) console.error('Pipeline fallo', err);
+    else console.log('Pipeline exitoso');
+  }
+);
+```
+
+## Cuando los datos llegan demasiado rapido
+
+Si el flujo de lectura es mas rapido que el de escritura (por ejemplo, al escribir en disco), la memoria comienza a llenarse. Aqui entra el **mecanismo de backpressure**, que evita sobrecargar la RAM:
+
+```go:js
+inp.pipe(gzip).pipe(outputFile); // sin control puede agotar memoria
+```
+
+### Consecuencias sin backpressure:
+
+* Procesos lentos
+* Mayor carga del Garbage Collector
+* Agotamiento de memoria
+
+## Comparativa de rendimiento
+
+| Prueba | Tiempo normal (ms) | Tiempo modificado (ms) |
+| ------ | ------------------ | ---------------------- |
+| 1      | 56924              | 55011                  |
+| 2      | 52686              | 55869                  |
+| 3      | 59479              | 54043                  |
+| 4      | 54473              | 55229                  |
+| 5      | 52933              | 59723                  |
+| Prom.  | 55299              | 55975                  |
+
+El uso incorrecto de backpressure aumenta el uso de memoria hasta **1.5 GB**, en comparacion con **87 MB** con Streams bien implementados.
+
+## Como funciona el backpressure
+
+Cuando se usa `.pipe()`, el sistema espera un `true` del metodo `.write()` para continuar enviando datos. Si retorna `false`, se emite un evento `drain` y el flujo se pausa hasta que el consumidor esta listo:
+
+```go:js
+const ret = writable.write(chunk);
+if (!ret) readable.pause();
+writable.on('drain', () => readable.resume());
+```
+
+## Ciclo de vida de .pipe()
+
+El siguiente esquema simplifica como un Stream maneja backpressure:
+
+```text
+Readable --> .pipe() --> Writable
+  |                           |
+  |--> .write() -> retorna false --> pausa
+  |<-- 'drain' <-------------------|
+```
+
+## Buenas practicas con Streams personalizados
+
+### Reglas generales:
+
+* Nunca usar `.push()` sin haber sido solicitado.
+* Esperar el evento `drain` si `.write()` devuelve `false`.
+* Cuidado con las versiones de Node.js, pueden cambiar comportamiento.
+
+### Para Readable Streams:
+
+```go:js
+class MyReadable extends Readable {
+  _read(size) {
+    let chunk;
+    let canPush = true;
+    while (canPush && (chunk = getNextChunk()) !== null) {
+      canPush = this.push(chunk);
+    }
+  }
+}
+```
+
+### Para Writable Streams:
+
+```go:js
+class MyWritable extends Writable {
+  _write(chunk, encoding, callback) {
+    if (chunk.includes('a')) return callback();
+    if (chunk.includes('b')) return callback();
+    callback();
+  }
+}
+```
+
+### Uso correcto de cork/uncork
+
+```go:js
+ws.cork();
+ws.write('hola ');
+ws.write('mundo');
+process.nextTick(() => ws.uncork());
+```
+
+## Conclusiones
+
+El manejo de backpressure en Node.js mediante Streams es fundamental para aplicaciones eficientes. Al entender como funciona `.pipe()`, `.write()` y eventos como `drain`, puedes construir pipelines solidas que eviten consumir memoria innecesaria y saturar el sistema.
+
+Consulta la [documentacion oficial de Streams](https://nodejs.org/api/stream.html) para explorar mas funciones que te ayudaran a sacar el maximo provecho de esta potente herramienta de Node.js.

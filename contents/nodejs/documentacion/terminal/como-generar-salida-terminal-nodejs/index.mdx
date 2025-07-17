@@ -1,0 +1,146 @@
+---
+title: Como generar salida en terminal con Node.js
+description: Aprende a usar console en Node.js para salida en terminal con formato y color
+href: /como-generar-salida-terminal-nodejs
+subtitle: Salida en terminal con Node.js
+---
+
+El módulo `console` de Node.js es una herramienta esencial para interactuar con la línea de comandos, ofreciendo métodos como `console.log`, `console.count` y `console.trace`. Este artículo te guía para generar salida en la terminal, desde mensajes básicos hasta texto coloreado, optimizando tu flujo de trabajo en 2025.
+
+## Por que usar el modulo console
+
+El módulo `console` permite imprimir mensajes, rastrear errores, medir tiempos y formatear salidas en la terminal. Es ideal para depuración, monitoreo y creación de herramientas CLI, con soporte para stdout y stderr.
+
+## Usar console.log para salida basica
+
+El método `console.log` imprime texto o variables en la consola:
+
+```go:js
+const x = 'x';
+const y = 'y';
+console.log(x, y); // Imprime: x y
+```
+
+También puedes formatear mensajes con especificadores:
+
+- `%s`: Cadena
+- `%d`: Número
+- `%i`: Parte entera
+- `%o`: Objeto
+
+Ejemplo:
+
+```go:js
+console.log('Mi %s tiene %d orejas', 'gato', 2); // Imprime: Mi gato tiene 2 orejas
+console.log('%o', Number); // Imprime: [Function: Number]
+```
+
+## Limpiar la consola
+
+Usa `console.clear` para limpiar la terminal (el comportamiento puede variar según la consola):
+
+```go:js
+console.clear(); // Limpia la consola
+```
+
+## Contar elementos con console.count
+
+`console.count` cuenta cuántas veces se imprime una cadena:
+
+```go:js
+const x = 1;
+const y = 2;
+console.count(`El valor de x es ${x}`); // Imprime: El valor de x es 1: 1
+console.count(`El valor de x es ${x}`); // Imprime: El valor de x es 1: 2
+console.count(`El valor de y es ${y}`); // Imprime: El valor de y es 2: 1
+```
+
+Reinicia el conteo con `console.countReset`:
+
+```go:js
+console.count('naranja'); // Imprime: naranja: 1
+console.count('naranja'); // Imprime: naranja: 2
+console.countReset('naranja');
+console.count('naranja'); // Imprime: naranja: 1
+```
+
+## Rastrear la pila con console.trace
+
+`console.trace` muestra la pila de llamadas, útil para depurar:
+
+```go:js
+const funcion2 = () => console.trace();
+const funcion1 = () => funcion2();
+funcion1();
+// Imprime un rastreo de la pila, mostrando el flujo de ejecución
+```
+
+## Medir el tiempo de ejecucion
+
+Usa `console.time` y `console.timeEnd` para medir el tiempo que tarda una función:
+
+```go:js
+const hacerAlgo = () => console.log('Tarea ejecutada');
+const medirTiempo = () => {
+  console.time('hacerAlgo');
+  hacerAlgo();
+  console.timeEnd('hacerAlgo'); // Imprime: hacerAlgo: 0.123ms
+};
+medirTiempo();
+```
+
+## Salida estandar y de error
+
+- `console.log`: Imprime en stdout (salida estándar).
+- `console.error`: Imprime en stderr (salida de error), útil para logs separados.
+
+```go:js
+console.log('Mensaje en stdout');
+console.error('Error en stderr');
+```
+
+## Colorear la salida con styleText
+
+Desde Node.js 22.11 (en desarrollo), usa `styleText` del módulo `node:util` para colorear texto:
+
+```go:js
+import { styleText } from 'node:util';
+console.log(
+  styleText(['red'], 'Texto rojo ') +
+  styleText(['green', 'bold'], 'texto verde en negrita ') +
+  'texto normal'
+);
+// Imprime: Texto rojo (en rojo) texto verde en negrita (en verde y negrita) texto normal
+```
+
+**Nota**: Verifica la compatibilidad, ya que `styleText` está en desarrollo. Consulta la [documentación de `util`](https://nodejs.org/api/util.html#utilstyletextformat-text).
+
+## Comparacion de metodos de consola
+
+| Método | Uso | Ejemplo de salida |
+|--------|-----|-------------------|
+| console.log | Imprimir mensajes | Texto, objetos, formateo |
+| console.clear | Limpiar consola | (Consola limpia) |
+| console.count | Contar repeticiones | naranja: 1 |
+| console.trace | Rastrear pila | Trace: funcion2 -> funcion1 |
+| console.time | Medir tiempo | hacerAlgo: 0.123ms |
+| console.error | Imprimir errores | Error en stderr |
+| styleText | Colorear texto | Texto rojo (en rojo) |
+
+## Casos de uso practicos
+
+- **Depuración**: Usa `console.trace` para rastrear errores en el flujo del programa.
+- **Monitoreo**: Registra eventos con `console.count` para analizar frecuencias.
+- **Rendimiento**: Mide tiempos con `console.time` para optimizar funciones.
+- **Interfaz CLI**: Colorea salidas con `styleText` para mejorar la experiencia del usuario.
+
+## Buenas practicas
+
+- Usa `console.error` para errores, permitiendo redirigir stderr en scripts.
+- Evita saturar la consola con mensajes innecesarios en producción.
+- Combina `console.log` con formateo para mensajes claros y legibles.
+- Verifica la compatibilidad de `styleText` antes de usarlo en producción.
+
+## Conclusión
+
+El módulo `console` de Node.js es una herramienta poderosa para generar salida en la terminal, desde mensajes simples con `console.log` hasta rastreo de pila con `console.trace` y texto coloreado con `styleText`. Usa estos métodos para depurar, monitorear y mejorar tus aplicaciones CLI. Explora la [documentación de Node.js](https://nodejs.org/api/console.html) para más detalles.

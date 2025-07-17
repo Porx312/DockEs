@@ -1,0 +1,148 @@
+---
+title: Como usar el REPL de Node.js
+description: Aprende a usar el REPL de Node.js para probar codigo JavaScript rapido
+href: /como-usar-repl-nodejs
+subtitle: REPL de Node.js
+---
+
+
+El REPL (Read-Eval-Print Loop) de Node.js es una herramienta interactiva para ejecutar código JavaScript desde la terminal. Ideal para pruebas rápidas y aprendizaje, este artículo te explica cómo usarlo, sus comandos especiales y cómo integrarlo en scripts en 2025.
+
+## Que es el REPL de Node.js
+
+El REPL es un entorno interactivo que lee código JavaScript, lo evalúa, imprime el resultado y espera más entrada (Read-Eval-Print Loop). Es perfecto para experimentar con código sin crear archivos.
+
+## Iniciar una sesion REPL
+
+Para iniciar el REPL, ejecuta el comando `node` sin argumentos:
+
+```go:bash
+node
+```
+
+Verás un prompt (`>`):
+
+```go:bash
+> 
+```
+
+Escribe código JavaScript y presiona Enter:
+
+```go:js
+console.log('¡Hola, Node.js!');
+// Imprime: ¡Hola, Node.js!
+// Devuelve: undefined
+```
+
+El REPL evalúa el código, muestra el resultado y espera más entrada. Por ejemplo, una expresión:
+
+```go:js
+5 === '5' // Devuelve: false
+```
+
+**Nota**: Las expresiones devuelven su valor directamente, mientras que las sentencias (como `console.log`) devuelven `undefined`.
+
+## Codigo multilinea
+
+El REPL detecta automáticamente código multilínea, como funciones o bucles:
+
+```go:js
+function generarAleatorio() {
+  return Math.random();
+}
+// Devuelve: undefined
+```
+
+Llama a la función:
+
+```go:js
+generarAleatorio(); // Devuelve un número aleatorio, ej: 0.123456789
+```
+
+Para salir del modo multilínea sin ejecutar, usa `.break` o `Ctrl+C`.
+
+## Comandos especiales del REPL
+
+El REPL incluye comandos que comienzan con un punto (`.`) para controlar la sesión:
+
+| Comando | Descripción |
+|---------|-------------|
+| .help   | Muestra ayuda de comandos |
+| .editor | Activa modo editor para código multilínea (salir con Ctrl+D) |
+| .break  | Cancela entrada multilínea |
+| .clear  | Resetea el contexto y entrada multilínea |
+| .load   | Carga un archivo JavaScript |
+| .save   | Guarda la sesión en un archivo |
+| .exit   | Cierra el REPL |
+
+Ejemplo de uso de `.editor`:
+
+```go:bash
+> .editor
+// Escribe:
+function saludar() {
+  console.log('¡Hola!');
+}
+saludar();
+// Presiona Ctrl+D para ejecutar
+```
+
+## Usar la variable especial _
+
+La variable `_` contiene el resultado de la última operación:
+
+```go:js
+5 + 3; // Devuelve: 8
+_ // Devuelve: 8
+```
+
+## Historial con tecla arriba
+
+Presiona la tecla de flecha arriba para navegar por el historial de comandos de la sesión actual y anteriores.
+
+## Iniciar el REPL desde un archivo
+
+Puedes iniciar el REPL desde un script usando el módulo `repl`:
+
+```go:js
+const repl = require('node:repl');
+// Inicia el REPL con un prompt personalizado
+const sesion = repl.start('$ ');
+// Mensaje al salir
+sesion.on('exit', () => {
+  console.log('Saliendo del REPL');
+  process.exit();
+});
+```
+
+Ejecuta el archivo:
+
+```go:bash
+node repl.js
+```
+
+Consulta la [documentación del módulo `repl`](https://nodejs.org/api/repl.html) para más opciones.
+
+## Casos de uso practicos
+
+- **Pruebas rápidas**: Ejecuta snippets para probar lógica o funciones.
+- **Depuración**: Evalúa expresiones para verificar resultados.
+- **Aprendizaje**: Experimenta con JavaScript sin crear archivos.
+- **Scripts CLI**: Integra el REPL en herramientas interactivas.
+
+## Buenas practicas
+
+- Usa `.editor` para código complejo multilínea.
+- Guarda sesiones con `.save` para reutilizar código.
+- Evita código sensible en el REPL, ya que el historial puede persistir.
+- Combina con `--watch` para desarrollo iterativo:
+
+```go:bash
+node --watch script.js
+```
+
+## Conclusión
+
+El REPL de Node.js es una herramienta poderosa para probar y depurar código JavaScript de forma interactiva. Con comandos como `.editor`, `.break` y el módulo `repl`, puedes optimizar tu flujo de trabajo. Prueba estos ejemplos y explora la [documentación de Node.js](https://nodejs.org/api/repl.html) para sacarle el máximo provecho en 2025.
+
+¿Listo para experimentar? Abre tu terminal y escribe `node` para comenzar.

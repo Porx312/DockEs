@@ -1,0 +1,132 @@
+---
+title: Como escribir archivos con Node.js en 2025
+description: Aprende a escribir y anexar archivos en Node.js con fs.writeFile y promesas
+---
+
+
+Node.js ofrece herramientas potentes para manejar archivos mediante el módulo `fs`. Este artículo te guía paso a paso para escribir y anexar archivos usando métodos asíncronos, síncronos y basados en promesas, optimizando tu código para proyectos en 2025.
+
+## Por que escribir archivos con Node.js
+
+Escribir archivos es esencial en aplicaciones como registros de logs, generación de reportes o almacenamiento de datos. El módulo `fs` (File System) de Node.js permite realizar estas operaciones de forma eficiente. A continuación, exploramos los métodos más comunes: `fs.writeFile`, `fs.writeFileSync`, `fsPromises.writeFile` y `fs.appendFile`.
+
+## Escribir archivos de forma asincrona
+
+El método `fs.writeFile` es ideal para operaciones asíncronas, ya que no bloquea el hilo principal, mejorando el rendimiento en aplicaciones con alta concurrencia.
+
+```go:js
+const fs = require('node:fs');
+const content = '¡Hola, Node.js!';
+fs.writeFile('./test.txt', content, (err) => {
+  if (err) {
+    console.error('Error:', err);
+  } else {
+    console.log('Archivo escrito con éxito');
+  }
+});
+```
+
+**Ventajas**:
+- No bloquea el evento principal.
+- Ideal para aplicaciones escalables.
+
+**Nota**: Por defecto, `fs.writeFile` sobrescribe el archivo si ya existe. Usa la bandera `flag: 'a+'` para anexar contenido.
+
+## Escribir archivos de forma sincrona
+
+Para operaciones simples donde la sincronía no afecta el rendimiento, usa `fs.writeFileSync`. Este método bloquea el hilo hasta completar la escritura.
+
+```go:js
+const fs = require('node:fs');
+const content = '¡Contenido síncrono!';
+try {
+  fs.writeFileSync('./test.txt', content);
+  console.log('Archivo escrito con éxito');
+} catch (err) {
+  console.error('Error:', err);
+}
+```
+
+**Cuándo usarlo**:
+- Scripts pequeños o tareas iniciales.
+- Evita usarlo en aplicaciones con alta carga.
+
+## Escribir archivos con promesas
+
+El módulo `fs/promises` ofrece una API moderna basada en promesas, ideal para usar con `async/await`, mejorando la legibilidad del código.
+
+```go:js
+const fs = require('node:fs/promises');
+async function escribirArchivo() {
+  try {
+    const content = '¡Contenido con promesas!';
+    await fs.writeFile('./test.txt', content);
+    console.log('Archivo escrito con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+escribirArchivo();
+```
+
+**Beneficios**:
+- Código más limpio y fácil de mantener.
+- Compatible con aplicaciones modernas.
+
+## Anexar contenido a un archivo
+
+Si deseas agregar contenido sin sobrescribir el archivo, usa `fs.appendFile` (asíncrono) o `fs.appendFileSync` (síncrono).
+
+```go:js
+const fs = require('node:fs');
+const content = '¡Nuevo contenido anexado!\n';
+fs.appendFile('./log.txt', content, (err) => {
+  if (err) {
+    console.error('Error:', err);
+  } else {
+    console.log('Contenido anexado con éxito');
+  }
+});
+```
+
+**Ejemplo con promesas**:
+
+```go:js
+const fs = require('node:fs/promises');
+async function anexarArchivo() {
+  try {
+    const content = '¡Contenido anexado con promesas!\n';
+    await fs.appendFile('./log.txt', content);
+    console.log('Contenido anexado con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+anexarArchivo();
+```
+
+## Banderas para controlar la escritura
+
+Las banderas determinan cómo se comporta la escritura de archivos. Aquí una tabla con las más comunes:
+
+| Bandera | Descripción | Crea archivo si no existe |
+|---------|-------------|--------------------------|
+| r+      | Abre para lectura y escritura | ❌ |
+| w+      | Abre para lectura y escritura, inicia al principio | ✅ |
+| a       | Abre para escritura, anexa al final | ✅ |
+| a+      | Abre para lectura y escritura, anexa al final | ✅ |
+
+Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html) para más detalles.
+
+## Casos de uso practicos
+
+- **Logs de aplicaciones**: Usa `fs.appendFile` para registrar eventos sin sobrescribir datos.
+- **Generación de archivos**: Crea reportes o configuraciones con `fs.writeFile`.
+- **Automatización**: Escribe archivos en scripts CLI con `fs.writeFileSync`.
+
+## Conclusión
+
+Escribir y anexar archivos en Node.js es sencillo con el módulo `fs`. Usa `fs.writeFile` para operaciones asíncronas, `fs.writeFileSync` para tareas síncronas, o `fsPromises.writeFile` para un enfoque moderno con promesas. Selecciona el método según las necesidades de tu proyecto para optimizar rendimiento y legibilidad.
+
+¿Listo para implementar? Prueba estos ejemplos y consulta la [documentación de Node.js](https://nodejs.org/api/fs.html) para más opciones.
+

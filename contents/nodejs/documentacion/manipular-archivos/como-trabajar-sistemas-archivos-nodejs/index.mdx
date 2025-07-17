@@ -1,0 +1,132 @@
+---
+title: Como trabajar con sistemas de archivos en Node.js 2025
+description: Aprende a gestionar sistemas de archivos en Node.js con buenas practicas
+---
+
+
+Node.js ofrece herramientas potentes para interactuar con sistemas de archivos a través del módulo `fs`. Sin embargo, no todos los sistemas de archivos son iguales. Este artículo te guía sobre cómo manejar diferentes sistemas de archivos (como NTFS, HFS+ o EXT4) con buenas prácticas, preservando datos y optimizando la compatibilidad en 2025.
+
+## Por que entender los sistemas de archivos
+
+Los sistemas de archivos varían en características como sensibilidad a mayúsculas, preservación de formas Unicode o resolución de marcas temporales. Por ejemplo, HFS+ (macOS) puede ser insensible a mayúsculas, mientras que EXT4 (Linux) es sensible. Usar el módulo `fs` de Node.js correctamente asegura que tu aplicación sea robusta y evite pérdida de datos.
+
+## Evitar el enfoque de minimo comun denominador
+
+Normalizar nombres de archivos a mayúsculas, formas Unicode NFC o marcas temporales de baja resolución parece una solución simple, pero puede corromper datos o causar colisiones. Por ejemplo:
+
+- Normalizar a mayúsculas impide trabajar con sistemas sensibles a mayúsculas.
+- Forzar NFC puede alterar nombres en sistemas que preservan NFD.
+
+Esto limita la compatibilidad y crea errores difíciles de solucionar.
+
+## Adoptar un enfoque de superconjunto
+
+En lugar de reducir funcionalidades, adopta un enfoque de superconjunto que soporte todas las características posibles: sensibilidad a mayúsculas, preservación de formas Unicode, permisos Unix, marcas temporales de alta resolución, etc. Por ejemplo:
+
+- Preserva marcas temporales de milisegundos en NTFS, aunque no estén soportadas en FAT.
+- Mantén permisos Unix en EXT4, aunque no apliquen en Windows.
+
+```go:js
+const fs = require('node:fs/promises');
+async function copiarArchivo(origen, destino) {
+  try {
+    const stats = await fs.stat(origen);
+    await fs.copyFile(origen, destino);
+    // Preserva marcas temporales y permisos si el sistema lo soporta
+    await fs.utimes(destino, stats.atime, stats.mtime);
+    console.log('Archivo copiado con éxito');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+copiarArchivo('./origen.txt', './destino.txt');
+```
+
+## Preservar el caso de los nombres
+
+Los sistemas de archivos como HFS+ pueden convertir nombres a mayúsculas o minúsculas. Preserva el caso exacto devuelto por el sistema.
+
+```go:js
+const fs = require('node:fs/promises');
+async function listarArchivos(carpeta) {
+  try {
+    const archivos = await fs.readdir(carpeta);
+    console.log('Archivos:', archivos); // Preserva el caso original
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+listarArchivos('./test');
+```
+
+**Nota**: No uses `toLowerCase()` para comparar nombres en sistemas sensibles al caso, ya que `ABC` y `abc` son archivos diferentes.
+
+## Preservar formas Unicode
+
+Algunos sistemas, como HFS+, normalizan nombres a NFD, mientras que NTFS o EXT4 preservan NFC y NFD. No alteres la forma Unicode; úsala tal como la devuelve el sistema.
+
+```go:js
+const fs = require('node:fs/promises');
+async function crearCarpeta(nombre) {
+  try {
+    await fs.mkdir(nombre);
+    console.log(`Carpeta ${nombre} creada`); // Preserva forma Unicode
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+crearCarpeta('./café'); // NFC: <63 61 66 c3 a9>
+```
+
+Para comparar nombres en sistemas insensibles a formas Unicode:
+
+```go:js
+const fs = require('node:fs/promises');
+async function compararNombres(nombre1, nombre2) {
+  const normalizado1 = nombre1.normalize('NFD');
+  const normalizado2 = nombre2.normalize('NFD');
+  return normalizado1 === normalizado2; // Compara sin alterar datos
+}
+```
+
+**Nota**: Usa `string.normalize('NFD')` solo para comparaciones, nunca para almacenar.
+
+## Resolver marcas temporales
+
+La resolución de marcas temporales varía: NTFS soporta milisegundos, FAT puede limitarse a segundos o incluso 24 horas para `atime`. Preserva la resolución original.
+
+```go:js
+const fs = require('node:fs/promises');
+async function obtenerMarcaTemporal(archivo) {
+  try {
+    const stats = await fs.stat(archivo);
+    console.log('mtime:', stats.mtimeMs); // Preserva resolución
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+obtenerMarcaTemporal('./test.txt');
+```
+
+## Comparacion de sistemas de archivos
+
+| Sistema | Sensibilidad al caso | Preservación Unicode | Resolución temporal |
+|---------|---------------------|----------------------|---------------------|
+| NTFS    | Insensible          | NFC/NFD              | Milisegundos        |
+| HFS+    | Insensible (HFSX sensible) | NFD            | Milisegundos        |
+| EXT4    | Sensible            | NFC/NFD              | Nanosegundos        |
+| FAT     | Insensible          | Limitada             | Segundos/24h (atime) |
+
+## Buenas practicas
+
+- **Probar el sistema**: Usa `fs.access` o crea archivos de prueba para detectar comportamientos.
+- **Preservar datos**: No normalices nombres ni marcas temporales; pásalos como los devuelve el sistema.
+- **Comparaciones seguras**: Usa `string.normalize` solo para comparar, no para modificar.
+- **Soporte multiplataforma**: Implementa un superconjunto de características para máxima compatibilidad.
+- **Usar promesas**: Prefiere `fs/promises` para un código moderno y legible.
+
+Consulta la [documentación de Node.js](https://nodejs.org/api/fs.html) para más detalles.
+
+## Conclusión
+
+Trabajar con diferentes sistemas de archivos en Node.js requiere un enfoque de superconjunto que preserve casos, formas Unicode y marcas temporales. Evita normalizar datos para prevenir corrupción y usa funciones de comparación adecuadas. Con estas prácticas, tus aplicaciones serán robustas y compatibles en 2025.

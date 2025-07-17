@@ -1,0 +1,129 @@
+---
+title: Como ejecutar scripts de Node.js desde la terminal
+description: Aprende a ejecutar scripts de Node.js con node, shebang y tareas automaticas
+href: /como-ejecutar-scripts-nodejs
+subtitle: Ejecucion de scripts en Node.js
+---
+
+
+Node.js permite ejecutar scripts desde la línea de comandos de forma sencilla y eficiente. Este artículo te explica cómo usar el comando `node`, líneas shebang, ejecución de strings, reinicio automático y tareas definidas en `package.json`, optimizando tu flujo de trabajo en 2025.
+
+## Por que ejecutar scripts desde la terminal
+
+Ejecutar scripts desde la terminal es fundamental para desarrollar, probar y automatizar tareas en Node.js. Ya sea para lanzar aplicaciones, ejecutar pruebas o depurar código, el comando `node` y sus opciones te ofrecen flexibilidad y control.
+
+## Ejecutar un script basico
+
+La forma más común de ejecutar un script es usando el comando `node` seguido del nombre del archivo.
+
+```go:bash
+node app.js
+```
+
+**Nota**: Asegúrate de estar en el directorio que contiene `app.js`. Consulta la [documentación de Node.js](https://nodejs.org/api/cli.html) para más detalles.
+
+## Usar una linea shebang
+
+Una línea shebang indica al sistema operativo qué intérprete usar. Agrega esta línea al inicio de tu script:
+
+```go:js
+#!/usr/bin/env node
+console.log('¡Hola, Node.js!');
+```
+
+Luego, otorga permisos de ejecución:
+
+```go:bash
+chmod u+x app.js
+```
+
+Ejecuta el script directamente:
+
+```go:bash
+./app.js
+```
+
+**Ventajas**:
+- No necesitas especificar `node` al ejecutar.
+- Compatible con la mayoría de los sistemas operativos.
+
+## Ejecutar un string como script
+
+Usa la bandera `-e` o `--eval` para ejecutar código JavaScript directamente:
+
+```go:bash
+node -e "console.log('Hola desde la terminal')"
+```
+
+**Notas**:
+- En Windows, usa comillas dobles (`"`) en `cmd.exe`.
+- En PowerShell o Git Bash, tanto comillas simples (`'`) como dobles funcionan.
+
+## Reiniciar automaticamente la aplicacion
+
+Desde Node.js v16, la bandera `--watch` reinicia automáticamente tu aplicación al detectar cambios en el archivo.
+
+```go:bash
+node --watch app.js
+```
+
+**Uso recomendado**:
+- Desarrollo local para ahorrar tiempo.
+- Consulta la [documentación de la bandera `--watch`](https://nodejs.org/api/cli.html#--watch) para más información.
+
+## Ejecutar tareas con package.json
+
+Node.js incluye un ejecutor de tareas que usa el archivo `package.json` para automatizar comandos. Ejemplo de `package.json`:
+
+```go:js
+{
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "test": "node --test"
+  }
+}
+```
+
+Ejecuta una tarea con la bandera `--run`:
+
+```go:bash
+node --run test
+```
+
+**Pasar argumentos**:
+Para pasar argumentos adicionales, usa `--` seguido del argumento:
+
+```go:bash
+node --run dev
+```
+
+**Variables de entorno**:
+- `NODE_RUN_SCRIPT_NAME`: Nombre del script ejecutado.
+- `NODE_RUN_PACKAGE_JSON_PATH`: Ruta al archivo `package.json`.
+
+**Limitaciones**:
+- No ejecuta scripts `pre` ni `post` como `npm run`.
+- Diseñado para simplicidad y rendimiento.
+
+## Comparacion de metodos de ejecucion
+
+| Método | Tipo | Caso de uso |
+|--------|------|-------------|
+| node app.js | Básico | Ejecución simple |
+| Shebang | Directo | Scripts ejecutables |
+| node -e | Eval | Pruebas rápidas |
+| node --watch | Desarrollo | Reinicio automático |
+| node --run | Tareas | Automatización |
+
+## Casos de uso practicos
+
+- **Desarrollo local**: Usa `--watch` para reiniciar automáticamente al editar código.
+- **Pruebas rápidas**: Ejecuta snippets con `-e` para depurar.
+- **Automatización**: Define tareas en `package.json` para tests o builds.
+- **Scripts CLI**: Usa shebang para crear comandos ejecutables.
+
+## Conclusión
+
+Ejecutar scripts de Node.js desde la terminal es flexible y potente. Usa `node app.js` para ejecuciones básicas, shebang para scripts directos, `-e` para pruebas rápidas, `--watch` para desarrollo y `--run` para tareas automatizadas. Optimiza tu flujo de trabajo con estas herramientas y consulta la [documentación de Node.js](https://nodejs.org/api/cli.html) para más detalles.
