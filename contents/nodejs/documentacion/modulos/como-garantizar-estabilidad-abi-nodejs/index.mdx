@@ -1,5 +1,5 @@
 ---
-title: Como garantizar estabilidad ABI en Node.js 
+title: Como garantizar estabilidad ABI en Node.js
 description: Aprende sobre estabilidad ABI y N-API en Node.js para addons nativos
 ---
 
@@ -31,6 +31,7 @@ napi_value SayHello(napi_env env, napi_callback_info info) {
 ```
 
 **Ventajas**:
+
 - Los complementos N-API no requieren recompilación al actualizar Node.js.
 - Compatibilidad con implementaciones alternativas de Node.js.
 - Preparado para futuros motores JavaScript.
@@ -50,12 +51,12 @@ npm install paquete@n-api
 
 ## Comparacion de caracteristicas
 
-| Característica | Node.js estándar | N-API |
-|----------------|------------------|-------|
-| Compatibilidad ABI | Dentro de la misma versión mayor | A través de versiones mayores |
-| Dependencia de V8 | Sí | No |
-| Recompilación requerida | Por versión mayor | No necesaria |
-| Cabeceras | `node.h`, `v8.h` | `node_api.h`, `node_api_types.h` |
+| Característica          | Node.js estándar                 | N-API                            |
+| ----------------------- | -------------------------------- | -------------------------------- |
+| Compatibilidad ABI      | Dentro de la misma versión mayor | A través de versiones mayores    |
+| Dependencia de V8       | Sí                               | No                               |
+| Recompilación requerida | Por versión mayor                | No necesaria                     |
+| Cabeceras               | `node.h`, `v8.h`                 | `node_api.h`, `node_api_types.h` |
 
 ## Buenas practicas
 

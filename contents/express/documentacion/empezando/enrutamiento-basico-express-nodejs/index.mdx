@@ -1,0 +1,132 @@
+---
+title: Enrutamiento basico en Express con Node.js
+description: Aprende enrutamiento basico en Express con Node.js. Configura rutas GET, POST, PUT y DELETE para tu aplicacion web
+href: /enrutamiento-basico-express-nodejs
+subtitle: Enrutamiento en Express
+---
+
+El enrutamiento en [Express](https://expressjs.com/) define cómo una aplicación responde a solicitudes de clientes en endpoints específicos, que consisten en una URI (o ruta) y un método HTTP (GET, POST, PUT, DELETE, etc.). Esta guía te explica cómo crear rutas básicas en Express, ideal para principiantes que desean construir aplicaciones web o APIs con [Node.js](https://nodejs.org/).
+
+## Que es el enrutamiento en Express
+
+El enrutamiento determina qué función manejadora se ejecuta cuando una solicitud HTTP coincide con una ruta y un método específico. Cada ruta puede tener una o más funciones manejadoras, que procesan la solicitud y envían una respuesta.
+
+La estructura de una ruta en Express es:
+
+```go:js
+app.METHOD(PATH, HANDLER)
+```
+
+- **`app`**: Instancia de Express.
+- **`METHOD`**: Método HTTP en minúsculas (get, post, put, delete, etc.).
+- **`PATH`**: Ruta en el servidor (e.g., `/`, `/user`).
+- **`HANDLER`**: Función que se ejecuta cuando la ruta coincide.
+
+Esta guía asume que ya tienes una aplicación Express configurada y un servidor en ejecución. Si no, consulta nuestro [ejemplo Hola Mundo con Express](/ejemplo-hola-mundo-express-nodejs).
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado en tu proyecto. Consulta [cómo instalar Express](/como-instalar-express-nodejs).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Ejemplos de rutas basicas
+
+A continuación, se muestran ejemplos de rutas básicas usando diferentes métodos HTTP. Crea un archivo `app.js` con una instancia de Express:
+
+```go:js
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+```
+
+### Ruta GET en la pagina principal
+
+Responde con "¡Hola, Mundo!" en la ruta raíz (`/`):
+
+```go:js
+app.get('/', (req, res) => {
+  res.send('¡Hola, Mundo!');
+});
+```
+
+Accede a [http://localhost:3000](http://localhost:3000) para ver el mensaje.
+
+### Ruta POST en la pagina principal
+
+Maneja una solicitud POST en la ruta raíz (`/`):
+
+```go:js
+app.post('/', (req, res) => {
+  res.send('Recibida una solicitud POST');
+});
+```
+
+Prueba esta ruta con una herramienta como [Postman](https://www.postman.com/) enviando una solicitud POST a `http://localhost:3000`.
+
+### Ruta PUT en /user
+
+Maneja una solicitud PUT en la ruta `/user`:
+
+```go:js
+app.put('/user', (req, res) => {
+  res.send('Recibida una solicitud PUT en /user');
+});
+```
+
+### Ruta DELETE en /user
+
+Maneja una solicitud DELETE en la ruta `/user`:
+
+```go:js
+app.delete('/user', (req, res) => {
+  res.send('Recibida una solicitud DELETE en /user');
+});
+```
+
+## Como probar las rutas
+
+1. Guarda los ejemplos en `app.js`.
+2. Ejecuta la aplicación:
+
+   ```go:bash
+   node app.js
+   ```
+
+3. Usa un navegador o Postman para probar:
+   - **GET**: Visita [http://localhost:3000](http://localhost:3000).
+   - **POST, PUT, DELETE**: Envía solicitudes con Postman a las rutas correspondientes.
+
+## Consejos para mejorar el enrutamiento
+
+- **Organiza rutas en modulos**: Usa el módulo `express.Router` para estructurar rutas en archivos separados. Consulta la [guía de enrutamiento de Express](https://expressjs.com/es/guide/routing.html).
+- **Usa nodemon**: Instala `nodemon` para reiniciar el servidor automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Maneja errores 404**: Agrega una ruta predeterminada para manejar rutas no definidas:
+
+  ```go:js
+  app.use((req, res) => {
+    res.status(404).send('Ruta no encontrada');
+  });
+  ```
+
+- **Agrega .gitignore**: Excluye `node_modules` en tu repositorio:
+
+  ```go:gitignore
+  node_modules/
+  ```

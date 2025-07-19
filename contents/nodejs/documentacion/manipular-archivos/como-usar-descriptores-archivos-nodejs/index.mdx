@@ -5,7 +5,6 @@ href: /como-usar-descriptores-archivos-nodejs
 subtitle: Guia de descriptores en Node.js
 ---
 
-
 En **Node.js**, los descriptores de archivos son esenciales para interactuar con el sistema de archivos. Un descriptor de archivo es un número que identifica un archivo abierto en el sistema operativo. Esta guía te explica cómo usar el módulo `fs` para obtener y trabajar con descriptores de archivos, con ejemplos prácticos y enfoques síncronos, asíncronos y basados en promesas.
 
 ## Que es un descriptor de archivo
@@ -38,12 +37,12 @@ fs.open('/ruta/archivo.txt', 'r', (err, fd) => {
 
 El indicador `'r'` abre el archivo solo para lectura. Otros indicadores comunes incluyen:
 
-| Indicador | Descripción | Crea archivo si no existe |
-|-----------|-------------|--------------------------|
-| `r+`      | Abre para lectura y escritura | ❌ |
-| `w+`      | Abre para lectura y escritura, comienza al inicio | ✅ |
-| `a`       | Abre para escritura, comienza al final | ✅ |
-| `a+`      | Abre para lectura y escritura, comienza al final | ✅ |
+| Indicador | Descripción                                       | Crea archivo si no existe |
+| --------- | ------------------------------------------------- | ------------------------- |
+| `r+`      | Abre para lectura y escritura                     | ❌                        |
+| `w+`      | Abre para lectura y escritura, comienza al inicio | ✅                        |
+| `a`       | Abre para escritura, comienza al final            | ✅                        |
+| `a+`      | Abre para lectura y escritura, comienza al final  | ✅                        |
 
 ## Abrir archivos con fs.openSync (sincrono)
 

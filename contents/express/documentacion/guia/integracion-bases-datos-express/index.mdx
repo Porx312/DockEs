@@ -1,0 +1,224 @@
+---
+title: Como integrar bases de datos con Express
+description: Aprende a conectar bases de datos como MySQL, MongoDB y Redis a Express con controladores de Node.js
+href: /integracion-bases-datos-express
+subtitle: Bases de datos en Express
+---
+
+## Por que integrar bases de datos con Express
+
+Integrar bases de datos en una aplicación Express permite almacenar y gestionar datos de manera eficiente. Express no incluye soporte nativo para bases de datos, pero puedes usar controladores de Node.js para conectar tu aplicación a sistemas como MySQL, MongoDB, PostgreSQL, Redis y más. Este artículo explica cómo integrar las bases de datos más populares con ejemplos prácticos.
+
+## Como conectar una base de datos a Express
+
+Para conectar una base de datos a Express, necesitas:
+
+1. Instalar el controlador correspondiente mediante npm.
+2. Configurar la conexión en tu aplicación.
+3. Ejecutar consultas usando los métodos del controlador.
+
+A continuación, se presentan ejemplos para las bases de datos más comunes.
+
+## Ejemplos de integracion por base de datos
+
+### MySQL
+
+**Módulo**: [mysql](https://www.npmjs.com/package/mysql)
+
+**Instalación**:
+
+```go:bash
+npm install mysql
+```
+
+**Ejemplo**:
+
+```go:js
+const express = require('express');
+const mysql = require('mysql');
+const app = express();
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'dbuser',
+  password: 's3kreee7',
+  database: 'my_db'
+});
+
+connection.connect();
+
+app.get('/suma', (req, res) => {
+  connection.query('SELECT 1 + 1 AS solution', (err, rows) => {
+    if (err) return res.status(500).send('Error en la consulta');
+    res.json({ solution: rows[0].solution });
+  });
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+### MongoDB
+
+**Módulo**: [mongodb](https://www.npmjs.com/package/mongodb)
+
+**Instalación**:
+
+```go:bash
+npm install mongodb
+```
+
+**Ejemplo (versión 3.x)**:
+
+```go:js
+const express = require('express');
+const MongoClient = require('mongodb').MongoClient;
+const app = express();
+
+app.get('/mammals', async (req, res) => {
+  try {
+    const client = await MongoClient.connect('mongodb://localhost:27017/animals');
+    const db = client.db('animals');
+    const result = await db.collection('mammals').find().toArray();
+    res.json(result);
+    client.close();
+  } catch (err) {
+    res.status(500).send('Error en la consulta');
+  }
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+**Nota**: Considera usar [Mongoose](https://mongoosejs.com/) para un modelo de objetos más estructurado con MongoDB.
+
+### PostgreSQL
+
+**Módulo**: [pg-promise](https://www.npmjs.com/package/pg-promise)
+
+**Instalación**:
+
+```go:bash
+npm install pg-promise
+```
+
+**Ejemplo**:
+
+```go:js
+const express = require('express');
+const pgp = require('pg-promise')();
+const app = express();
+
+const db = pgp('postgres://username:password@localhost:5432/database');
+
+app.get('/valor', async (req, res) => {
+  try {
+    const data = await db.one('SELECT $1 AS value', 123);
+    res.json({ value: data.value });
+  } catch (error) {
+    res.status(500).send('Error en la consulta');
+  }
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+### Redis
+
+**Módulo**: [redis](https://www.npmjs.com/package/redis)
+
+**Instalación**:
+
+```go:bash
+npm install redis
+```
+
+**Ejemplo**:
+
+```go:js
+const express = require('express');
+const redis = require('redis');
+const app = express();
+
+const client = redis.createClient();
+
+client.on('error', (err) => console.log(`Error ${err}`));
+
+app.get('/set', (req, res) => {
+  client.set('key', 'valor', (err, reply) => {
+    if (err) return res.status(500).send('Error en Redis');
+    res.send(`Clave establecida: ${reply}`);
+  });
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+### SQLite
+
+**Módulo**: [sqlite3](https://www.npmjs.com/package/sqlite3)
+
+**Instalación**:
+
+```go:bash
+npm install sqlite3
+```
+
+**Ejemplo**:
+
+```go:js
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const app = express();
+
+const db = new sqlite3.Database(':memory:');
+
+app.get('/lorem', (req, res) => {
+  db.serialize(() => {
+    db.run('CREATE TABLE lorem (info TEXT)');
+    const stmt = db.prepare('INSERT INTO lorem VALUES (?)');
+    for (let i = 0; i < 5; i++) {
+      stmt.run(`Ipsum ${i}`);
+    }
+    stmt.finalize();
+
+    db.all('SELECT rowid AS id, info FROM lorem', (err, rows) => {
+      if (err) return res.status(500).send('Error en la consulta');
+      res.json(rows);
+    });
+  });
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+## Tabla de bases de datos compatibles
+
+| Base de datos | Módulo            | Tipo            | Casos de uso principales                   |
+|---------------|-------------------|-----------------|-------------------------------------------|
+| MySQL         | mysql             | Relacional      | Aplicaciones con datos estructurados      |
+| MongoDB       | mongodb, mongoose | NoSQL           | Datos flexibles, aplicaciones escalables  |
+| PostgreSQL    | pg-promise        | Relacional      | Consultas complejas, aplicaciones robustas|
+| Redis         | redis             | Clave-valor     | Caché, sesiones, datos en tiempo real     |
+| SQLite        | sqlite3           | Relacional      | Aplicaciones ligeras, pruebas locales     |
+| Cassandra     | cassandra-driver  | NoSQL           | Grandes volúmenes de datos, alta escritura|
+| CouchDB       | nano              | NoSQL           | Documentos JSON, sincronización offline   |
+| Neo4j         | neo4j-driver      | Grafos          | Relaciones complejas, redes sociales      |
+| Oracle        | oracledb          | Relacional      | Aplicaciones empresariales                |
+| SQL Server    | tedious           | Relacional      | Entornos Microsoft, datos estructurados   |
+| Elasticsearch | elasticsearch     | Búsqueda        | Búsquedas full-text, análisis de datos    |
+
+## Mejores practicas para la integracion
+
+- **Manejo de errores**: Siempre captura errores en las consultas y responde con códigos de estado HTTP apropiados.
+- **Cierre de conexiones**: Cierra las conexiones a la base de datos (por ejemplo, `client.close()` en MongoDB) para evitar fugas de recursos.
+- **Usa ORM si es necesario**: Para bases relacionales, considera ORMs como [Sequelize](https://sequelize.org/) o para MongoDB, [Mongoose](https://mongoosejs.com/).
+- **Seguridad**: Usa consultas parametrizadas para evitar inyecciones SQL.
+- **Explora otros controladores**: Busca en [npm](https://www.npmjs.com/) para encontrar controladores adicionales según tus necesidades.
+
+## Enlaces utiles
+
+- [Documentacion oficial de Express sobre integracion de bases de datos](https://expressjs.com/es/guide/database-integration.html)
+- [Npm para buscar controladores de bases de datos](https://www.npmjs.com/)
+- [Guia de Mongoose para MongoDB](https://mongoosejs.com/docs/)
+
+Con estos ejemplos, puedes integrar fácilmente cualquier base de datos en tu aplicación Express, desde bases relacionales como MySQL hasta sistemas NoSQL como MongoDB o Redis. ¡Elige la base de datos que mejor se adapte a tu proyecto!

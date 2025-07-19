@@ -120,12 +120,12 @@ Este código usa `fs.createReadStream` para leer el archivo en fragmentos, mostr
 
 ## Cuándo usar cada método
 
-| Método | Ventajas | Desventajas | Caso de uso |
-|--------|----------|-------------|-------------|
-| `fs.readFile` | Asíncrono, fácil de usar | Carga todo en memoria | Archivos pequeños |
-| `fs.readFileSync` | Simple, síncrono | Bloquea el event loop | Scripts rápidos, no críticos |
-| `fsPromises.readFile` | Moderno, usa promesas | Carga todo en memoria | Código limpio con async/await |
-| `fs.createReadStream` | Eficiente para archivos grandes | Más complejo | Archivos grandes, alto rendimiento |
+| Método                | Ventajas                        | Desventajas           | Caso de uso                        |
+| --------------------- | ------------------------------- | --------------------- | ---------------------------------- |
+| `fs.readFile`         | Asíncrono, fácil de usar        | Carga todo en memoria | Archivos pequeños                  |
+| `fs.readFileSync`     | Simple, síncrono                | Bloquea el event loop | Scripts rápidos, no críticos       |
+| `fsPromises.readFile` | Moderno, usa promesas           | Carga todo en memoria | Código limpio con async/await      |
+| `fs.createReadStream` | Eficiente para archivos grandes | Más complejo          | Archivos grandes, alto rendimiento |
 
 ## Consejos para optimizar la lectura de archivos
 
@@ -136,4 +136,4 @@ Este código usa `fs.createReadStream` para leer el archivo en fragmentos, mostr
 
 ## Conclusión
 
-Leer archivos en Node.js es sencillo con los métodos del módulo `fs`. Usa `fs.readFile` o `fsPromises.readFile` para archivos pequeños, y `fs.createReadStream` para archivos grandes. Con estas herramientas, puedes optimizar el rendimiento de tus aplicaciones backend. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html#fsreadfilepath-options-callback) 
+Leer archivos en Node.js es sencillo con los métodos del módulo `fs`. Usa `fs.readFile` o `fsPromises.readFile` para archivos pequeños, y `fs.createReadStream` para archivos grandes. Con estas herramientas, puedes optimizar el rendimiento de tus aplicaciones backend. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html#fsreadfilepath-options-callback)

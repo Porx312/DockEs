@@ -1,8 +1,7 @@
 ---
-title: Como aceptar entrada en terminal con Node.js 
+title: Como aceptar entrada en terminal con Node.js
 description: Aprende a usar el modulo readline en Node.js para entrada interactiva
 ---
-
 
 Crear programas CLI interactivos en Node.js es fácil con el módulo `readline`, disponible desde la versión 7. Este módulo permite leer entrada del usuario desde la terminal (`process.stdin`) línea por línea. Este artículo te guía para usar `readline`, capturar entradas y manejar contraseñas de forma segura en 2025.
 
@@ -64,13 +63,13 @@ rl._writeToOutput = function(string) {
 
 El módulo `readline` ofrece métodos útiles para interfaces CLI avanzadas:
 
-| Método | Descripción |
-|--------|-------------|
-| question | Solicita entrada y ejecuta un callback |
-| prompt | Muestra el prompt para entrada continua |
-| close | Cierra la interfaz readline |
-| write | Escribe en la salida sin esperar entrada |
-| line | Evento emitido por cada línea ingresada |
+| Método   | Descripción                              |
+| -------- | ---------------------------------------- |
+| question | Solicita entrada y ejecuta un callback   |
+| prompt   | Muestra el prompt para entrada continua  |
+| close    | Cierra la interfaz readline              |
+| write    | Escribe en la salida sin esperar entrada |
+| line     | Evento emitido por cada línea ingresada  |
 
 Ejemplo con entrada continua usando `prompt`:
 

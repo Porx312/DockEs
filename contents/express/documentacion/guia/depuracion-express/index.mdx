@@ -1,0 +1,139 @@
+---
+title: Como depurar aplicaciones en Express
+description: Aprende a depurar aplicaciones Express con la variable DEBUG para ver logs internos y optimizar el desarrollo
+href: /depuracion-express
+subtitle: Depuracion en Express
+---
+
+## Que es la depuracion en Express
+
+La depuración en Express permite visualizar los logs internos de la framework para identificar problemas en el código, rutas o middleware. Al configurar la variable de entorno `DEBUG`, puedes activar los mensajes de depuración generados por el módulo [debug](https://www.npmjs.com/package/debug), utilizado por Express.
+
+## Como activar los logs de depuracion
+
+Para ver todos los logs internos de Express, configura la variable `DEBUG` con el valor `express:*` al iniciar tu aplicación. Usa el siguiente comando:
+
+### En Linux/Mac:
+
+```go:bash
+DEBUG=express:* node index.js
+```
+
+### En Windows:
+
+```go:bash
+$env:DEBUG="express:*"; node index.js
+```
+
+Este comando genera una salida detallada, como:
+
+```
+  express:router:route new / +0ms
+  express:router:layer new / +1ms
+  express:router:route get / +1ms
+  express:application compile etag weak +1ms
+  express:application booting in development mode +1ms
+```
+
+Cuando hagas una solicitud a la aplicación, verás logs adicionales, como:
+
+```
+  express:router dispatching GET / +4h
+  express:router query  : / +2ms
+  express:view lookup "index.pug" +338ms
+  express:view render "/projects/example/views/index.pug" +1ms
+```
+
+## Como filtrar logs especificos
+
+Si deseas ver solo ciertos logs, especifica un espacio de nombres en la variable `DEBUG`:
+
+- **Logs de enrutamiento**: Usa `DEBUG=express:router`.
+- **Logs de la aplicacion**: Usa `DEBUG=express:application`.
+
+Por ejemplo, para ver solo los logs del enrutador:
+
+```go:bash
+DEBUG=express:router node index.js
+```
+
+## Depuracion en aplicaciones generadas por Express
+
+Las aplicaciones generadas con el comando `express` usan un espacio de nombres basado en el nombre de la aplicación. Por ejemplo, si generaste una aplicación llamada `mi-app` con:
+
+```go:bash
+express mi-app
+```
+
+Activa los logs con:
+
+```go:bash
+DEBUG=mi-app:* node ./bin/www
+```
+
+Puedes combinar múltiples espacios de nombres separándolos por comas:
+
+```go:bash
+DEBUG=http,express:*,mi-app:* node index.js
+```
+
+## Opciones avanzadas de depuracion
+
+El módulo `debug` ofrece variables de entorno para personalizar la salida de los logs:
+
+| Variable            | Propósito                                              |
+| ------------------- | ------------------------------------------------------ |
+| `DEBUG`             | Habilita/desactiva espacios de nombres específicos.    |
+| `DEBUG_COLORS`      | Activa/desactiva colores en la salida (true/false).    |
+| `DEBUG_DEPTH`       | Define la profundidad de inspección de objetos.        |
+| `DEBUG_FD`          | Descriptor de archivo para la salida de logs.          |
+| `DEBUG_SHOW_HIDDEN` | Muestra propiedades ocultas en objetos inspeccionados. |
+
+Ejemplo para activar colores y mayor profundidad:
+
+```go:bash
+DEBUG=express:* DEBUG_COLORS=true DEBUG_DEPTH=10 node index.js
+```
+
+## Mejores practicas para depurar en Express
+
+- **Usa entornos de desarrollo**: Activa los logs solo en desarrollo, ya que en producción (`NODE_ENV=production`) pueden afectar el rendimiento.
+- **Filtra logs relevantes**: Usa espacios de nombres específicos para evitar saturación de información.
+- **Integra herramientas adicionales**: Considera herramientas como [morgan](https://www.npmjs.com/package/morgan) para logs HTTP o [winston](https://www.npmjs.com/package/winston) para un sistema de logging más robusto.
+- **Revisa la documentacion**: Consulta la [documentación oficial de Express](https://expressjs.com/es/guide/debugging.html) para ejemplos avanzados.
+
+## Ejemplo practico de depuracion
+
+1. Configura tu aplicación Express:
+
+   ```go:js
+   const express = require('express');
+   const app = express();
+
+   app.get('/', (req, res) => {
+     res.send('¡Hola, mundo!');
+   });
+
+   app.listen(3000, () => console.log('Servidor en puerto 3000'));
+   ```
+
+2. Inicia la aplicación con depuración:
+
+   ```go:bash
+   DEBUG=express:* node index.js
+   ```
+
+3. Haz una solicitud a `http://localhost:3000` y observa los logs generados, como:
+
+   ```
+   express:router dispatching GET / +0ms
+   express:router query  : / +1ms
+   ```
+
+## Enlaces utiles
+
+- [Documentacion oficial de Express sobre depuracion](https://expressjs.com/es/guide/debugging.html)
+- [Modulo debug en npm](https://www.npmjs.com/package/debug)
+- [Guia de middleware Morgan para logs](https://www.npmjs.com/package/morgan)
+
+Con estas técnicas, puedes depurar tu aplicación Express de manera eficiente, identificando problemas rápidamente y optimizando el desarrollo. ¡Prueba configurar `DEBUG` en tu próximo proyecto!

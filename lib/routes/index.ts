@@ -3,10 +3,12 @@ import { ZUSTAND_ROUTES } from "./zustand";
 import { PRISMA_ROUTES } from "./prisma";
 import { TS_ROUTES } from "./typescript";
 import { NODEJS_ROUTES } from "./nodejs";
+import { EXPRESS_ROUTES } from "./express";
 export {
   NEXTJS_ROUTES,
   ZUSTAND_ROUTES,
   PRISMA_ROUTES,
   TS_ROUTES,
   NODEJS_ROUTES,
+  EXPRESS_ROUTES,
 };

@@ -1,0 +1,188 @@
+---
+title: Escribir middleware en Express con Node.js
+description: Aprende a crear middleware en Express con Node.js para personalizar solicitudes y respuestas en tu aplicacion web
+href: /escribir-middleware-express-nodejs
+subtitle: Middleware en Express
+---
+
+El middleware en [Express](https://expressjs.com/) es una función que accede a los objetos de solicitud (`req`), respuesta (`res`) y la función `next` en el ciclo de solicitud-respuesta de una aplicación. Esta guía te explica cómo crear y usar middleware en Express con [Node.js](https://nodejs.org/), incluyendo ejemplos prácticos de registro, manejo de tiempo y validación de cookies.
+
+## Que es el middleware en Express
+
+El middleware es una función que se ejecuta entre la recepción de una solicitud y el envío de una respuesta. Puede realizar tareas como:
+
+- Ejecutar código personalizado.
+- Modificar los objetos `req` y `res`.
+- Finalizar el ciclo de solicitud-respuesta.
+- Llamar al siguiente middleware con `next()`.
+
+Si un middleware no finaliza el ciclo, debe llamar a `next()` para pasar el control al siguiente middleware, o la solicitud quedará colgada. En Express 5, los middlewares que devuelven una Promesa llaman a `next(value)` si se rechazan o lanzan un error.
+
+Consulta nuestra guía de [enrutamiento básico en Express](/enrutamiento-basico-express-nodejs) para conceptos previos.
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado en tu proyecto. Consulta [cómo instalar Express](/como-instalar-express-nodejs).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Ejemplo basico de middleware
+
+Crea una aplicación básica con Express:
+
+```go:js
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('¡Hola, Mundo!');
+});
+
+app.listen(3000, () => {
+  console.log('Servidor en http://localhost:3000');
+});
+```
+
+### Middleware myLogger
+
+Este middleware registra un mensaje en la consola para cada solicitud:
+
+```go:js
+const myLogger = (req, res, next) => {
+  console.log('LOGGED');
+  next();
+};
+
+app.use(myLogger);
+```
+
+Coloca `app.use(myLogger)` antes de las rutas para que se ejecute en todas las solicitudes. El orden importa: los middlewares cargados primero se ejecutan primero.
+
+Prueba accediendo a [http://localhost:3000](http://localhost:3000). Verás "LOGGED" en la consola.
+
+### Middleware requestTime
+
+Este middleware agrega una propiedad `requestTime` al objeto `req`:
+
+```go:js
+const requestTime = (req, res, next) => {
+  req.requestTime = Date.now();
+  next();
+};
+
+app.use(requestTime);
+
+app.get('/', (req, res) => {
+  let responseText = '¡Hola, Mundo!<br>';
+  responseText += `<small>Solicitud recibida en: ${req.requestTime}</small>`;
+  res.send(responseText);
+});
+```
+
+Accede a [http://localhost:3000](http://localhost:3000) para ver el mensaje con la marca de tiempo.
+
+### Middleware validateCookies
+
+Este middleware valida cookies usando un servicio externo simulado:
+
+```go:js
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const app = express();
+
+async function cookieValidator(cookies) {
+  try {
+    await externallyValidateCookie(cookies.testCookie); // Simulación
+  } catch {
+    throw new Error('Cookies inválidas');
+  }
+}
+
+async function validateCookies(req, res, next) {
+  await cookieValidator(req.cookies);
+  next();
+}
+
+app.use(cookieParser());
+app.use(validateCookies);
+
+// Manejador de errores
+app.use((err, req, res, next) => {
+  res.status(400).send(err.message);
+});
+
+app.listen(3000);
+```
+
+**Nota**: Instala `cookie-parser` con:
+
+```go:bash
+npm install cookie-parser
+```
+
+Si la validación falla, el manejador de errores responde con un estado 400. Prueba con [Postman](https://www.postman.com/) enviando una solicitud con cookies.
+
+## Middleware configurable
+
+Para crear un middleware reutilizable, exporta una función que acepte opciones:
+
+Archivo `my-middleware.js`:
+
+```go:js
+module.exports = function (options) {
+  return function (req, res, next) {
+    console.log('Opciones:', options);
+    next();
+  };
+};
+```
+
+Úsalo en `app.js`:
+
+```go:js
+const express = require('express');
+const app = express();
+const mw = require('./my-middleware.js');
+
+app.use(mw({ opcion1: 'valor1', opcion2: 'valor2' }));
+
+app.get('/', (req, res) => {
+  res.send('¡Hola, Mundo!');
+});
+
+app.listen(3000);
+```
+
+Ejemplos de middlewares configurables son [cookie-session](https://www.npmjs.com/package/cookie-session) y [compression](https://www.npmjs.com/package/compression).
+
+## Consejos para optimizar middleware
+
+- **Orden de carga**: Carga middlewares en el orden correcto para controlar el flujo de ejecución.
+- **Manejo de errores**: Usa un middleware de manejo de errores al final:
+
+  ```go:js
+  app.use((err, req, res, next) => {
+    res.status(500).send('Error en el servidor');
+  });
+  ```
+
+- **Usa nodemon**: Instala `nodemon` para reiniciar el servidor automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Agrega .gitignore**:
+
+  ```go:gitignore
+  node_modules/
+  ```
+
+- **Explora middlewares**: Consulta la [documentación de Express](https://expressjs.com/es/guide/using-middleware.html) para más ejemplos.

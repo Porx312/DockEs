@@ -3,7 +3,6 @@ title: Como escribir archivos con Node.js en 2025
 description: Aprende a escribir y anexar archivos en Node.js con fs.writeFile y promesas
 ---
 
-
 Node.js ofrece herramientas potentes para manejar archivos mediante el módulo `fs`. Este artículo te guía paso a paso para escribir y anexar archivos usando métodos asíncronos, síncronos y basados en promesas, optimizando tu código para proyectos en 2025.
 
 ## Por que escribir archivos con Node.js
@@ -27,6 +26,7 @@ fs.writeFile('./test.txt', content, (err) => {
 ```
 
 **Ventajas**:
+
 - No bloquea el evento principal.
 - Ideal para aplicaciones escalables.
 
@@ -48,6 +48,7 @@ try {
 ```
 
 **Cuándo usarlo**:
+
 - Scripts pequeños o tareas iniciales.
 - Evita usarlo en aplicaciones con alta carga.
 
@@ -70,6 +71,7 @@ escribirArchivo();
 ```
 
 **Beneficios**:
+
 - Código más limpio y fácil de mantener.
 - Compatible con aplicaciones modernas.
 
@@ -109,12 +111,12 @@ anexarArchivo();
 
 Las banderas determinan cómo se comporta la escritura de archivos. Aquí una tabla con las más comunes:
 
-| Bandera | Descripción | Crea archivo si no existe |
-|---------|-------------|--------------------------|
-| r+      | Abre para lectura y escritura | ❌ |
-| w+      | Abre para lectura y escritura, inicia al principio | ✅ |
-| a       | Abre para escritura, anexa al final | ✅ |
-| a+      | Abre para lectura y escritura, anexa al final | ✅ |
+| Bandera | Descripción                                        | Crea archivo si no existe |
+| ------- | -------------------------------------------------- | ------------------------- |
+| r+      | Abre para lectura y escritura                      | ❌                        |
+| w+      | Abre para lectura y escritura, inicia al principio | ✅                        |
+| a       | Abre para escritura, anexa al final                | ✅                        |
+| a+      | Abre para lectura y escritura, anexa al final      | ✅                        |
 
 Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html) para más detalles.
 
@@ -129,4 +131,3 @@ Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html) 
 Escribir y anexar archivos en Node.js es sencillo con el módulo `fs`. Usa `fs.writeFile` para operaciones asíncronas, `fs.writeFileSync` para tareas síncronas, o `fsPromises.writeFile` para un enfoque moderno con promesas. Selecciona el método según las necesidades de tu proyecto para optimizar rendimiento y legibilidad.
 
 ¿Listo para implementar? Prueba estos ejemplos y consulta la [documentación de Node.js](https://nodejs.org/api/fs.html) para más opciones.
-

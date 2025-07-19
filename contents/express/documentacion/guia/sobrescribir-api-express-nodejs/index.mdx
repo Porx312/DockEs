@@ -1,0 +1,142 @@
+---
+title: Sobrescribir la API de Express en Node.js
+description: Aprende a sobrescribir la API de Express en Node.js para personalizar metodos y propiedades de solicitud y respuesta
+href: /sobrescribir-api-express-nodejs
+subtitle: Sobrescribir API de Express
+---
+
+La API de [Express](https://expressjs.com/) proporciona métodos y propiedades en los objetos de solicitud (`req`) y respuesta (`res`), heredados a través de prototipos. Puedes personalizar su comportamiento sobrescribiendo prototipos globales (`express.request`, `express.response`) o específicos de la aplicación (`app.request`, `app.response`). Esta guía te explica cómo hacerlo con ejemplos prácticos, ideal para desarrolladores que buscan personalizar aplicaciones web con [Node.js](https://nodejs.org/).
+
+## Que es la API de Express
+
+La API de Express incluye métodos (como `res.send()`) y propiedades (como `req.ip`) en los objetos `req` y `res`, que heredan de los prototipos `http.IncomingMessage` y `http.ServerResponse` de Node.js. Puedes modificarlos en dos niveles:
+
+- **Global**: Afecta todas las aplicaciones Express en el mismo proceso.
+- **A nivel de aplicación**: Afecta solo una instancia específica de la aplicación.
+
+**Nota**: Sobrescribir globalmente puede generar conflictos en aplicaciones múltiples. Usa modificaciones a nivel de aplicación cuando sea posible.
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado. Consulta [cómo instalar Express](/como-instalar-express-nodejs).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Sobrescribir metodos
+
+Puedes cambiar el comportamiento de métodos existentes asignando una nueva función. Por ejemplo, sobrescribamos `res.sendStatus` para aceptar un código de estado, tipo de contenido y mensaje:
+
+```go:js
+const express = require('express');
+const app = express();
+
+app.response.sendStatus = function (statusCode, type, message) {
+  return this.contentType(type)
+    .status(statusCode)
+    .send(message);
+};
+
+app.get('/', (req, res) => {
+  res.sendStatus(404, 'application/json', '{"error":"Recurso no encontrado"}');
+});
+
+app.listen(3000, () => {
+  console.log('Servidor en http://localhost:3000');
+});
+```
+
+Prueba accediendo a [http://localhost:3000](http://localhost:3000) con [Postman](https://www.postman.com/) para ver la respuesta JSON personalizada.
+
+**Nota**: Este ejemplo modifica `app.response` para limitar el cambio a una sola aplicación.
+
+## Sobrescribir propiedades
+
+Las propiedades de la API de Express son:
+
+1. **Asignadas dinámicamente**: Como `req.baseUrl`. No se pueden sobrescribir.
+2. **Definidas como getters**: Como `req.ip`. Se pueden sobrescribir con `Object.defineProperty`.
+
+Por ejemplo, sobrescribamos `req.ip` para devolver el valor del encabezado `Client-IP`:
+
+```go:js
+const express = require('express');
+const app = express();
+
+Object.defineProperty(app.request, 'ip', {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return this.get('Client-IP');
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send(`IP del cliente: ${req.ip}`);
+});
+
+app.listen(3000);
+```
+
+Prueba enviando una solicitud con el encabezado `Client-IP: 192.168.1.1` usando Postman.
+
+## Sobrescribir prototipos
+
+Puedes reemplazar los prototipos predeterminados (`http.IncomingMessage.prototype` para `req` y `http.ServerResponse.prototype` para `res`) con prototipos personalizados. Hazlo a nivel de aplicación para evitar afectar otras aplicaciones.
+
+Ejemplo con prototipos personalizados (`FakeRequest` y `FakeResponse`):
+
+```go:js
+const express = require('express');
+const http = require('http');
+
+class FakeRequest extends http.IncomingMessage {
+  customMethod() {
+    return 'Método personalizado';
+  }
+}
+
+class FakeResponse extends http.ServerResponse {
+  customResponse() {
+    this.write('Respuesta personalizada');
+  }
+}
+
+const app = express();
+
+Object.setPrototypeOf(Object.getPrototypeOf(app.request), FakeRequest.prototype);
+Object.setPrototypeOf(Object.getPrototypeOf(app.response), FakeResponse.prototype);
+
+app.get('/', (req, res) => {
+  res.send(`Método: ${req.customMethod()}`);
+});
+
+app.listen(3000);
+```
+
+**Advertencia**: Asegúrate de que los prototipos personalizados mantengan la funcionalidad de los originales para evitar errores.
+
+## Consejos para optimizar la personalizacion
+
+- **Usa cambios a nivel de aplicacion**: Modifica `app.request` y `app.response` en lugar de prototipos globales.
+- **Prueba exhaustivamente**: Usa herramientas como [Postman](https://www.postman.com/) para verificar el comportamiento.
+- **Usa nodemon**: Instala `nodemon` para reiniciar automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Documenta cambios**: Detalla las modificaciones para facilitar el mantenimiento.
+- **Agrega .gitignore**:
+
+  ```go:gitignore
+  node_modules/
+  ```
+
+- **Consulta la documentacion**: Revisa la [documentación de Express](https://expressjs.com/es/api.html) para más detalles.

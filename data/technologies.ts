@@ -46,8 +46,8 @@ export const technologies = [
   },
   {
     name: "Express",
-    comingSoon: true,
-    slug: "/docs/express/empezando/instalacion",
+    comingSoon: false,
+    slug: "/docs/express/documentacion/empezando/como-instalar-express-nodejs",
     iconDark: "/icons/expressd.svg",
     iconLight: "/icons/express.png",
     description:

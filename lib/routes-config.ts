@@ -6,6 +6,7 @@ import {
   PRISMA_ROUTES,
   TS_ROUTES,
   ZUSTAND_ROUTES,
+  EXPRESS_ROUTES,
 } from "./routes/index";
 
 // Definición del tipo para cada elemento de ruta en la navegación
@@ -27,6 +28,7 @@ export const ROUTES: EachRoute[] = [
   ...(Array.isArray(PRISMA_ROUTES) ? PRISMA_ROUTES : [PRISMA_ROUTES]),
   ...(Array.isArray(TS_ROUTES) ? TS_ROUTES : [TS_ROUTES]),
   ...(Array.isArray(NODEJS_ROUTES) ? NODEJS_ROUTES : [NODEJS_ROUTES]),
+  ...(Array.isArray(EXPRESS_ROUTES) ? EXPRESS_ROUTES : [EXPRESS_ROUTES]),
 ];
 
 // Tipo para las páginas finales aplanadas

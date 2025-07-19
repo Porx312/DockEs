@@ -1,0 +1,279 @@
+---
+title: Enrutamiento avanzado en Express con Node.js
+description: Aprende enrutamiento avanzado en Express con Node.js. Configura rutas, manejadores y routers modulares para aplicaciones web
+href: /enrutamiento-avanzado-express-nodejs
+subtitle: Enrutamiento en Express
+---
+
+El enrutamiento en [Express](https://expressjs.com/) define cómo los endpoints (URIs) de una aplicación responden a solicitudes de clientes. Esta guía profundiza en conceptos avanzados de enrutamiento, como métodos HTTP, rutas dinámicas, parámetros, expresiones regulares y el uso de `express.Router` para crear aplicaciones modulares con [Node.js](https://nodejs.org/). Si eres nuevo en enrutamiento, consulta nuestra guía de [enrutamiento básico en Express](/enrutamiento-basico-express-nodejs).
+
+## Que es el enrutamiento en Express
+
+El enrutamiento determina cómo una aplicación maneja solicitudes HTTP (GET, POST, etc.) a rutas específicas. Express proporciona métodos como `app.get()`, `app.post()`, y `app.all()` para definir rutas, junto con `app.use()` para middlewares. Cada ruta puede tener múltiples funciones manejadoras que se ejecutan cuando coincide la solicitud.
+
+La estructura básica de una ruta es:
+
+```go:js
+app.METHOD(PATH, HANDLER)
+```
+
+- **`app`**: Instancia de Express.
+- **`METHOD`**: Método HTTP (get, post, put, etc.).
+- **`PATH`**: Ruta en el servidor (e.g., `/`, `/users`).
+- **`HANDLER`**: Función ejecutada cuando la ruta coincide.
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado en tu proyecto. Consulta [cómo instalar Express](/como-instalar-express-nodejs).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Metodos de ruta
+
+Express soporta todos los métodos HTTP (GET, POST, PUT, DELETE, etc.). Ejemplo básico:
+
+```go:js
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Solicitud GET a la página principal');
+});
+
+app.post('/', (req, res) => {
+  res.send('Solicitud POST a la página principal');
+});
+
+app.listen(port, () => {
+  console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+```
+
+### Usar app.all()
+
+El método `app.all()` maneja todos los métodos HTTP para una ruta específica:
+
+```go:js
+app.all('/secreto', (req, res, next) => {
+  console.log('Accediendo a la sección secreta...');
+  next();
+});
+```
+
+Prueba las rutas con [Postman](https://www.postman.com/) o un navegador en [http://localhost:3000](http://localhost:3000).
+
+## Rutas basadas en patrones
+
+Las rutas pueden usar cadenas, patrones o expresiones regulares.
+
+### Rutas con cadenas
+
+```go:js
+app.get('/about', (req, res) => {
+  res.send('Página sobre nosotros');
+});
+
+app.get('/random.text', (req, res) => {
+  res.send('Archivo random.text');
+});
+```
+
+### Rutas con expresiones regulares
+
+- Coincide con rutas que contienen una "a":
+
+  ```go:js
+  app.get(/a/, (req, res) => {
+    res.send('Ruta con "a"');
+  });
+  ```
+
+- Coincide con rutas que terminan en "fly":
+
+  ```go:js
+  app.get(/.*fly$/, (req, res) => {
+    res.send('Ruta que termina en "fly"');
+  });
+  ```
+
+**Nota**: En Express 4.x, usa `{0,}` en lugar de `*` en expresiones regulares. En Express 5, revisa la [guía de migración](https://expressjs.com/es/migrating-5.html) para cambios en patrones.
+
+## Parametros de ruta
+
+Los parámetros de ruta capturan valores dinámicos en la URL y se almacenan en `req.params`. Ejemplo:
+
+```go:js
+app.get('/users/:userId/books/:bookId', (req, res) => {
+  res.send(req.params); // Ejemplo: { "userId": "34", "bookId": "8989" }
+});
+```
+
+Accede a [http://localhost:3000/users/34/books/8989](http://localhost:3000/users/34/books/8989) para ver el resultado.
+
+Para restringir parámetros con expresiones regulares:
+
+```go:js
+app.get('/user/:userId(\\d+)', (req, res) => {
+  res.send(req.params); // Solo acepta userId numérico
+});
+```
+
+## Manejadores de ruta
+
+Los manejadores pueden ser una sola función, múltiples funciones o arreglos de funciones.
+
+### Manejador simple
+
+```go:js
+app.get('/ejemplo/a', (req, res) => {
+  res.send('¡Hola desde A!');
+});
+```
+
+### Multiples manejadores
+
+Usa `next()` para pasar el control al siguiente manejador:
+
+```go:js
+app.get('/ejemplo/b', (req, res, next) => {
+  console.log('Respuesta enviada por la siguiente función...');
+  next();
+}, (req, res) => {
+  res.send('¡Hola desde B!');
+});
+```
+
+### Arreglo de manejadores
+
+```go:js
+const cb0 = (req, res, next) => {
+  console.log('CB0');
+  next();
+};
+
+const cb1 = (req, res, next) => {
+  console.log('CB1');
+  next();
+};
+
+const cb2 = (req, res) => {
+  res.send('¡Hola desde C!');
+};
+
+app.get('/ejemplo/c', [cb0, cb1, cb2]);
+```
+
+## Metodos de respuesta
+
+Los métodos de `res` terminan el ciclo de solicitud-respuesta. Algunos comunes son:
+
+| Método           | Descripción                          |
+| ---------------- | ------------------------------------ |
+| `res.send()`     | Envía una respuesta de varios tipos. |
+| `res.json()`     | Envía una respuesta JSON.            |
+| `res.redirect()` | Redirige la solicitud.               |
+| `res.render()`   | Renderiza una plantilla de vista.    |
+
+Ejemplo:
+
+```go:js
+app.get('/json', (req, res) => {
+  res.json({ mensaje: 'Respuesta JSON' });
+});
+```
+
+## Usar app.route()
+
+`app.route()` permite encadenar manejadores para una misma ruta, reduciendo redundancia:
+
+```go:js
+app.route('/libro')
+  .get((req, res) => {
+    res.send('Obtener un libro aleatorio');
+  })
+  .post((req, res) => {
+    res.send('Agregar un libro');
+  })
+  .put((req, res) => {
+    res.send('Actualizar un libro');
+  });
+```
+
+## Usar express.Router
+
+`express.Router` crea sistemas de enrutamiento modulares. Ejemplo:
+
+Crea un archivo `birds.js`:
+
+```go:js
+const express = require('express');
+const router = express.Router();
+
+// Middleware específico para este router
+const timeLog = (req, res, next) => {
+  console.log('Hora:', Date.now());
+  next();
+};
+router.use(timeLog);
+
+// Rutas
+router.get('/', (req, res) => {
+  res.send('Página principal de aves');
+});
+
+router.get('/about', (req, res) => {
+  res.send('Sobre aves');
+});
+
+module.exports = router;
+```
+
+Carga el router en `app.js`:
+
+```go:js
+const express = require('express');
+const app = express();
+const birds = require('./birds');
+
+app.use('/birds', birds);
+
+app.listen(3000, () => {
+  console.log('Servidor en http://localhost:3000');
+});
+```
+
+Accede a [http://localhost:3000/birds](http://localhost:3000/birds) o [http://localhost:3000/birds/about](http://localhost:3000/birds/about).
+
+**Nota**: Para acceder a parámetros de rutas padre, usa `express.Router({ mergeParams: true })`.
+
+## Consejos para optimizar el enrutamiento
+
+- **Usa nodemon**: Instala `nodemon` para reiniciar el servidor automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Prueba rutas**: Usa [Postman](https://www.postman.com/) para probar métodos HTTP.
+- **Maneja errores 404**: Agrega un middleware para rutas no encontradas:
+
+  ```go:js
+  app.use((req, res) => {
+    res.status(404).send('Ruta no encontrada');
+  });
+  ```
+
+- **Consulta la documentación**: Revisa la [guía de enrutamiento de Express](https://expressjs.com/es/guide/routing.html) y [path-to-regexp](https://github.com/pillarjs/path-to-regexp) para patrones avanzados.
+- **Agrega .gitignore**:
+
+  ```go:gitignore
+  node_modules/
+  ```

@@ -5,7 +5,6 @@ href: /como-ejecutar-scripts-nodejs
 subtitle: Ejecucion de scripts en Node.js
 ---
 
-
 Node.js permite ejecutar scripts desde la línea de comandos de forma sencilla y eficiente. Este artículo te explica cómo usar el comando `node`, líneas shebang, ejecución de strings, reinicio automático y tareas definidas en `package.json`, optimizando tu flujo de trabajo en 2025.
 
 ## Por que ejecutar scripts desde la terminal
@@ -44,6 +43,7 @@ Ejecuta el script directamente:
 ```
 
 **Ventajas**:
+
 - No necesitas especificar `node` al ejecutar.
 - Compatible con la mayoría de los sistemas operativos.
 
@@ -56,6 +56,7 @@ node -e "console.log('Hola desde la terminal')"
 ```
 
 **Notas**:
+
 - En Windows, usa comillas dobles (`"`) en `cmd.exe`.
 - En PowerShell o Git Bash, tanto comillas simples (`'`) como dobles funcionan.
 
@@ -68,6 +69,7 @@ node --watch app.js
 ```
 
 **Uso recomendado**:
+
 - Desarrollo local para ahorrar tiempo.
 - Consulta la [documentación de la bandera `--watch`](https://nodejs.org/api/cli.html#--watch) para más información.
 
@@ -100,22 +102,24 @@ node --run dev
 ```
 
 **Variables de entorno**:
+
 - `NODE_RUN_SCRIPT_NAME`: Nombre del script ejecutado.
 - `NODE_RUN_PACKAGE_JSON_PATH`: Ruta al archivo `package.json`.
 
 **Limitaciones**:
+
 - No ejecuta scripts `pre` ni `post` como `npm run`.
 - Diseñado para simplicidad y rendimiento.
 
 ## Comparacion de metodos de ejecucion
 
-| Método | Tipo | Caso de uso |
-|--------|------|-------------|
-| node app.js | Básico | Ejecución simple |
-| Shebang | Directo | Scripts ejecutables |
-| node -e | Eval | Pruebas rápidas |
+| Método       | Tipo       | Caso de uso         |
+| ------------ | ---------- | ------------------- |
+| node app.js  | Básico     | Ejecución simple    |
+| Shebang      | Directo    | Scripts ejecutables |
+| node -e      | Eval       | Pruebas rápidas     |
 | node --watch | Desarrollo | Reinicio automático |
-| node --run | Tareas | Automatización |
+| node --run   | Tareas     | Automatización      |
 
 ## Casos de uso practicos
 

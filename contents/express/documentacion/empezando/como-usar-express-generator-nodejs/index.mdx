@@ -1,0 +1,200 @@
+---
+title: Como usar Express Generator en Node.js
+description: Aprende a usar Express Generator para crear una aplicacion web en Node.js rapidamente. Configura tu proyecto con esta guia practica
+href: /como-usar-express-generator-nodejs
+subtitle: Express Generator en Node.js
+---
+
+[Express Generator](https://expressjs.com/es/starter/generator.html) es una herramienta que permite crear rápidamente una estructura básica para aplicaciones web con [Node.js](https://nodejs.org/) y Express. Esta guía te explica cómo usar Express Generator para configurar un proyecto con una estructura profesional, ideal para principiantes y desarrolladores experimentados.
+
+## Que es Express Generator
+
+Express Generator es una utilidad de línea de comandos que genera un esqueleto de aplicación Express con archivos y carpetas preconfigurados, incluyendo rutas, vistas y estilos. A diferencia de un ejemplo básico como [Hola Mundo con Express](/ejemplo-hola-mundo-express-nodejs), esta herramienta crea una estructura completa lista para desarrollo.
+
+## Requisitos previos
+
+Antes de usar Express Generator, asegúrate de tener lo siguiente:
+
+- **Node.js** y **npm** instalados. Verifica las versiones con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Node.js 8.2.0 o superior para usar `npx`. Para versiones anteriores, instala Express Generator globalmente.
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Paso 1: Instalar Express Generator
+
+### Usando npx (Node.js 8.2.0 o superior)
+
+Si tienes Node.js 8.2.0 o superior, usa `npx` para ejecutar Express Generator sin instalación previa:
+
+```go:bash
+npx express-generator
+```
+
+### Instalacion global (Node.js anterior a 8.2.0)
+
+Para versiones anteriores de Node.js, instala Express Generator globalmente:
+
+```go:bash
+npm install -g express-generator
+```
+
+Luego, ejecuta el comando `express`:
+
+```go:bash
+express
+```
+
+## Paso 2: Crear una aplicacion con Express Generator
+
+Para crear una aplicación llamada `mi-app` con el motor de vistas Pug, ejecuta:
+
+```go:bash
+express --view=pug mi-app
+```
+
+Esto genera una carpeta `mi-app` con la siguiente estructura:
+
+<Files
+  items={[
+    { type: "file", name: "app.js" },
+    { type: "file", name: "package.json" },
+    {
+      type: "folder",
+      name: "bin",
+      children: [{ type: "file", name: "www" }],
+    },
+    {
+      type: "folder",
+      name: "public",
+      children: [
+        {
+          type: "folder",
+          name: "images",
+          children: [],
+        },
+        {
+          type: "folder",
+          name: "javascripts",
+          children: [],
+        },
+        {
+          type: "folder",
+          name: "stylesheets",
+          children: [{ type: "file", name: "style.css" }],
+        },
+      ],
+    },
+    {
+      type: "folder",
+      name: "routes",
+      children: [
+        { type: "file", name: "index.js" },
+        { type: "file", name: "users.js" },
+      ],
+    },
+    {
+      type: "folder",
+      name: "views",
+      children: [
+        { type: "file", name: "error.pug" },
+        { type: "file", name: "index.pug" },
+        { type: "file", name: "layout.pug" },
+      ],
+    },
+  ]}
+/>
+
+### Opciones del comando express
+
+Puedes personalizar la generación con opciones. Consulta las opciones disponibles con:
+
+```go:bash
+express -h
+```
+
+Algunas opciones útiles:
+
+- `--view <engine>`: Selecciona un motor de vistas (ejs, hbs, pug, etc.). Ejemplo: `--view=ejs`.
+- `--css <engine>`: Añade soporte para hojas de estilo (less, stylus, sass, etc.). Ejemplo: `--css=sass`.
+- `--git`: Genera un archivo `.gitignore`.
+- `--no-view`: Crea la aplicación sin motor de vistas.
+- `-f, --force`: Fuerza la creación en un directorio no vacío.
+
+Por ejemplo, para usar EJS y SASS:
+
+```go:bash
+express --view=ejs --css=sass mi-app
+```
+
+## Paso 3: Instalar dependencias
+
+Accede al directorio del proyecto e instala las dependencias:
+
+```go:bash
+cd mi-app
+npm install
+```
+
+## Paso 4: Ejecutar la aplicacion
+
+Ejecuta la aplicación según tu sistema operativo:
+
+### MacOS o Linux
+
+```go:bash
+DEBUG=mi-app:* npm start
+```
+
+### Windows Command Prompt
+
+```go:bash
+set DEBUG=mi-app:* & npm start
+```
+
+### Windows PowerShell
+
+```go:bash
+$env:DEBUG='mi-app:*'; npm start
+```
+
+Abre tu navegador en [http://localhost:3000](http://localhost:3000) para ver la aplicación.
+
+## Estructura de la aplicacion generada
+
+La aplicación generada incluye:
+
+- **`app.js`**: Archivo principal que configura Express y las rutas.
+- **`bin/www`**: Script para iniciar el servidor.
+- **`package.json`**: Gestiona dependencias y scripts.
+- **`public/`**: Archivos estáticos (imágenes, JavaScript, CSS).
+- **`routes/`**: Define rutas para la aplicación.
+- **`views/`**: Plantillas del motor de vistas (Pug, en este caso).
+
+Esta estructura es flexible y puedes adaptarla según tus necesidades.
+
+## Consejos para optimizar tu proyecto
+
+- **Usa nodemon**: Instala `nodemon` para reiniciar el servidor automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  ```
+
+  Ejecuta con:
+
+  ```go:bash
+  npx nodemon ./bin/www
+  ```
+
+- **Personaliza las vistas**: Modifica los archivos en `views/` para personalizar la interfaz.
+- **Explora motores de vistas**: Aprende más sobre Pug, EJS o Handlebars en la [documentación de Express](https://expressjs.com/es/guide/using-template-engines.html).
+- **Agrega .gitignore**: Si no usaste la opción `--git`, crea un archivo `.gitignore`:
+
+  ```go:gitignore
+  node_modules/
+  ```

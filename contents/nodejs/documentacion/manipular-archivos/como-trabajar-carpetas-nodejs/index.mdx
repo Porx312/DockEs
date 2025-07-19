@@ -5,7 +5,6 @@ href: /como-trabajar-carpetas-nodejs
 subtitle: Gestion de carpetas en Node.js
 ---
 
-
 El módulo `fs` de Node.js proporciona herramientas esenciales para gestionar carpetas en tus aplicaciones. Este artículo te muestra cómo verificar, crear, leer, renombrar y eliminar carpetas usando métodos asíncronos, síncronos y basados en promesas, optimizando tu código para 2025.
 
 ## Por que gestionar carpetas con Node.js
@@ -150,12 +149,12 @@ eliminarCarpeta();
 
 ## Comparacion de metodos
 
-| Método | Tipo | Uso recomendado |
-|--------|------|-----------------|
-| fs.access | Asíncrono | Verificar acceso sin bloquear |
-| fs.mkdirSync | Síncrono | Scripts simples |
-| fsPromises.readdir | Promesas | Código moderno y legible |
-| fs.rm | Asíncrono | Eliminar carpetas con contenido |
+| Método             | Tipo      | Uso recomendado                 |
+| ------------------ | --------- | ------------------------------- |
+| fs.access          | Asíncrono | Verificar acceso sin bloquear   |
+| fs.mkdirSync       | Síncrono  | Scripts simples                 |
+| fsPromises.readdir | Promesas  | Código moderno y legible        |
+| fs.rm              | Asíncrono | Eliminar carpetas con contenido |
 
 ## Casos de uso practicos
 
@@ -166,4 +165,3 @@ eliminarCarpeta();
 ## Conclusión
 
 El módulo `fs` de Node.js facilita la gestión de carpetas con métodos como `fs.mkdir`, `fs.readdir` y `fs.rm`. Usa promesas para un código moderno, métodos asíncronos para mejor rendimiento y métodos síncronos para tareas simples. Consulta la [documentación oficial de Node.js](https://nodejs.org/api/fs.html) para más detalles y optimiza tus proyectos en 2025.
-

@@ -1,0 +1,131 @@
+---
+title: Servir archivos estaticos en Express con Node.js
+description: Aprende a servir archivos estaticos como imagenes, CSS y JavaScript en Express con Node.js usando el middleware express.static
+href: /servir-archivos-estaticos-express-nodejs
+subtitle: Archivos estaticos en Express
+---
+
+En [Express](https://expressjs.com/), puedes servir archivos estáticos como imágenes, archivos CSS y JavaScript utilizando el middleware integrado `express.static`. Esta guía te explica cómo configurar y usar este middleware para entregar contenido estático en tu aplicación web con [Node.js](https://nodejs.org/), ideal para desarrolladores que buscan optimizar sus proyectos.
+
+## Que es el middleware express.static
+
+El middleware `express.static` permite servir archivos estáticos desde un directorio específico. Su firma es:
+
+```go:js
+express.static(root, [options])
+```
+
+- **`root`**: Directorio raíz desde donde se sirven los archivos.
+- **`options`**: Configuraciones opcionales, como caché o extensiones. Consulta la [documentación de express.static](https://expressjs.com/es/api.html#express.static) para más detalles.
+
+Esta guía asume que tienes una aplicación Express configurada. Si no, revisa nuestro [ejemplo Hola Mundo con Express](/ejemplo-hola-mundo-express-nodejs) o [cómo instalar Express](/como-instalar-express-nodejs).
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado en tu proyecto.
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Paso 1: Configurar el middleware express.static
+
+Para servir archivos desde un directorio llamado `public`, agrega el siguiente código en tu archivo `app.js`:
+
+```go:js
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.use(express.static('public'));
+
+app.listen(port, () => {
+  console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+```
+
+### Estructura del directorio public
+
+Crea un directorio `public` con archivos como:
+
+```
+public/
+├── css/
+│   └── style.css
+├── images/
+│   └── kitten.jpg
+├── js/
+│   └── app.js
+└── hello.html
+```
+
+Ahora, puedes acceder a estos archivos desde:
+
+- [http://localhost:3000/images/kitten.jpg](http://localhost:3000/images/kitten.jpg)
+- [http://localhost:3000/css/style.css](http://localhost:3000/css/style.css)
+- [http://localhost:3000/js/app.js](http://localhost:3000/js/app.js)
+- [http://localhost:3000/hello.html](http://localhost:3000/hello.html)
+
+El nombre del directorio `public` no aparece en la URL, ya que Express lo resuelve internamente.
+
+## Paso 2: Usar multiples directorios estaticos
+
+Para servir archivos desde varios directorios, usa `express.static` múltiples veces:
+
+```go:js
+app.use(express.static('public'));
+app.use(express.static('files'));
+```
+
+Express busca los archivos en el orden de los directorios definidos. Por ejemplo, si `public/style.css` y `files/style.css` existen, se servirá el de `public` primero.
+
+## Paso 3: Usar un prefijo de ruta virtual
+
+Para agregar un prefijo a las URLs (e.g., `/static`), especifica una ruta de montaje:
+
+```go:js
+app.use('/static', express.static('public'));
+```
+
+Ahora, los archivos se acceden con el prefijo `/static`:
+
+- [http://localhost:3000/static/images/kitten.jpg](http://localhost:3000/static/images/kitten.jpg)
+- [http://localhost:3000/static/css/style.css](http://localhost:3000/static/css/style.css)
+
+## Paso 4: Usar rutas absolutas para mayor seguridad
+
+Si ejecutas tu aplicación desde un directorio diferente, usa rutas absolutas con el módulo `path`:
+
+```go:js
+const path = require('path');
+app.use('/static', express.static(path.join(__dirname, 'public')));
+```
+
+Esto asegura que el directorio `public` se resuelva correctamente desde la ubicación del archivo `app.js`.
+
+## Consejos para optimizar archivos estaticos
+
+- **Usa un proxy inverso**: Mejora el rendimiento con herramientas como [NGINX](https://nginx.org/) para caché de archivos estáticos.
+- **Configura opciones avanzadas**: Usa opciones de `express.static` como `maxAge` para caché. Ejemplo:
+
+  ```go:js
+  app.use(express.static('public', { maxAge: '1d' }));
+  ```
+
+- **Organiza archivos**: Mantén una estructura clara en tu directorio `public` para facilitar el mantenimiento.
+- **Usa nodemon**: Instala `nodemon` para reiniciar el servidor automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Agrega .gitignore**: Excluye `node_modules` en tu repositorio:
+
+  ```go:gitignore
+  node_modules/
+  ```

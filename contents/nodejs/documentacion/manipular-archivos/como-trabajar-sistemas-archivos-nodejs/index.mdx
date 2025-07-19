@@ -3,7 +3,6 @@ title: Como trabajar con sistemas de archivos en Node.js 2025
 description: Aprende a gestionar sistemas de archivos en Node.js con buenas practicas
 ---
 
-
 Node.js ofrece herramientas potentes para interactuar con sistemas de archivos a través del módulo `fs`. Sin embargo, no todos los sistemas de archivos son iguales. Este artículo te guía sobre cómo manejar diferentes sistemas de archivos (como NTFS, HFS+ o EXT4) con buenas prácticas, preservando datos y optimizando la compatibilidad en 2025.
 
 ## Por que entender los sistemas de archivos
@@ -110,12 +109,12 @@ obtenerMarcaTemporal('./test.txt');
 
 ## Comparacion de sistemas de archivos
 
-| Sistema | Sensibilidad al caso | Preservación Unicode | Resolución temporal |
-|---------|---------------------|----------------------|---------------------|
-| NTFS    | Insensible          | NFC/NFD              | Milisegundos        |
-| HFS+    | Insensible (HFSX sensible) | NFD            | Milisegundos        |
-| EXT4    | Sensible            | NFC/NFD              | Nanosegundos        |
-| FAT     | Insensible          | Limitada             | Segundos/24h (atime) |
+| Sistema | Sensibilidad al caso       | Preservación Unicode | Resolución temporal  |
+| ------- | -------------------------- | -------------------- | -------------------- |
+| NTFS    | Insensible                 | NFC/NFD              | Milisegundos         |
+| HFS+    | Insensible (HFSX sensible) | NFD                  | Milisegundos         |
+| EXT4    | Sensible                   | NFC/NFD              | Nanosegundos         |
+| FAT     | Insensible                 | Limitada             | Segundos/24h (atime) |
 
 ## Buenas practicas
 

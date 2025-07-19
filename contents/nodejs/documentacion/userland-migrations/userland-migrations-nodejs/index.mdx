@@ -29,11 +29,13 @@ npx codemod@latest @nodejs/correct-ts-specifiers
 ### Ejemplo de transformacion
 
 Antes (import legacy):
+
 ```go:ts
 import Foo from './foo';
 ```
 
 Despues (specifiers modernos, segun la migracion aplicada):
+
 ```go:ts
 import Foo from './foo.js';
 ```

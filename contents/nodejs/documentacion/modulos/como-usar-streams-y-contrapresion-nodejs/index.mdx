@@ -67,9 +67,9 @@ inp.pipe(gzip).pipe(outputFile); // sin control puede agotar memoria
 
 ### Consecuencias sin backpressure:
 
-* Procesos lentos
-* Mayor carga del Garbage Collector
-* Agotamiento de memoria
+- Procesos lentos
+- Mayor carga del Garbage Collector
+- Agotamiento de memoria
 
 ## Comparativa de rendimiento
 
@@ -109,9 +109,9 @@ Readable --> .pipe() --> Writable
 
 ### Reglas generales:
 
-* Nunca usar `.push()` sin haber sido solicitado.
-* Esperar el evento `drain` si `.write()` devuelve `false`.
-* Cuidado con las versiones de Node.js, pueden cambiar comportamiento.
+- Nunca usar `.push()` sin haber sido solicitado.
+- Esperar el evento `drain` si `.write()` devuelve `false`.
+- Cuidado con las versiones de Node.js, pueden cambiar comportamiento.
 
 ### Para Readable Streams:
 

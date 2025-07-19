@@ -5,7 +5,6 @@ href: /como-usar-repl-nodejs
 subtitle: REPL de Node.js
 ---
 
-
 El REPL (Read-Eval-Print Loop) de Node.js es una herramienta interactiva para ejecutar código JavaScript desde la terminal. Ideal para pruebas rápidas y aprendizaje, este artículo te explica cómo usarlo, sus comandos especiales y cómo integrarlo en scripts en 2025.
 
 ## Que es el REPL de Node.js
@@ -23,7 +22,7 @@ node
 Verás un prompt (`>`):
 
 ```go:bash
-> 
+>
 ```
 
 Escribe código JavaScript y presiona Enter:
@@ -65,15 +64,15 @@ Para salir del modo multilínea sin ejecutar, usa `.break` o `Ctrl+C`.
 
 El REPL incluye comandos que comienzan con un punto (`.`) para controlar la sesión:
 
-| Comando | Descripción |
-|---------|-------------|
-| .help   | Muestra ayuda de comandos |
+| Comando | Descripción                                                  |
+| ------- | ------------------------------------------------------------ |
+| .help   | Muestra ayuda de comandos                                    |
 | .editor | Activa modo editor para código multilínea (salir con Ctrl+D) |
-| .break  | Cancela entrada multilínea |
-| .clear  | Resetea el contexto y entrada multilínea |
-| .load   | Carga un archivo JavaScript |
-| .save   | Guarda la sesión en un archivo |
-| .exit   | Cierra el REPL |
+| .break  | Cancela entrada multilínea                                   |
+| .clear  | Resetea el contexto y entrada multilínea                     |
+| .load   | Carga un archivo JavaScript                                  |
+| .save   | Guarda la sesión en un archivo                               |
+| .exit   | Cierra el REPL                                               |
 
 Ejemplo de uso de `.editor`:
 
@@ -87,7 +86,7 @@ saludar();
 // Presiona Ctrl+D para ejecutar
 ```
 
-## Usar la variable especial _
+## Usar la variable especial \_
 
 La variable `_` contiene el resultado de la última operación:
 

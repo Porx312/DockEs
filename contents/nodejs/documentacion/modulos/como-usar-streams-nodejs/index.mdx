@@ -1,5 +1,5 @@
 ---
-title: Como usar streams en Node.js para datos grandes 
+title: Como usar streams en Node.js para datos grandes
 description: Aprende a usar streams Readable, Writable, Duplex y Transform en Node.js
 href: /como-usar-streams-nodejs
 subtitle: Streams en Node.js
@@ -12,6 +12,7 @@ Los Streams en Node.js son esenciales para procesar grandes volúmenes de datos 
 Los Streams procesan datos incrementalmente, ideales para archivos grandes, solicitudes de red o entrada en tiempo real. Al heredar de `EventEmitter`, emiten eventos como `data`, `end` y `error`, integrándose con la arquitectura basada en eventos de Node.js.
 
 ### Ventajas principales
+
 - **Eficiencia de memoria**: Procesa fragmentos sin cargar todo en memoria.
 - **Respuesta rápida**: Maneja datos al llegar, reduciendo latencia.
 - **Escalabilidad**: Ideal para aplicaciones en tiempo real con grandes volúmenes de datos.
@@ -22,12 +23,12 @@ Los Streams procesan datos incrementalmente, ideales para archivos grandes, soli
 
 Node.js ofrece cuatro tipos de Streams, todos basados en `EventEmitter`:
 
-| Tipo | Descripción | Ejemplo |
-|------|-------------|---------|
-| Readable | Lee datos secuencialmente | `fs.createReadStream`, `process.stdin` |
-| Writable | Escribe datos secuencialmente | `fs.createWriteStream`, `process.stdout` |
-| Duplex | Lee y escribe simultáneamente | `net.Socket` |
-| Transform | Transforma datos entre entrada/salida | `zlib.createGzip` |
+| Tipo      | Descripción                           | Ejemplo                                  |
+| --------- | ------------------------------------- | ---------------------------------------- |
+| Readable  | Lee datos secuencialmente             | `fs.createReadStream`, `process.stdin`   |
+| Writable  | Escribe datos secuencialmente         | `fs.createWriteStream`, `process.stdout` |
+| Duplex    | Lee y escribe simultáneamente         | `net.Socket`                             |
+| Transform | Transforma datos entre entrada/salida | `zlib.createGzip`                        |
 
 ## Streams Readable
 
@@ -302,6 +303,7 @@ main().catch(console.error);
 ```
 
 **Ventajas**:
+
 - Código más claro con `for await...of`.
 - Manejo de errores simple con `try/catch`.
 - Control automático de contrapresión.
@@ -386,4 +388,3 @@ stream.on('error', err => console.error('Error:', err));
 - **Compresión de datos**: Aplica Transform para comprimir archivos con `zlib`.
 - **Procesamiento de archivos**: Lee y escribe archivos grandes con Streams.
 - **APIs de streaming**: Maneja datos HTTP en tiempo real.
-

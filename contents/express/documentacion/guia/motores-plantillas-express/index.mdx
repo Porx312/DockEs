@@ -1,0 +1,91 @@
+---
+title: Como usar motores de plantillas con Express
+description: Aprende a usar motores de plantillas como Pug, EJS y Handlebars en Express para crear paginas HTML dinamicas de forma sencilla
+href: /motores-plantillas-express
+subtitle: Motores de plantillas en Express
+---
+
+## Que son los motores de plantillas en Express
+
+Un motor de plantillas permite usar archivos de plantillas estáticos en tu aplicación Express. En tiempo de ejecución, estos motores reemplazan variables en las plantillas con valores reales, transformándolas en archivos HTML que se envían al cliente. Este enfoque simplifica el diseño de páginas web dinámicas y mejora la mantenibilidad del código.
+
+Los motores de plantillas más populares para Express incluyen [Pug](https://pugjs.org/), [EJS](https://ejs.co/) y [Handlebars](https://handlebarsjs.com/). El generador de aplicaciones Express usa Pug por defecto, pero puedes elegir otros según tus necesidades.
+
+## Como configurar un motor de plantillas
+
+Para usar un motor de plantillas en Express, debes configurar dos propiedades principales en tu aplicación:
+
+- **views**: Directorio donde se encuentran los archivos de plantillas. Por ejemplo: `app.set('views', './views')`. Por defecto, Express busca en el directorio `views` en la raíz del proyecto.
+- **view engine**: Motor de plantillas a utilizar. Por ejemplo, para Pug: `app.set('view engine', 'pug')`.
+
+### Instalacion del motor de plantillas
+
+Instala el paquete del motor de plantillas mediante npm. Por ejemplo, para Pug:
+
+```go:bash
+npm install pug --save
+```
+
+Express carga automáticamente el módulo del motor de plantillas una vez configurado, por lo que no necesitas importarlo manualmente.
+
+## Ejemplo practico con Pug
+
+Sigue estos pasos para renderizar una página HTML con Pug en Express:
+
+1. **Configura Express**:
+
+   ```go:js
+   const express = require('express');
+   const app = express();
+
+   app.set('views', './views');
+   app.set('view engine', 'pug');
+
+   app.listen(3000, () => console.log('Servidor en puerto 3000'));
+   ```
+
+2. **Crea una plantilla Pug**:
+
+   Crea un archivo llamado `index.pug` en el directorio `views` con el siguiente contenido:
+
+   ```go:pug
+   html
+     head
+       title= title
+     body
+       h1= message
+   ```
+
+3. **Define una ruta para renderizar la plantilla**:
+
+   ```go:js
+   app.get('/', (req, res) => {
+     res.render('index', { title: 'Bienvenido', message: '¡Hola, mundo!' });
+   });
+   ```
+
+Al acceder a la ruta raíz (`/`), Express renderizará `index.pug` como HTML, mostrando una página con el título "Bienvenido" y el mensaje "¡Hola, mundo!".
+
+## Otros motores de plantillas populares
+
+Además de Pug, puedes usar otros motores compatibles con Express:
+
+- **EJS**: Ideal para incrustar JavaScript directamente en HTML. Usa sintaxis similar a HTML, lo que facilita la transición desde archivos estáticos.
+- **Handlebars**: Popular por su simplicidad y lógica mínima en las plantillas, ideal para proyectos que requieren claridad.
+
+Para usar un motor diferente, instala su paquete (`npm install ejs --save` o `npm install hbs --save`) y configura `view engine` соответственно.
+
+## Consejos para optimizar el uso de plantillas
+
+- **Usa la libreria Consolidate**: Si trabajas con múltiples motores, considera usar [@ladjs/consolidate](https://www.npmjs.com/package/@ladjs/consolidate), que mapea motores de plantillas compatibles con Express.
+- **Habilita el cache en produccion**: Express no almacena en caché el contenido renderizado, solo las plantillas. Activa el caché con `app.set('view cache', true)` para mejorar el rendimiento en producción.
+- **Organiza tus vistas**: Mantén los archivos de plantillas en un directorio `views` bien estructurado para facilitar el mantenimiento.
+
+## Enlaces utiles
+
+- [Documentacion oficial de Express](https://expressjs.com/es/guide/using-template-engines.html)
+- [Tutorial de Pug](https://pugjs.org/api/getting-started.html)
+- [Guia de EJS](https://ejs.co/#docs)
+- [Documentacion de Handlebars](https://handlebarsjs.com/guide/)
+
+Con estos pasos, puedes integrar motores de plantillas en Express para crear aplicaciones web dinámicas y optimizadas. ¡Prueba diferentes motores para encontrar el que mejor se adapte a tu proyecto!

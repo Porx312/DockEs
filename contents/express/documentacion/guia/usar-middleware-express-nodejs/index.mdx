@@ -1,0 +1,241 @@
+---
+title: Usar middleware en Express con Node.js
+description: Aprende a usar middleware en Express con Node.js para manejar solicitudes, errores y funcionalidades avanzadas en tu aplicacion
+href: /usar-middleware-express-nodejs
+subtitle: Middleware en Express
+---
+
+El middleware es el núcleo de [Express](https://expressjs.com/), un framework de enrutamiento y middleware para [Node.js](https://nodejs.org/) que permite personalizar el manejo de solicitudes HTTP. Esta guía detalla cómo usar diferentes tipos de middleware (a nivel de aplicación, router, manejo de errores, integrado y de terceros) para construir aplicaciones web robustas.
+
+## Que es el middleware en Express
+
+El middleware es una función que accede a los objetos de solicitud (`req`), respuesta (`res`) y la función `next` en el ciclo de solicitud-respuesta. Puede:
+
+- Ejecutar código personalizado.
+- Modificar `req` y `res`.
+- Finalizar el ciclo de solicitud-respuesta.
+- Llamar al siguiente middleware con `next()`.
+
+Si un middleware no finaliza el ciclo, debe llamar a `next()` para evitar que la solicitud quede colgada. Consulta nuestra guía sobre [cómo escribir middleware en Express](/escribir-middleware-express-nodejs) para más detalles.
+
+## Requisitos previos
+
+- **Node.js** y **npm** instalados. Verifica con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express instalado. Consulta [cómo instalar Express](/como-instalar-express-nodejs).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Tipos de middleware
+
+Express soporta varios tipos de middleware:
+
+1. **A nivel de aplicación**: Se aplica a toda la aplicación.
+2. **A nivel de router**: Se aplica a instancias de `express.Router`.
+3. **Manejo de errores**: Procesa errores en la aplicación.
+4. **Integrado**: Funciones incluidas en Express (e.g., `express.static`).
+5. **De terceros**: Módulos externos para añadir funcionalidades.
+
+## Middleware a nivel de aplicacion
+
+El middleware a nivel de aplicación se vincula con `app.use()` o `app.METHOD()`.
+
+### Ejemplo sin ruta de montaje
+
+Este middleware registra la hora para todas las solicitudes:
+
+```go:js
+const express = require('express');
+const app = express();
+
+app.use((req, res, next) => {
+  console.log('Hora:', Date.now());
+  next();
+});
+
+app.listen(3000, () => {
+  console.log('Servidor en http://localhost:3000');
+});
+```
+
+### Ejemplo con ruta de montaje
+
+Este middleware registra el método HTTP para solicitudes a `/user/:id`:
+
+```go:js
+app.use('/user/:id', (req, res, next) => {
+  console.log('Tipo de solicitud:', req.method);
+  next();
+});
+```
+
+### Subpila de middleware
+
+Define múltiples middlewares para una ruta:
+
+```go:js
+app.use('/user/:id', (req, res, next) => {
+  console.log('URL solicitada:', req.originalUrl);
+  next();
+}, (req, res, next) => {
+  console.log('Tipo de solicitud:', req.method);
+  next();
+});
+
+app.get('/user/:id', (req, res) => {
+  res.send('Información del usuario');
+});
+```
+
+### Saltar middlewares con next('route')
+
+Usa `next('route')` para saltar middlewares en la misma pila:
+
+```go:js
+app.get('/user/:id', (req, res, next) => {
+  if (req.params.id === '0') next('route');
+  else next();
+}, (req, res) => {
+  res.send('Respuesta regular');
+});
+
+app.get('/user/:id', (req, res) => {
+  res.send('Respuesta especial');
+});
+```
+
+Accede a [http://localhost:3000/user/0](http://localhost:3000/user/0) para la respuesta especial, o a `/user/123` para la regular.
+
+## Middleware a nivel de router
+
+El middleware a nivel de router usa `express.Router()`:
+
+```go:js
+const express = require('express');
+const app = express();
+const router = express.Router();
+
+router.use((req, res, next) => {
+  console.log('Hora:', Date.now());
+  next();
+});
+
+router.use('/user/:id', (req, res, next) => {
+  console.log('URL solicitada:', req.originalUrl);
+  next();
+}, (req, res, next) => {
+  console.log('Tipo de solicitud:', req.method);
+  next();
+});
+
+router.get('/user/:id', (req, res, next) => {
+  if (req.params.id === '0') next('route');
+  else next();
+}, (req, res) => {
+  res.send('Página regular');
+});
+
+router.get('/user/:id', (req, res) => {
+  res.send('Página especial');
+});
+
+app.use('/', router);
+
+app.listen(3000);
+```
+
+Usa `next('router')` para saltar todos los middlewares del router:
+
+```go:js
+router.use((req, res, next) => {
+  if (!req.headers['x-auth']) return next('router');
+  next();
+});
+
+router.get('/user/:id', (req, res) => {
+  res.send('¡Hola, usuario!');
+});
+
+app.use('/admin', router, (req, res) => {
+  res.sendStatus(401);
+});
+```
+
+## Middleware de manejo de errores
+
+El middleware de errores usa cuatro argumentos: `(err, req, res, next)`:
+
+```go:js
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('¡Algo salió mal!');
+});
+```
+
+Colócalo al final para capturar errores de todos los middlewares anteriores.
+
+## Middleware integrado
+
+Express incluye middlewares como:
+
+- **`express.static`**: Sirve archivos estáticos. Consulta [servir archivos estáticos en Express](/servir-archivos-estaticos-express-nodejs).
+- **`express.json`**: Analiza solicitudes JSON (Express 4.16.0+).
+- **`express.urlencoded`**: Analiza solicitudes codificadas en URL (Express 4.16.0+).
+
+Ejemplo con `express.json`:
+
+```go:js
+app.use(express.json());
+
+app.post('/data', (req, res) => {
+  res.send(`Datos recibidos: ${JSON.stringify(req.body)}`);
+});
+```
+
+Prueba con [Postman](https://www.postman.com/) enviando una solicitud POST con un cuerpo JSON.
+
+## Middleware de terceros
+
+Instala y usa middlewares de terceros para añadir funcionalidades. Ejemplo con `cookie-parser`:
+
+```go:bash
+npm install cookie-parser
+```
+
+```go:js
+const express = require('express');
+const app = express();
+const cookieParser = require('cookie-parser');
+
+app.use(cookieParser());
+
+app.get('/', (req, res) => {
+  res.send(`Cookies: ${JSON.stringify(req.cookies)}`);
+});
+
+app.listen(3000);
+```
+
+Consulta la [lista de middlewares de terceros](https://expressjs.com/es/resources/middleware.html) para más opciones.
+
+## Consejos para optimizar middleware
+
+- **Orden de carga**: Carga middlewares en el orden correcto para controlar el flujo.
+- **Usa nodemon**: Instala `nodemon` para reiniciar automáticamente:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  npx nodemon app.js
+  ```
+
+- **Maneja errores**: Incluye siempre un middleware de errores al final.
+- **Explora middlewares**: Revisa la [documentación de Express](https://expressjs.com/es/guide/using-middleware.html).
+- **Agrega .gitignore**:
+
+  ```go:gitignore
+  node_modules/
+  ```

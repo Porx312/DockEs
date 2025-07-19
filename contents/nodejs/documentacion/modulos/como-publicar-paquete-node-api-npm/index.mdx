@@ -1,8 +1,7 @@
 ---
-title: Como publicar paquete Node-API y no Node-API en npm 
+title: Como publicar paquete Node-API y no Node-API en npm
 description: Aprende a publicar versiones Node-API y no Node-API de un paquete npm
 ---
-
 
 Publicar versiones Node-API y no Node-API de un paquete en npm permite a los desarrolladores ofrecer compatibilidad con diferentes entornos de Node.js. Este artículo te guía paso a paso para publicar ambas versiones, gestionar dependencias y seguir mejores prácticas, usando el ejemplo de `iotivity-node`.
 
@@ -64,10 +63,10 @@ Consulta la [documentación de npm sobre dist-tags](https://docs.npmjs.com/using
 
 ## Comparacion de metodos de publicacion
 
-| Método | Comando | Instalación por defecto | Uso |
-|--------|---------|-------------------------|-----|
-| No Node-API | `npm publish` | `npm install paquete` | Usuarios estándar |
-| Node-API | `npm publish --tag n-api` | `npm install paquete@n-api` | Usuarios que requieren estabilidad ABI |
+| Método      | Comando                   | Instalación por defecto     | Uso                                    |
+| ----------- | ------------------------- | --------------------------- | -------------------------------------- |
+| No Node-API | `npm publish`             | `npm install paquete`       | Usuarios estándar                      |
+| Node-API    | `npm publish --tag n-api` | `npm install paquete@n-api` | Usuarios que requieren estabilidad ABI |
 
 ## Buenas practicas
 

@@ -105,29 +105,33 @@ export const NODEJS_ROUTES: EachRoute = {
           title: "File stats en Node.js",
           href: "/como-usar-file-stats-nodejs",
         },
-          {
+        {
           title: "Rutas en Node.js",
           href: "/como-manejar-rutas-archivos-nodejs",
         },
-         {
+        {
           title: "Descriptores en Node.js",
           href: "/como-usar-descriptores-archivos-nodejs",
         },
-         {
+        {
           title: "Lectura de archivos en Node.js",
           href: "/como-leer-archivos-nodejs",
-        }, {
+        },
+        {
           title: "Escribir archivos en Node.js",
           href: "/como-escribir-archivos-nodejs",
-        }, {
+        },
+        {
           title: "Gestion de carpetas en Node.js",
           href: "/como-trabajar-carpetas-nodejs",
-        },{
+        },
+        {
           title: "Gestion de sistemas de archivos",
           href: "/como-trabajar-sistemas-archivos-nodejs",
         },
       ],
-    },{
+    },
+    {
       title: "Terminal",
       href: "/terminal",
       noLink: true,
@@ -135,7 +139,8 @@ export const NODEJS_ROUTES: EachRoute = {
         {
           title: "Ejecucion de scripts en Node.js",
           href: "/como-ejecutar-scripts-nodejs",
-        }, {
+        },
+        {
           title: "Variables de entorno en Node.js",
           href: "/como-leer-variables-entorno-nodejs",
         },
@@ -150,9 +155,10 @@ export const NODEJS_ROUTES: EachRoute = {
         {
           title: "Entrada interactiva en Node.js",
           href: "/como-aceptar-entrada-terminal-nodejs",
-        }
+        },
       ],
-    },{
+    },
+    {
       title: "Userland Migrations",
       href: "/userland-migrations",
       noLink: true,
@@ -160,9 +166,10 @@ export const NODEJS_ROUTES: EachRoute = {
         {
           title: "Userland Migrations Nodejs",
           href: "/userland-migrations-nodejs",
-        }, 
+        },
       ],
-    },{
+    },
+    {
       title: "Modulos",
       href: "/modulos",
       noLink: true,
@@ -170,22 +177,27 @@ export const NODEJS_ROUTES: EachRoute = {
         {
           title: "Publicar paquetes Nodejs",
           href: "/publicar-paquete-nodejs-mejores-practicas",
-        }, {
+        },
+        {
           title: "Publicar paquetes Node-API",
           href: "/como-publicar-paquete-node-api-npm",
-        }, {
+        },
+        {
           title: "Servidor HTTP en Node.js",
           href: "/como-manejar-transaccion-http-nodejs",
-        },  {
+        },
+        {
           title: "Estabilidad ABI en Node.js",
           href: "/como-garantizar-estabilidad-abi-nodejs",
-        }, {
+        },
+        {
           title: "Streams en Node.js",
           href: "/como-usar-streams-nodejs",
-        }, {
+        },
+        {
           title: "Backpressure con Streams",
           href: "/como-usar-streams-y-contrapresion-nodejs",
-        }, 
+        },
       ],
     },
   ],

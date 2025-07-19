@@ -1,0 +1,132 @@
+---
+title: Como usar Express detras de proxies
+description: Configura Express detras de un proxy con trust proxy para obtener IPs y protocolos correctos
+href: /express-detras-proxies
+subtitle: Express con proxies
+---
+
+## Que significa usar Express detras de un proxy
+
+Cuando ejecutas una aplicación Express detrás de un proxy inverso (como Nginx o Apache), las APIs de Express, como `req.ip` o `req.hostname`, pueden devolver valores incorrectos, como la dirección IP interna del proxy en lugar de la del cliente. La configuración `trust proxy` permite a Express interpretar correctamente la información proporcionada por el proxy, como las cabeceras `X-Forwarded-For`, `X-Forwarded-Host` y `X-Forwarded-Proto`.
+
+## Como configurar trust proxy en Express
+
+La configuración `app.set('trust proxy', valor)` ajusta cómo Express interpreta las cabeceras enviadas por el proxy. Es crucial que esta configuración coincida con la estructura del proxy para evitar que los clientes falsifiquen valores. A continuación, se describen las opciones disponibles:
+
+### Opciones de trust proxy
+
+| Tipo          | Valor                                                                                  |
+|---------------|-----------------------------------------------------------------------------------------|
+| **Booleano**  | - `true`: Usa la IP más a la izquierda en `X-Forwarded-For`.                           |
+|               |   Asegúrate de que el último proxy confiable sobrescriba las cabeceras.                |
+|               | - `false`: Usa `req.socket.remoteAddress` (predeterminado, sin proxy).                 |
+| **Direcciones IP** | Especifica IPs o subredes confiables (por ejemplo, `loopback`, `127.0.0.1`).     |
+| **Número**     | Número de saltos confiables desde la aplicación. `0` indica sin proxy.                |
+| **Función**    | Implementación personalizada para determinar IPs confiables.                          |
+
+### Ejemplo con subredes preconfiguradas
+
+Puedes configurar subredes como `loopback`, `linklocal` o `uniquelocal`:
+
+```go:js
+const express = require('express');
+const app = express();
+
+// Confiar en subred loopback
+app.set('trust proxy', 'loopback');
+
+// Confiar en múltiples subredes
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+
+// Confiar en una IP específica y una subred
+app.set('trust proxy', 'loopback, 123.123.123.123');
+
+// Usar un array de subredes
+app.set('trust proxy', ['loopback', 'uniquelocal']);
+
+app.get('/', (req, res) => {
+  res.send(`IP del cliente: ${req.ip}`);
+});
+
+app.listen(3000, () => console.log('Servidor en puerto 3000'));
+```
+
+### Ejemplo con numero de saltos
+
+Especifica cuántos saltos (proxies) son confiables:
+
+```go:js
+app.set('trust proxy', 1); // Confía en el primer proxy
+```
+
+### Ejemplo con funcion personalizada
+
+Define una lógica personalizada para determinar IPs confiables:
+
+```go:js
+app.set('trust proxy', (ip) => {
+  if (ip === '127.0.0.1' || ip === '123.123.123.123') return true;
+  return false;
+});
+```
+
+## Efectos de activar trust proxy
+
+Habilitar `trust proxy` afecta las siguientes APIs de Express:
+
+- **req.ip y req.ips**: Se derivan de `X-Forwarded-For` y `req.socket.remoteAddress`, empezando por la primera dirección no confiable.
+- **req.hostname**: Se obtiene de la cabecera `X-Forwarded-Host`.
+- **req.protocol**: Refleja el valor de `X-Forwarded-Proto` (por ejemplo, `http` o `https`).
+
+## Mejores practicas para proxies en Express
+
+- **Valida el proxy**: Asegúrate de que el último proxy confiable sobrescriba las cabeceras `X-Forwarded-*` para evitar falsificaciones.
+- **Usa subredes especificas**: Prefiere configurar IPs o subredes específicas en lugar de `true` para mayor seguridad.
+- **Prueba la configuracion**: Verifica que `req.ip`, `req.hostname` y `req.protocol` devuelvan los valores esperados en tu entorno.
+- **Consulta la documentacion**: Revisa la documentación del paquete [proxy-addr](https://www.npmjs.com/package/proxy-addr) para detalles técnicos.
+
+## Ejemplo practico con Nginx
+
+1. Configura Nginx como proxy inverso:
+
+   ```go:bash
+   server {
+       listen 80;
+       server_name example.com;
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+           proxy_set_header X-Forwarded-Host $host;
+       }
+   }
+   ```
+
+2. Configura Express para confiar en el proxy:
+
+   ```go:js
+   const express = require('express');
+   const app = express();
+
+   app.set('trust proxy', 'loopback'); // Confía en localhost
+
+   app.get('/', (req, res) => {
+     res.json({
+       ip: req.ip,
+       hostname: req.hostname,
+       protocol: req.protocol
+     });
+   });
+
+   app.listen(3000, () => console.log('Servidor en puerto 3000'));
+   ```
+
+3. Prueba la aplicación enviando una solicitud a `http://example.com`. La respuesta mostrará la IP del cliente, el hostname y el protocolo correctos.
+
+## Enlaces utiles
+
+- [Documentacion oficial de Express sobre proxies](https://expressjs.com/es/guide/behind-proxies.html)
+- [Paquete proxy-addr en npm](https://www.npmjs.com/package/proxy-addr)
+- [Guia de configuracion de Nginx como proxy](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)
+
+Con estas configuraciones, puedes usar Express detrás de un proxy inverso de manera segura y eficiente, asegurando que las APIs devuelvan información precisa del cliente. ¡Implementa `trust proxy` en tu próximo proyecto!

@@ -1,0 +1,189 @@
+---
+title: Como manejar errores en Express
+description: Aprende a manejar errores en Express para codigo sincrono y asincrono con ejemplos practicos y el manejador por defecto
+href: /manejo-errores-express
+subtitle: Manejo de errores en Express
+---
+
+## Que es el manejo de errores en Express
+
+El manejo de errores en Express se refiere a cómo la framework captura y procesa errores que ocurren durante la ejecución de manejadores de rutas y middleware, ya sean síncronos o asíncronos. Express incluye un manejador de errores por defecto, por lo que no necesitas crear uno propio para empezar, aunque puedes personalizarlo para necesidades específicas.
+
+## Como captura Express los errores
+
+Express maneja errores de manera diferente según el tipo de código:
+
+- **Errores sincronos**: Si un manejador de rutas o middleware síncrono lanza un error, Express lo captura automáticamente. Por ejemplo:
+
+  ```go:js
+  app.get('/', (req, res) => {
+    throw new Error('¡Error síncrono!');
+  });
+  ```
+
+- **Errores asincronos**: Para funciones asíncronas, debes pasar el error a la función `next()`. Por ejemplo:
+
+  ```go:js
+  app.get('/', (req, res, next) => {
+    fs.readFile('/archivo-inexistente', (err, data) => {
+      if (err) {
+        next(err); // Pasa el error a Express
+      } else {
+        res.send(data);
+      }
+    });
+  });
+  ```
+
+### Manejo de errores con promesas
+
+A partir de Express 5, los manejadores de rutas que devuelven promesas llaman a `next()` automáticamente si la promesa se rechaza o lanza un error. Ejemplo:
+
+```go:js
+app.get('/usuario/:id', async (req, res, next) => {
+  const usuario = await obtenerUsuarioPorId(req.params.id);
+  res.send(usuario);
+});
+```
+
+Si `obtenerUsuarioPorId` falla, Express captura el error automáticamente.
+
+## Como usar el manejador de errores por defecto
+
+Express incluye un manejador de errores integrado que se ejecuta al final de la pila de middleware. Si pasas un error a `next()` sin manejarlo en un middleware personalizado, este manejador por defecto:
+
+- Establece `res.statusCode` desde `err.status` (o `err.statusCode`), o usa 500 si no está en el rango 4xx o 5xx.
+- Define `res.statusMessage` según el código de estado.
+- En producción, envía un mensaje HTML del código de estado; en desarrollo, incluye el rastreo de pila (`err.stack`).
+
+Para activar el modo producción, configura la variable de entorno:
+
+```go:bash
+export NODE_ENV=production
+```
+
+## Como crear manejadores de errores personalizados
+
+Define middleware de manejo de errores con cuatro argumentos: `(err, req, res, next)`. Por ejemplo:
+
+```go:js
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('¡Algo salió mal!');
+});
+```
+
+Coloca los manejadores de errores después de todos los `app.use()` y rutas:
+
+```go:js
+const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(methodOverride());
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render('error', { error: err });
+});
+```
+
+### Ejemplo de multiples manejadores
+
+Puedes usar varios manejadores de errores para diferentes casos, como solicitudes XHR:
+
+```go:js
+function logErrores(err, req, res, next) {
+  console.error(err.stack);
+  next(err);
+}
+
+function manejadorErroresCliente(err, req, res, next) {
+  if (req.xhr) {
+    res.status(500).send({ error: '¡Error en solicitud XHR!' });
+  } else {
+    next(err);
+  }
+}
+
+function manejadorErrores(err, req, res, next) {
+  res.status(500).render('error', { error: err });
+}
+
+app.use(logErrores);
+app.use(manejadorErroresCliente);
+app.use(manejadorErrores);
+```
+
+## Mejores practicas para el manejo de errores
+
+- **Usa try-catch para codigo asincrono**: Captura errores en código asíncrono y pásalos a `next()`:
+
+  ```go:js
+  app.get('/', (req, res, next) => {
+    setTimeout(() => {
+      try {
+        throw new Error('¡Error asíncrono!');
+      } catch (err) {
+        next(err);
+      }
+    }, 100);
+  });
+  ```
+
+- **Aprovecha las promesas**: Simplifica el manejo de errores con promesas:
+
+  ```go:js
+  app.get('/', (req, res, next) => {
+    Promise.resolve()
+      .then(() => {
+        throw new Error('¡Error en promesa!');
+      })
+      .catch(next);
+  });
+  ```
+
+- **Evita errores despues de enviar la respuesta**: Si ya enviaste encabezados, delega al manejador por defecto:
+
+  ```go:js
+  function manejadorErrores(err, req, res, next) {
+    if (res.headersSent) {
+      return next(err);
+    }
+    res.status(500).render('error', { error: err });
+  }
+  ```
+
+- **Organiza el codigo**: Usa cadenas de manejadores para separar la lógica asíncrona y síncrona:
+
+  ```go:js
+  app.get('/', [
+    (req, res, next) => {
+      fs.readFile('/archivo', 'utf-8', (err, data) => {
+        res.locals.data = data;
+        next(err);
+      });
+    },
+    (req, res) => {
+      res.locals.data = res.locals.data.split(',')[1];
+      res.send(res.locals.data);
+    }
+  ]);
+  ```
+
+## Tabla de metodos para manejar errores
+
+| Método                | Descripción                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| `throw new Error()`   | Lanza errores en código síncrono, capturado automáticamente por Express. |
+| `next(err)`           | Pasa errores asíncronos a Express para su procesamiento.                 |
+| Promesas              | Automatizan el manejo de errores en Express 5 si se rechazan.            |
+| Middleware de errores | Usa `(err, req, res, next)` para personalizar el manejo de errores.      |
+
+## Enlaces utiles
+
+- [Documentacion oficial de Express sobre manejo de errores](https://expressjs.com/es/guide/error-handling.html)
+- [Guia de middleware en Express](https://expressjs.com/es/guide/using-middleware.html)
+- [Node.js y manejo de errores asincronos](https://nodejs.org/api/errors.html)
+
+Con estas técnicas, puedes manejar errores en Express de manera robusta, asegurando que tu aplicación sea estable y proporcione respuestas claras al usuario. ¡Prueba estas estrategias en tu próximo proyecto!

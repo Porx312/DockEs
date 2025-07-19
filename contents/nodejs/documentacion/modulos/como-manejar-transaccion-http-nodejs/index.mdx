@@ -5,7 +5,6 @@ href: /como-manejar-transaccion-http-nodejs
 subtitle: Servidor HTTP en Node.js
 ---
 
-
 Crear y gestionar servidores HTTP en Node.js es esencial para aplicaciones web. Este artículo detalla cómo manejar transacciones HTTP usando el módulo `http`, desde la creación del servidor hasta el enrutamiento y la gestión de errores, con ejemplos claros y prácticos.
 
 ## Por que entender las transacciones HTTP
@@ -48,6 +47,7 @@ console.log(`Método: ${method}, URL: ${url}, User-Agent: ${userAgent}`);
 ```
 
 **Notas**:
+
 - Las cabeceras se convierten a minúsculas para facilitar su manejo.
 - Usa `rawHeaders` para cabeceras sin procesar si necesitas preservar el formato original.
 
@@ -122,12 +122,12 @@ http
 
 ## Comparacion de metodos clave
 
-| Método | Uso | Ejemplo |
-|--------|-----|---------|
-| createServer | Crear servidor | `http.createServer((req, res) => {})` |
-| req.on('data') | Leer cuerpo | `req.on('data', chunk => body.push(chunk))` |
-| res.writeHead | Configurar cabeceras | `res.writeHead(200, { 'Content-Type': 'json' })` |
-| req.pipe | Redirigir flujo | `req.pipe(res)` |
+| Método         | Uso                  | Ejemplo                                          |
+| -------------- | -------------------- | ------------------------------------------------ |
+| createServer   | Crear servidor       | `http.createServer((req, res) => {})`            |
+| req.on('data') | Leer cuerpo          | `req.on('data', chunk => body.push(chunk))`      |
+| res.writeHead  | Configurar cabeceras | `res.writeHead(200, { 'Content-Type': 'json' })` |
+| req.pipe       | Redirigir flujo      | `req.pipe(res)`                                  |
 
 ## Casos de uso practicos
 

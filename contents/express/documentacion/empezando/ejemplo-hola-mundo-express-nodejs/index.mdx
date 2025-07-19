@@ -1,0 +1,106 @@
+---
+title: Ejemplo Hola Mundo con Express en Node.js
+description: Aprende a crear un ejemplo basico de Hola Mundo con Express en Node.js. Configura tu primera aplicacion web en minutos
+href: /ejemplo-hola-mundo-express-nodejs
+subtitle: Hola Mundo con Express
+---
+
+Express es un framework ligero para [Node.js](https://nodejs.org/) que facilita la creación de aplicaciones web y APIs. En esta guía, te mostramos cómo crear un ejemplo básico de "Hola Mundo" con Express, ideal para principiantes que desean aprender los fundamentos de este framework.
+
+## Que es el ejemplo Hola Mundo
+
+El ejemplo "Hola Mundo" es una aplicación mínima de Express que inicia un servidor y responde con un mensaje simple en la ruta raíz (`/`). A diferencia de proyectos generados con el [generador de Express](https://expressjs.com/es/starter/generator.html), este ejemplo usa un solo archivo, perfecto para entender los conceptos básicos.
+
+## Requisitos previos
+
+Antes de comenzar, asegúrate de tener lo siguiente:
+
+- **Node.js** y **npm** instalados. Verifica las versiones con:
+
+  ```go:bash
+  node -v
+  npm -v
+  ```
+
+- Express requiere Node.js 0.10 o superior para la versión 4.x, y Node.js 18 o superior para la versión 5.x. Descarga Node.js desde [nodejs.org](https://nodejs.org/).
+- Un editor de código como [Visual Studio Code](https://code.visualstudio.com/).
+
+## Paso 1: Configurar el proyecto
+
+1. Crea un directorio para tu aplicación y accede a él:
+
+   ```go:bash
+   mkdir mi-app
+   cd mi-app
+   ```
+
+2. Inicializa un proyecto Node.js con `npm init`:
+
+   ```go:bash
+   npm init -y
+   ```
+
+   Esto crea un archivo `package.json` con configuraciones predeterminadas.
+
+3. Instala Express como dependencia:
+
+   ```go:bash
+   npm install express
+   ```
+
+## Paso 2: Crear el ejemplo Hola Mundo
+
+Crea un archivo llamado `app.js` en el directorio `mi-app` y copia el siguiente código:
+
+```go:js
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('¡Hola, Mundo!');
+});
+
+app.listen(port, () => {
+  console.log(`Aplicacion de ejemplo escuchando en http://localhost:${port}`);
+});
+```
+
+### Explicacion del codigo
+
+- **`require('express')`**: Importa el módulo Express.
+- **`app.get('/')`**: Define una ruta para la URL raíz (`/`) que responde con "¡Hola, Mundo!".
+- **`req` y `res`**: Objetos de solicitud y respuesta proporcionados por Node.js, compatibles con métodos como `req.pipe()` o `res.send()`.
+- **`app.listen(port)`**: Inicia el servidor en el puerto 3000.
+- **Respuesta 404**: Para cualquier otra ruta, Express devuelve automáticamente un error "404 Not Found".
+
+## Paso 3: Ejecutar la aplicacion
+
+Ejecuta el siguiente comando en la terminal:
+
+```go:bash
+node app.js
+```
+
+Abre tu navegador y visita [http://localhost:3000](http://localhost:3000). Deberías ver el mensaje "¡Hola, Mundo!". Si accedes a otra ruta, como [http://localhost:3000/otra](http://localhost:3000/otra), verás un error 404.
+
+## Consejos para mejorar tu aplicacion
+
+- **Usa nodemon para desarrollo**: Instala `nodemon` para reiniciar automáticamente el servidor al hacer cambios:
+
+  ```go:bash
+  npm install nodemon --save-dev
+  ```
+
+  Luego, ejecuta:
+
+  ```go:bash
+  npx nodemon app.js
+  ```
+
+- **Explora rutas avanzadas**: Aprende a crear rutas dinámicas y APIs en la [documentación oficial de Express](https://expressjs.com/es/guide/routing.html).
+- **Agrega un archivo .gitignore**: Evita subir `node_modules` a tu repositorio:
+
+  ```go:gitignore
+  node_modules/
+  ```
