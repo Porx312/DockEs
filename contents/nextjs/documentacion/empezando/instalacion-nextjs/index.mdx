@@ -1,0 +1,250 @@
+---
+title: Como instalar Next.js
+description: Guia para instalar Next.js con create-next-app o manualmente, configurar TypeScript y ESLint
+href: /instalacion-nextjs
+subtitle: Instalacion de Next.js
+---
+
+## Por que instalar Next.js
+
+Next.js es un framework de React que facilita la creación de aplicaciones web modernas con renderizado del lado del servidor (SSR) y generación de sitios estáticos (SSG). Esta guía explica cómo instalar Next.js, ya sea automáticamente con `create-next-app` o manualmente, y cómo configurar herramientas como TypeScript y ESLint.
+
+## Requisitos del sistema
+
+Antes de instalar Next.js, asegúrate de cumplir con los siguientes requisitos:
+
+- **Node.js**: Versión 18.18 o superior.
+- **Sistema operativo**: macOS, Windows (incluyendo WSL) o Linux.
+
+Verifica tu versión de Node.js con:
+
+```go:bash
+node -v
+```
+
+Si necesitas actualizar Node.js, descárgalo desde [nodejs.org](https://nodejs.org/).
+
+## Instalacion automatica con create-next-app
+
+La forma más rápida de crear una aplicación Next.js es usando `create-next-app`, que configura todo automáticamente.
+
+### Pasos
+
+1. Ejecuta el siguiente comando:
+
+   ```go:bash
+   npx create-next-app@latest
+   ```
+
+2. Responde a las preguntas interactivas, por ejemplo:
+
+   ```
+   What is your project named? mi-app
+   Would you like to use TypeScript? Yes
+   Would you like to use ESLint? Yes
+   Would you like to use Tailwind CSS? No
+   Would you like your code inside a `src/` directory? Yes
+   Would you like to use App Router? (recommended) Yes
+   Would you like to use Turbopack for `next dev`? No
+   Would you like to customize the import alias (`@/*` by default)? Yes
+   What import alias would you like configured? @/*
+   ```
+
+3. Una vez completado, accede al directorio del proyecto:
+
+   ```go:bash
+   cd mi-app
+   ```
+
+4. Inicia el servidor de desarrollo:
+
+   ```go:bash
+   npm run dev
+   ```
+
+Abre `http://localhost:3000` en tu navegador para ver la aplicación.
+
+## Instalacion manual
+
+Si prefieres configurar Next.js manualmente, sigue estos pasos:
+
+### 1. Crea un proyecto nuevo
+
+Inicializa un proyecto Node.js:
+
+```go:bash
+mkdir mi-app
+cd mi-app
+npm init -y
+```
+
+### 2. Instala las dependencias
+
+Instala Next.js, React y React DOM:
+
+```go:bash
+npm install next@latest react@latest react-dom@latest
+```
+
+### 3. Configura los scripts en package.json
+
+Edita `package.json` para añadir los scripts necesarios:
+
+```go:js
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  }
+}
+```
+
+- `dev`: Inicia el servidor de desarrollo.
+- `build`: Genera la aplicación para producción.
+- `start`: Inicia el servidor de producción.
+- `lint`: Ejecuta ESLint para verificar el código.
+
+### 4. Crea la estructura de carpetas
+
+Crea un directorio `app` para el enrutamiento basado en archivos:
+
+```go:bash
+mkdir app
+```
+
+### 5. Crea el layout principal
+
+Crea `app/layout.tsx` con el siguiente contenido:
+
+```go:js
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### 6. Crea una pagina inicial
+
+Crea `app/page.tsx` con un contenido inicial:
+
+```go:js
+export default function Page() {
+  return <h1>¡Hola, Next.js!</h1>;
+}
+```
+
+### 7. Inicia el servidor
+
+Ejecuta:
+
+```go:bash
+npm run dev
+```
+
+Visita `http://localhost:3000` para ver tu página.
+
+## Configurar TypeScript
+
+Next.js tiene soporte integrado para TypeScript (versión mínima: 4.5.2). Para habilitarlo:
+
+1. Renombra un archivo a `.tsx` (por ejemplo, `page.tsx`) o crea uno nuevo.
+2. Ejecuta:
+
+   ```go:bash
+   npm run dev
+   ```
+
+Next.js instalará automáticamente las dependencias necesarias y creará un archivo `tsconfig.json` con la configuración recomendada.
+
+### Habilitar el plugin de TypeScript en VS Code
+
+Para mejorar la experiencia de desarrollo:
+
+1. Abre la paleta de comandos en VS Code (`Ctrl/⌘ + Shift + P`).
+2. Busca "TypeScript: Select TypeScript Version".
+3. Selecciona "Use Workspace Version".
+
+Consulta la [referencia de TypeScript de Next.js](https://nextjs.org/docs/app/building-your-application/configuring/typescript) para más detalles.
+
+## Configurar ESLint
+
+Next.js incluye soporte para ESLint. Si usas `create-next-app`, se configura automáticamente. Para un proyecto manual:
+
+1. Añade el script `lint` a `package.json`:
+
+   ```go:js
+   {
+     "scripts": {
+       "lint": "next lint"
+     }
+   }
+   ```
+
+2. Ejecuta:
+
+   ```go:bash
+   npm run lint
+   ```
+
+3. Sigue las indicaciones para elegir una configuración:
+   - **Strict**: Incluye reglas estrictas para Core Web Vitals (recomendado).
+   - **Base**: Configuración básica de Next.js.
+   - **Cancel**: Para configuraciones personalizadas.
+
+Next.js instalará `eslint` y `eslint-config-next` y creará un archivo `.eslintrc.json`. Para usar el formato moderno `eslint.config.mjs`, consulta la [referencia de ESLint de Next.js](https://nextjs.org/docs/app/building-your-application/configuring/eslint).
+
+## Configurar importaciones absolutas
+
+Next.js soporta importaciones absolutas y alias de rutas mediante `tsconfig.json` o `jsconfig.json`. Ejemplo:
+
+```go:js
+{
+  "compilerOptions": {
+    "baseUrl": "src/",
+    "paths": {
+      "@/components/*": ["components/*"],
+      "@/styles/*": ["styles/*"]
+    }
+  }
+}
+```
+
+Esto permite importar módulos de forma más limpia:
+
+```go:js
+// Antes
+import { Button } from '../../../components/button';
+
+// Después
+import { Button } from '@/components/button';
+```
+
+## Tabla de comandos utiles
+
+| Comando         | Descripción                              |
+| --------------- | ---------------------------------------- |
+| `npm run dev`   | Inicia el servidor de desarrollo.        |
+| `npm run build` | Genera la aplicación para producción.    |
+| `npm run start` | Inicia el servidor de producción.        |
+| `npm run lint`  | Ejecuta ESLint para verificar el código. |
+
+## Mejores practicas
+
+- **Usa create-next-app para proyectos nuevos**: Ahorra tiempo con la configuración automática.
+- **Habilita TypeScript y ESLint**: Mejoran la calidad y mantenibilidad del código.
+- **Organiza el codigo**: Usa `src/` para separar el código de la aplicación de los archivos de configuración.
+- **Aprovecha el enrutamiento**: Crea rutas dinámicas colocando archivos en `app/`.
+
+## Enlaces utiles
+
+- [Documentacion oficial de Next.js](https://nextjs.org/docs)
+- [Guia de TypeScript en Next.js](https://nextjs.org/docs/app/building-your-application/configuring/typescript)
+- [Gu_Configuración de ESLint en Next.js](https://nextjs.org/docs/app/building-your-application/configuring/eslint)
+- [Vercel para despliegue](https://vercel.com/)
+
+Con esta guía, puedes instalar y configurar Next.js rápidamente, ya sea automáticamente o manualmente, y prepararte para construir aplicaciones web modernas. ¡Empieza tu proyecto hoy!

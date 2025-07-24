@@ -1,0 +1,148 @@
+---
+title: Como usar bundlers con Socket.IO
+description: Guia para empaquetar servidores Socket.IO con Webpack 5
+href: /bundlers-socketio
+subtitle: Bundlers en Socket.IO
+---
+
+Empaquetar un servidor Socket.IO con herramientas como Webpack 5 es menos común que en el frontend, pero completamente viable. Esta guía explica cómo configurar Webpack para un servidor Socket.IO, con y sin archivos de cliente, optimizando el despliegue de aplicaciones en tiempo real.
+
+### Instalacion inicial
+
+Instala las dependencias necesarias:
+
+```go:bash
+npm install -D webpack webpack-cli socket.io bufferutil utf-8-validate
+```
+
+> **Nota**: `bufferutil` y `utf-8-validate` son dependencias opcionales del paquete `ws` para mejorar el rendimiento de WebSocket. Pueden configurarse como externas si no son necesarias.
+
+### Empaquetado sin archivos de cliente
+
+Si no necesitas servir archivos de cliente desde el servidor, configura Socket.IO con `serveClient: false`:
+
+**index.js**:
+
+```go:js
+const { Server } = require("socket.io");
+
+const io = new Server({
+  serveClient: false
+});
+
+io.on("connection", (socket) => {
+  console.log(`Conectado: ${socket.id}`);
+  socket.on("disconnect", (reason) => {
+    console.log(`Desconectado: ${socket.id} por ${reason}`);
+  });
+});
+
+io.listen(3000);
+```
+
+**webpack.config.js**:
+
+```go:js
+const path = require("path");
+
+module.exports = {
+  entry: "./index.js",
+  target: "node",
+  mode: "production",
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "index.js"
+  }
+};
+```
+
+Para excluir `bufferutil` y `utf-8-validate` como dependencias externas:
+
+```go:js
+const path = require("path");
+
+module.exports = {
+  entry: "./index.js",
+  target: "node",
+  mode: "production",
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "index.js"
+  },
+  externals: {
+    bufferutil: "bufferutil",
+    "utf-8-validate": "utf-8-validate"
+  }
+};
+```
+
+> **Nota**: Consulta la [documentación de Webpack sobre externals](https://webpack.js.org/configuration/externals/) para más detalles.
+
+### Empaquetado con archivos de cliente
+
+Si el servidor debe servir archivos de cliente (como `socket.io.min.js`), usa módulos de activos (_Asset Modules_) y sobrescribe la función `sendFile`:
+
+**index.js**:
+
+```go:js
+const { Server } = require("socket.io");
+
+const clientFile = require("./node_modules/socket.io/client-dist/socket.io.min?raw");
+const clientMap = require("./node_modules/socket.io/client-dist/socket.io.min.js.map?raw");
+
+Server.sendFile = (filename, req, res) => {
+  res.end(filename.endsWith(".map") ? clientMap : clientFile);
+};
+
+const io = new Server();
+
+io.on("connection", (socket) => {
+  console.log(`Conectado: ${socket.id}`);
+  socket.on("disconnect", (reason) => {
+    console.log(`Desconectado: ${socket.id} por ${reason}`);
+  });
+});
+
+io.listen(3000);
+```
+
+**webpack.config.js**:
+
+```go:js
+const path = require("path");
+
+module.exports = {
+  entry: "./index.js",
+  target: "node",
+  mode: "production",
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "index.js"
+  },
+  module: {
+    rules: [
+      {
+        resourceQuery: /raw/,
+        type: "asset/source"
+      }
+    ]
+  }
+};
+```
+
+> **Precaucion**: La opción `resourceQuery: /raw/` asegura que los archivos de cliente se incluyan como texto plano. Asegúrate de que los archivos `socket.io.min.js` y su mapa de origen estén en `node_modules/socket.io/client-dist/`.
+
+### Consejos para optimizar
+
+1. **Minimiza dependencias**: Excluye `bufferutil` y `utf-8-validate` si no usas WebSocket intensivamente.
+2. **Habilita modo producción**: Usa `mode: "production"` en Webpack para optimizar el tamaño del bundle.
+3. **Prueba el bundle**: Ejecuta el archivo generado en `dist/index.js` para verificar su funcionamiento.
+4. **Monitorea el rendimiento**: Usa herramientas como [New Relic](https://newrelic.com) para supervisar el servidor empaquetado.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de inicialización del servidor](/inicializacion-servidor-socketio)
+- [Documentación de Webpack](https://webpack.js.org/configuration/)
+
+Con esta guía, puedes empaquetar un servidor Socket.IO con Webpack 5, optimizando su despliegue para aplicaciones en tiempo real.

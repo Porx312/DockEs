@@ -1,0 +1,135 @@
+---
+title: Como instalar un servidor Socket.IO
+description: Guia para instalar Socket.IO 4.8.1 con Node.js y optimizar su configuracion
+href: /instalacion-servidor-socketio
+subtitle: Instalacion de Socket.IO
+---
+
+Socket.IO es una biblioteca poderosa para aplicaciones en tiempo real. En esta guía, te mostramos cómo instalar la versión más reciente (4.8.1, octubre de 2024) de un servidor Socket.IO, configurar Node.js y explorar paquetes opcionales para optimizar el rendimiento. Sigue estos pasos para configurar tu servidor de manera eficiente.
+
+### Requisitos previos
+
+Antes de instalar Socket.IO, asegúrate de tener instalado Node.js en tu sistema. Se recomienda usar la versión LTS (Soporte a Largo Plazo) para mayor estabilidad. Consulta los detalles en [Node.js oficial](https://nodejs.org/es/).
+
+> **Nota**: Socket.IO requiere al menos Node.js 10. Versiones anteriores no son compatibles.
+
+### Instalacion de Socket.IO
+
+Para instalar la última versión de Socket.IO (4.8.1), utiliza uno de los siguientes gestores de paquetes:
+
+```go:bash
+npm install socket.io
+```
+
+Si necesitas una versión específica, por ejemplo, 4.7.2:
+
+```go:bash
+npm install socket.io@4.7.2
+```
+
+> **Consejo**: Usa `npm list socket.io` para verificar la versión instalada.
+
+### Paquetes opcionales para mejorar el rendimiento
+
+Por defecto, Socket.IO utiliza el servidor WebSocket proporcionado por el paquete `ws`. Puedes instalar dos paquetes opcionales para optimizar operaciones específicas, como el enmascaramiento de datos y la validación UTF-8:
+
+- **bufferutil**: Mejora la eficiencia en operaciones de enmascaramiento de tramas WebSocket.
+- **utf-8-validate**: Verifica rápidamente si los mensajes contienen UTF-8 válido.
+
+Instálalos con:
+
+```go:bash
+npm install --save-optional bufferutil utf-8-validate
+```
+
+> **Nota**: Estos paquetes son opcionales. Si no están disponibles, Socket.IO usará la implementación JavaScript predeterminada. Más información en [Documentación de ws](https://github.com/websockets/ws).
+
+### Uso de otras implementaciones WebSocket
+
+Socket.IO permite usar otras implementaciones de servidores WebSocket que expongan la misma API que `ws`. Una opción popular es `eiows`, una bifurcación del paquete `uws` (obsoleto), que puede mejorar el rendimiento y el uso de memoria.
+
+Instala `eiows`:
+
+```go:bash
+npm install eiows
+```
+
+Configura Socket.IO para usar `eiows`:
+
+```go:js
+const { Server } = require("socket.io");
+const eiows = require("eiows");
+
+const io = new Server(3000, {
+  wsEngine: eiows.Server
+});
+```
+
+> **Advertencia**: Evalúa el rendimiento de `eiows` en tu caso de uso, ya que las mejoras no están garantizadas.
+
+### Configuracion con uWebSockets.js
+
+Desde la versión 4.4.0, Socket.IO puede integrarse con `µWebSockets.js`, una alternativa en C++ al servidor HTTP nativo de Node.js, ideal para aplicaciones de alto tráfico.
+
+Instala `µWebSockets.js`:
+
+```go:bash
+npm install uWebSockets.js@uNetworking/uWebSockets.js#v20.4.0
+```
+
+Configura el servidor:
+
+```go:js
+const { App } = require("uWebSockets.js");
+const { Server } = require("socket.io");
+
+const app = App();
+const io = new Server();
+
+io.attachApp(app);
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+app.listen(3000, (token) => {
+  if (!token) {
+    console.warn("Puerto en uso");
+  }
+});
+```
+
+> **Consejo**: Usa `µWebSockets.js` para reducir el uso de memoria en aplicaciones con miles de clientes. Más detalles en [µWebSockets.js](https://github.com/uWebSockets/uWebSockets.js).
+
+### Arbol de dependencias
+
+Una instalación básica de Socket.IO 4.8.1 incluye 21 paquetes, de los cuales 6 son mantenidos por el equipo de Socket.IO. A continuación, un resumen del árbol de dependencias:
+
+| Paquete Principal      | Dependencias Notables                  |
+| ---------------------- | -------------------------------------- |
+| socket.io@4.8.1        | engine.io@6.6.4, ws@8.17.1, cors@2.8.5 |
+| engine.io@6.6.4        | cookie@0.7.2, engine.io-parser@5.2.3   |
+| socket.io-parser@4.2.4 | component-emitter@3.1.2                |
+
+> **Nota**: Las declaraciones de tipos para paquetes de terceros están incluidas para facilitar el uso con TypeScript, aunque aumentan ligeramente el tamaño del paquete.
+
+### Versiones transitivas
+
+La versión de Socket.IO está vinculada a versiones específicas de `engine.io` y `ws`. Aquí una tabla con las correspondencias:
+
+| Socket.IO | Engine.IO | ws     |
+| --------- | --------- | ------ |
+| 4.8.x     | 6.6.x     | 8.17.x |
+| 4.7.x     | 6.5.x     | 8.17.x |
+| 4.6.x     | 6.4.x     | 8.11.x |
+| 4.5.x     | 6.2.x     | 8.2.x  |
+
+Consulta la lista completa en la [documentación oficial](https://socket.io/docs/v4/).
+
+### Recursos adicionales
+
+- [Notas de la versión 4.8.1](https://github.com/socketio/socket.io/releases/tag/4.8.1)
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de optimización de rendimiento](https://socket.io/docs/v4/performance-tuning/)
+
+Con esta guía, puedes instalar y configurar un servidor Socket.IO optimizado para tus necesidades, utilizando las implementaciones WebSocket más adecuadas para tu proyecto.

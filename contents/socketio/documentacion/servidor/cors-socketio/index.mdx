@@ -1,0 +1,158 @@
+---
+title: Como configurar CORS en Socket.IO
+description: Guia para habilitar CORS en Socket.IO con ejemplos y solucion de errores
+href: /cors-socketio
+subtitle: CORS en Socket.IO
+---
+
+La gestión de Cross-Origin Resource Sharing (CORS) es crucial en Socket.IO (desde v3) para permitir conexiones entre dominios diferentes. Esta guía explica cómo configurar CORS, enviar credenciales y solucionar errores comunes, optimizando aplicaciones en tiempo real.
+
+### Configuracion de CORS
+
+Habilita CORS explícitamente al inicializar el servidor Socket.IO:
+
+```go:js
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const httpServer = createServer();
+const io = new Server(httpServer, {
+  cors: {
+    origin: "https://example.com"
+  }
+});
+
+httpServer.listen(3000);
+```
+
+> **Nota**: Todas las opciones de CORS se pasan al paquete `cors`. Consulta la [lista completa de opciones](https://github.com/expressjs/cors#configuration-options).
+
+Para configuraciones locales (por ejemplo, frontend en `http://localhost:8080` y servidor en `http://localhost:3000`):
+
+```go:js
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:8080"
+  }
+});
+
+httpServer.listen(3000);
+```
+
+### Envio de credenciales
+
+Para enviar cookies u otros encabezados, configura `credentials` y `allowedHeaders`:
+
+**Servidor**:
+
+```go:js
+const io = new Server(httpServer, {
+  cors: {
+    origin: "https://example.com",
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  }
+});
+```
+
+**Cliente**:
+
+```go:js
+import { io } from "socket.io-client";
+
+const socket = io("https://api.example.com", {
+  withCredentials: true,
+  extraHeaders: {
+    "my-custom-header": "abcd"
+  }
+});
+```
+
+> **Precaucion**: No uses `origin: "*"` con `credentials: true`, ya que no es compatible. Especifica un origen concreto o un array de orígenes:
+
+```go:js
+const io = new Server(httpServer, {
+  cors: {
+    origin: ["https://my-frontend.com", "http://localhost:3000"],
+    credentials: true
+  }
+});
+```
+
+### Deshabilitar solicitudes CORS
+
+Para permitir solo solicitudes sin encabezado `Origin`:
+
+```go:js
+const io = new Server(httpServer, {
+  allowRequest: (req, callback) => {
+    const noOriginHeader = req.headers.origin === undefined;
+    callback(null, noOriginHeader);
+  }
+});
+```
+
+### Solucion de errores comunes
+
+#### Error: Falta el encabezado ‘Access-Control-Allow-Origin’
+
+**Mensaje completo**:
+
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at .../socket.io/?EIO=4&transport=polling&t=NMnp2WI. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).
+```
+
+**Causa**: El servidor Socket.IO no está accesible o no está configurado correctamente.
+
+**Solución**: Verifica que el servidor esté escuchando en el puerto correcto. Prueba con:
+
+```go:bash
+curl "https://api.example.com/socket.io/?EIO=4&transport=polling"
+```
+
+Debería devolver algo como:
+
+```json
+0{"sid":"Lbo5JLzTotvW3g2LAAAA","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":20000}
+```
+
+Si no, revisa la configuración del servidor o la conectividad de red.
+
+#### Error: Credenciales no soportadas con ‘Access-Control-Allow-Origin: \*’
+
+**Mensaje completo**:
+
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at .../socket.io/?EIO=4&transport=polling&t=NvQfU77. (Reason: Credential is not supported if the CORS header ‘Access-Control-Allow-Origin’ is ‘*’).
+```
+
+**Causa**: Estás usando `withCredentials: true` con `origin: "*"`.
+
+**Solución**: Especifica un origen concreto en la configuración CORS, como se mostró anteriormente.
+
+#### Error: Se esperaba ‘true’ en ‘Access-Control-Allow-Credentials’
+
+**Mensaje completo**:
+
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at .../socket.io/?EIO=4&transport=polling&t=NvQny19. (Reason: expected ‘true’ in CORS header ‘Access-Control-Allow-Credentials’).
+```
+
+**Causa**: `withCredentials: true` en el cliente, pero falta `credentials: true` en el servidor.
+
+**Solución**: Añade `credentials: true` en la configuración CORS del servidor, como en el ejemplo anterior.
+
+### Consejos para optimizar
+
+1. **Especifica orígenes**: Usa dominios concretos en lugar de `*` para mayor seguridad.
+2. **Prueba localmente**: Configura CORS para `localhost` durante el desarrollo.
+3. **Monitorea errores**: Implementa manejadores de `connect_error` en el cliente para informar al usuario.
+4. **Usa herramientas de red**: Verifica solicitudes con `curl` o el inspector de red del navegador.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de proxy inverso](/proxy-inverso-socketio)
+- [Opciones del paquete cors](https://github.com/expressjs/cors#configuration-options)
+
+Con esta guía, puedes configurar CORS en Socket.IO de manera segura y solucionar problemas comunes, garantizando conexiones robustas en aplicaciones en tiempo real.

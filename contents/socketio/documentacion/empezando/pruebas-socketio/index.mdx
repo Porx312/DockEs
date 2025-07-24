@@ -1,0 +1,150 @@
+---
+title: Pruebas en Socket.IO Guia con Jest y TypeScript
+description: Aprende a probar aplicaciones Socket.IO con Jest y TypeScript para garantizar conexiones y eventos en tiempo real
+href: /pruebas-socketio
+subtitle: Pruebas con Socket.IO
+---
+
+Probar aplicaciones en tiempo real con Socket.IO es crucial para garantizar conexiones estables y eventos confiables. Esta guía muestra cómo usar Jest y TypeScript para crear pruebas efectivas, cubriendo configuraciones, ejemplos prácticos y mejores prácticas. Ideal para desarrolladores que buscan robustez en sus aplicaciones.
+
+## Por que probar Socket.IO
+
+Las aplicaciones Socket.IO manejan comunicaciones bidireccionales, lo que requiere pruebas para verificar:
+
+- Conexiones exitosas entre cliente y servidor.
+- Emisión y recepción correcta de eventos.
+- Manejo de confirmaciones (_acknowledgments_).
+- Comportamiento ante desconexiones.
+
+Esta guía usa **Jest** con TypeScript, pero los conceptos son aplicables a otras librerías como Mocha, Tape o Vitest.
+
+Explora más sobre [Jest](https://jestjs.io/) y [Socket.IO](https://socket.io/docs/).
+
+## Instalacion de dependencias
+
+Para comenzar, instala Jest y los tipos de TypeScript:
+
+```go:bash
+npm install --save-dev jest @types/jest socket.io socket.io-client typescript
+```
+
+Configura TypeScript en tu proyecto si aún no lo has hecho. Consulta la [guía de instalación de Jest](https://jestjs.io/docs/getting-started).
+
+## Configuracion de pruebas
+
+Crea un archivo de pruebas, por ejemplo, `__tests__/basic.test.ts`, para probar la comunicación entre un servidor y un cliente Socket.IO. El siguiente ejemplo configura un entorno de pruebas completo.
+
+### Estructura del codigo de pruebas
+
+```go:ts
+import { createServer } from "node:http";
+import { type AddressInfo } from "node:net";
+import { io as ioc, type Socket as ClientSocket } from "socket.io-client";
+import { Server, type Socket as ServerSocket } from "socket.io";
+
+function waitFor(socket: ServerSocket | ClientSocket, event: string) {
+  return new Promise((resolve) => {
+    socket.once(event, resolve);
+  });
+}
+
+describe("Proyecto Socket.IO", () => {
+  let io: Server, serverSocket: ServerSocket, clientSocket: ClientSocket;
+
+  beforeAll((done) => {
+    const httpServer = createServer();
+    io = new Server(httpServer);
+    httpServer.listen(() => {
+      const port = (httpServer.address() as AddressInfo).port;
+      clientSocket = ioc(`http://localhost:${port}`);
+      io.on("connection", (socket) => {
+        serverSocket = socket;
+      });
+      clientSocket.on("connect", done);
+    });
+  });
+
+  afterAll(() => {
+    io.close();
+    clientSocket.disconnect();
+  });
+
+  test("Emision de evento basico", (done) => {
+    clientSocket.on("hola", (arg) => {
+      expect(arg).toBe("mundo");
+      done();
+    });
+    serverSocket.emit("hola", "mundo");
+  });
+
+  test("Emision con confirmacion", (done) => {
+    serverSocket.on("saludo", (cb) => {
+      cb("hola");
+    });
+    clientSocket.emit("saludo", (arg) => {
+      expect(arg).toBe("hola");
+      done();
+    });
+  });
+
+  test("Uso de emitWithAck", async () => {
+    serverSocket.on("foo", (cb) => {
+      cb("bar");
+    });
+    const result = await clientSocket.emitWithAck("foo");
+    expect(result).toBe("bar");
+  });
+
+  test("Espera de evento con wait exotwaitFor", () => {
+    clientSocket.emit("baz");
+    return waitFor(serverSocket, "baz");
+  });
+});
+```
+
+### Explicacion del codigo
+
+- **Función `waitFor`**: Crea una promesa para esperar un evento específico, útil para pruebas asíncronas.
+- **Configuración (`beforeAll`)**: Inicia un servidor HTTP y conecta un cliente Socket.IO antes de las pruebas.
+- **Limpieza (`afterAll`)**: Cierra el servidor y desconecta el cliente tras las pruebas.
+- **Pruebas**:
+  - Verifica la emisión de eventos básicos.
+  - Prueba confirmaciones (_acknowledgments_).
+  - Usa `emitWithAck` para pruebas asíncronas.
+  - Utiliza `waitFor` para esperar eventos específicos.
+
+Consulta la [documentación de Jest](https://jestjs.io/docs/api) para más detalles.
+
+## Mejores practicas para pruebas
+
+1. **Usa TypeScript**: Asegura tipos seguros y mejora la mantenibilidad del código.
+2. **Prueba casos de error**: Simula desconexiones o fallos de red.
+3. **Automatiza la limpieza**: Cierra conexiones en `afterAll` para evitar fugas de recursos.
+4. **Filtra scopes de depuración**: Usa el módulo `debug` para diagnosticar problemas (ver [guía de depuración](https://socket.io/docs/v4/debugging/)).
+
+## Tabla de librerias de pruebas compatibles
+
+| Librería | Soporte | Características                           |
+| -------- | ------- | ----------------------------------------- |
+| Jest     | SÍ ✅   | Integración con TypeScript, snapshots     |
+| Mocha    | SÍ ✅   | Flexible, soporta promesas                |
+| Tape     | SÍ ✅   | Minimalista, ideal para pruebas simples   |
+| Vitest   | SÍ ✅   | Rápido, optimizado para Vite y TypeScript |
+
+## Ejemplo adicional Prueba de desconexion
+
+```go:ts
+test("Manejo de desconexion", (done) => {
+  clientSocket.on("disconnect", () => {
+    expect(true).toBe(true);
+    done();
+  });
+  serverSocket.disconnect();
+});
+```
+
+Este test verifica que el cliente detecte una desconexión iniciada por el servidor.
+
+## Conclusión
+
+Probar aplicaciones Socket.IO con Jest y TypeScript garantiza conexiones y eventos confiables. Configura un entorno de pruebas robusto, usa funciones como `waitFor` y `emitWithAck`, y sigue las mejores prácticas para mantener tu código escalable. Con esta guía, puedes implementar pruebas efectivas para tus aplicaciones en tiempo real.

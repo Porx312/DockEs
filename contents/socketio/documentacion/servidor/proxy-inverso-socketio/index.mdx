@@ -1,0 +1,182 @@
+---
+title: Como configurar Socket.IO con proxy inverso
+description: Guia para configurar Socket.IO con nginx, Apache, Node.js y Caddy
+href: /proxy-inverso-socketio
+subtitle: Proxy inverso en Socket.IO
+---
+
+Configurar un servidor Socket.IO detrás de un proxy inverso como nginx, Apache HTTPD, Node.js http-proxy o Caddy es esencial para aplicaciones en tiempo real escalables. Esta guía detalla cómo implementar estas configuraciones, incluyendo ajustes para rutas personalizadas y entornos multi-servidor.
+
+### Por que usar un proxy inverso
+
+Un proxy inverso permite:
+
+- **Balanceo de carga**: Distribuir conexiones entre múltiples servidores.
+- **Seguridad**: Proteger el servidor Socket.IO detrás de un firewall.
+- **Rutas personalizadas**: Redirigir solicitudes específicas, como `/socket.io/`.
+
+> **Nota**: Para configuraciones multi-servidor, consulta la [documentación de Socket.IO](https://socket.io/docs/v4/multi-server-setup/).
+
+### Configuracion con nginx
+
+Configura nginx para redirigir todas las solicitudes al servidor Socket.IO en el puerto 3000:
+
+```go:nginx
+http {
+  server {
+    listen 80;
+    location / {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host;
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }
+  }
+}
+```
+
+Para redirigir solo las solicitudes de Socket.IO:
+
+```go:nginx
+http {
+  server {
+    listen 80;
+    root /var/www/html;
+    location /socket.io/ {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host;
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }
+  }
+}
+```
+
+> **Precaucion**: Asegúrate de que `proxy_read_timeout` (60s por defecto) sea mayor que `pingInterval` (25s) + `pingTimeout` (20s) de Socket.IO para evitar errores de "transport close". Más detalles en [proxy_pass](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass).
+
+Para usar una ruta personalizada, configura el servidor y el cliente:
+
+**Servidor**:
+
+```go:js
+import { Server } from "socket.io";
+
+const io = new Server({
+  path: "/my-custom-path/"
+});
+```
+
+**Cliente**:
+
+```go:js
+import { io } from "socket.io-client";
+
+const socket = io({
+  path: "/my-custom-path/"
+});
+```
+
+```go:nginx
+http {
+  server {
+    listen 80;
+    location /my-custom-path/ {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host;
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }
+  }
+}
+```
+
+### Configuracion con Apache HTTPD
+
+Configura Apache para redirigir solicitudes al servidor Socket.IO:
+
+```go:apache
+Listen 80
+ServerName example.com
+
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+LoadModule rewrite_module modules/mod_rewrite.so
+
+ProxyPass / http://localhost:3000/
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "ws://localhost:3000/$1" [P,L]
+
+ProxyTimeout 60
+```
+
+> **Nota**: Ajusta `ProxyTimeout` (mínimo 60s) para que sea mayor que `pingInterval` + `pingTimeout`. Más detalles en [mod_proxy_wstunnel](https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html).
+
+### Configuracion con Node.js http-proxy
+
+Instala el paquete `http-proxy`:
+
+```go:bash
+npm install http-proxy
+```
+
+Configura el proxy:
+
+```go:js
+const httpProxy = require("http-proxy");
+
+httpProxy
+  .createProxyServer({
+    target: "http://localhost:3000",
+    ws: true
+  })
+  .listen(80);
+```
+
+Consulta la [documentación de http-proxy](https://github.com/http-party/node-http-proxy) para más opciones.
+
+### Configuracion con Caddy 2
+
+Configura Caddy para redirigir solicitudes de Socket.IO:
+
+```go:caddy
+example.com {
+  reverse_proxy /socket.io/* localhost:3000
+}
+```
+
+Para una ruta personalizada:
+
+```go:caddy
+example.com {
+  rewrite /path /path/
+  handle_path /path/* {
+    rewrite * /socket.io{path}
+    reverse_proxy localhost:3000
+  }
+}
+```
+
+Ajusta el servidor y el cliente para la ruta personalizada como en el ejemplo de nginx. Más detalles en [Caddyfile](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+
+### Consejos para optimizar
+
+1. **Ajusta timeouts**: Configura timeouts en el proxy para evitar desconexiones prematuras.
+2. **Usa rutas personalizadas**: Redirige solo las solicitudes de Socket.IO para optimizar el rendimiento.
+3. **Prueba en multi-servidor**: Revisa la [configuración multi-servidor](https://socket.io/docs/v4/multi-server-setup/) para clústeres.
+4. **Monitorea conexiones**: Usa herramientas como [New Relic](https://newrelic.com) para supervisar el rendimiento.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de inicialización del servidor](/inicializacion-servidor-socketio)
+- [Configuración multi-servidor](https://socket.io/docs/v4/multi-server-setup/)
+
+Con esta guía, puedes configurar un servidor Socket.IO detrás de un proxy inverso, garantizando escalabilidad y seguridad en aplicaciones en tiempo real.

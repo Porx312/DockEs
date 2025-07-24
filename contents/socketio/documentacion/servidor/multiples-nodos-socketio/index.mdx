@@ -1,0 +1,258 @@
+---
+title: Como usar multiples nodos en Socket.IO
+description: Guia para configurar Socket.IO con multiples nodos y sesiones persistentes
+href: /multiples-nodos-socketio
+subtitle: Multiples nodos en Socket.IO
+---
+
+## Como usar multiples nodos en Socket.IO
+
+Desplegar múltiples servidores Socket.IO requiere configurar sesiones persistentes (_sticky sessions_) y un adaptador compatible para sincronizar eventos entre nodos. Esta guía explica cómo lograrlo con soluciones como nginx, Apache, HAProxy, Traefik y el módulo de clúster de Node.js, optimizando aplicaciones en tiempo real.
+
+### Por que usar multiples nodos
+
+Usar múltiples nodos permite:
+
+- **Escalabilidad**: Distribuir la carga entre procesos o máquinas.
+- **Alta disponibilidad**: Mantener el servicio si un nodo falla.
+- **Rendimiento**: Gestionar más conexiones simultáneas.
+
+Sin embargo, el transporte HTTP long-polling (activado por defecto) requiere sesiones persistentes para evitar errores HTTP 400 ("Session ID unknown"). El transporte WebSocket, que usa una sola conexión TCP, no necesita sesiones persistentes:
+
+```go:js
+// Cliente: deshabilitar long-polling
+const socket = io("https://io.yourhost.com", {
+  transports: ["websocket"]
+});
+```
+
+> **Nota**: Consulta la [documentación de transportes](https://socket.io/docs/v4/client-options/#transports) para más detalles.
+
+### Habilitar sesiones persistentes
+
+Las sesiones persistentes aseguran que las solicitudes de una sesión lleguen al mismo nodo. Hay dos enfoques principales:
+
+1. **Enrutamiento por cookie**: Usa un cookie para identificar el nodo.
+2. **Enrutamiento por IP**: Usa la dirección IP del cliente.
+
+> **Precaucion**: En situaciones CORS (dominio del cliente diferente al del servidor), habilita credenciales:
+
+```go:js
+// Servidor
+const io = require("socket.io")(httpServer, {
+  cors: {
+    origin: "https://front-domain.com",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Cliente
+const socket = io("https://server-domain.com", {
+  withCredentials: true
+});
+```
+
+Sin esto, el navegador no enviará el cookie, causando errores HTTP 400.
+
+### Configuracion con nginx
+
+Configura un bloque `upstream` en `nginx.conf` para balancear la carga:
+
+```go:nginx
+http {
+  server {
+    listen 3000;
+    server_name io.yourhost.com;
+    location / {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host;
+      proxy_pass http://nodes;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }
+  }
+  upstream nodes {
+    hash $remote_addr consistent;
+    server app01:3000;
+    server app02:3000;
+    server app03:3000;
+  }
+}
+```
+
+> **Precaucion**: Asegúrate de que `proxy_read_timeout` (60s por defecto) sea mayor que `pingInterval` (25s) + `pingTimeout` (20s) de Socket.IO. Más detalles en [documentación de nginx](http://nginx.org/en/docs/http/ngx_http_proxy_module.html).
+
+### Configuracion con nginx Ingress (Kubernetes)
+
+Usa anotaciones para enrutar por IP del cliente:
+
+```go:yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: your-ingress
+  namespace: your-namespace
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      set $forwarded_client_ip "";
+      if ($http_x_forwarded_for ~ "^([^,]+)") {
+        set $forwarded_client_ip $1;
+      }
+      set $client_ip $remote_addr;
+      if ($forwarded_client_ip != "") {
+        set $client_ip $forwarded_client_ip;
+      }
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$client_ip"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: io.yourhost.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: your-service
+                port:
+                  number: 80
+```
+
+> **Nota**: La anotación `upstream-hash-by` asegura que las solicitudes de un cliente vayan al mismo pod. Más detalles en [Ingress Nginx](https://kubernetes.github.io/ingress-nginx/).
+
+### Configuracion con Apache HTTPD
+
+Configura sesiones persistentes con cookies:
+
+```go:apache
+Header add Set-Cookie "SERVERID=sticky.%{BALANCER_WORKER_ROUTE}e; path=/" env=BALANCER_ROUTE_CHANGED
+
+<Proxy "balancer://nodes_polling">
+    BalancerMember "http://app01:3000" route=app01
+    BalancerMember "http://app02:3000" route=app02
+    BalancerMember "http://app03:3000" route=app03
+    ProxySet stickysession=SERVERID
+</Proxy>
+
+<Proxy "balancer://nodes_ws">
+    BalancerMember "ws://app01:3000" route=app01
+    BalancerMember "ws://app02:3000" route=app02
+    BalancerMember "ws://app03:3000" route=app03
+    ProxySet stickysession=SERVERID
+</Proxy>
+
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule /(.*) balancer://nodes_ws/$1 [P,L]
+RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+RewriteRule /(.*) balancer://nodes_polling/$1 [P,L]
+
+ProxyTimeout 60
+```
+
+> **Nota**: Ajusta `ProxyTimeout` (mínimo 60s) para evitar desconexiones. Más detalles en [mod_proxy_wstunnel](https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html).
+
+### Configuracion con HAProxy
+
+Usa un cookie para sesiones persistentes:
+
+```go:haproxy
+listen chat
+  bind *:80
+  default_backend nodes
+
+backend nodes
+  option httpchk HEAD /health
+  http-check expect status 200
+  cookie io prefix indirect nocache
+  server app01 app01:3000 check cookie app01
+  server app02 app02:3000 check cookie app02
+  server app03 app03:3000 check cookie app03
+```
+
+Consulta la [documentación de HAProxy](https://www.haproxy.org/).
+
+### Configuracion con Traefik
+
+Usa etiquetas en `docker-compose.yml`:
+
+```go:yaml
+services:
+  traefik:
+    image: traefik:2.4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    links:
+      - server
+  server:
+    image: my-image:latest
+    labels:
+      - "traefik.http.routers.my-service.rule=PathPrefix(`/`)"
+      - traefik.http.services.my-service.loadBalancer.sticky.cookie.name=server_id
+      - traefik.http.services.my-service.loadBalancer.sticky.cookie.httpOnly=true
+```
+
+Consulta la [documentación de Traefik](https://doc.traefik.io/traefik/).
+
+### Configuracion con Node.js Cluster
+
+Usa el módulo `cluster` con `@socket.io/sticky`:
+
+```go:bash
+npm install @socket.io/sticky @socket.io/cluster-adapter
+```
+
+Configura el clúster:
+
+```go:js
+const cluster = require("cluster");
+const http = require("http");
+const { Server } = require("socket.io");
+const { setupMaster, setupWorker } = require("@socket.io/sticky");
+const { createAdapter } = require("@socket.io/cluster-adapter");
+
+if (cluster.isMaster) {
+  console.log(`Maestro ${process.pid} en ejecución`);
+  const httpServer = http.createServer();
+  setupMaster(httpServer, { loadBalancingMethod: "least-connection" });
+  setupPrimary();
+  httpServer.listen(3000);
+  for (let i = 0; i < require("os").cpus().length; i++) {
+    cluster.fork();
+  }
+  cluster.on("exit", (worker) => {
+    console.log(`Worker ${worker.process.pid} finalizado`);
+    cluster.fork();
+  });
+} else {
+  console.log(`Worker ${process.pid} iniciado`);
+  const httpServer = http.createServer();
+  const io = new Server(httpServer);
+  io.adapter(createAdapter());
+  setupWorker(io);
+  io.on("connection", (socket) => {
+    console.log("Cliente conectado");
+  });
+}
+```
+
+### Sincronizacion con adaptadores
+
+Para emitir eventos entre nodos, usa un adaptador como `@socket.io/redis-adapter`. Esto sincroniza mensajes entre servidores, permitiendo emitir a todos los clientes o a salas específicas. Más detalles en [adaptadores](https://socket.io/docs/v4/adapter/).
+
+### Consejos para optimizar
+
+1. **Usa WebSocket**: Deshabilita long-polling para evitar sesiones persistentes si es viable.
+2. **Configura timeouts**: Asegúrate de que los timeouts del proxy superen `pingInterval` + `pingTimeout`.
+3. **Habilita CORS correctamente**: Incluye `credentials: true` en configuraciones CORS.
+4. **Monitorea nodos**: Usa herramientas como [New Relic](https://newrelic.com) para supervisar el rendimiento.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de proxy inverso](/proxy-inverso-socketio)
+- [Documentación de adaptadores](https://socket.io/docs/v4/adapter/)
+
+Con esta guía, puedes configurar múltiples nodos Socket.IO con sesiones persistentes y adaptadores, asegurando escalabilidad y rendimiento.

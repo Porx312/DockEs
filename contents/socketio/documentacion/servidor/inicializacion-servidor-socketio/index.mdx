@@ -1,0 +1,274 @@
+---
+title: Como inicializar un servidor Socket.IO
+description: Guia para inicializar Socket.IO con HTTP, HTTPS, Express, Koa y mas
+href: /inicializacion-servidor-socketio
+subtitle: Inicializacion de Socket.IO
+---
+
+Inicializar un servidor Socket.IO es un paso clave para crear aplicaciones en tiempo real. Esta guía explica cómo configurar un servidor Socket.IO con diferentes entornos (HTTP, HTTPS, Express, Koa, Fastify, etc.) y optimizarlo para tus necesidades. Usa los ejemplos de código para comenzar rápidamente.
+
+### Requisitos previos
+
+Asegúrate de tener instalado Socket.IO 4.8.1 y Node.js (versión LTS recomendada). Consulta la [guía de instalación](/instalacion-servidor-socketio) para más detalles.
+
+> **Consejo**: Los usuarios de TypeScript pueden agregar tipos para eventos. Revisa la [documentación de TypeScript](https://socket.io/docs/v4/typescript/).
+
+### Inicializacion basica
+
+Para iniciar un servidor Socket.IO de forma independiente, usa el siguiente código:
+
+```go:js
+import { Server } from "socket.io";
+
+const io = new Server(3000, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+```
+
+Esto crea un servidor HTTP en el puerto 3000. Puedes acceder al servidor HTTP con `io.httpServer`.
+
+### Configuracion con servidor HTTP
+
+Si prefieres crear un servidor HTTP manualmente:
+
+```go:js
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const httpServer = createServer();
+const io = new Server(httpServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+httpServer.listen(3000);
+```
+
+### Configuracion con servidor HTTPS
+
+Para un servidor seguro con HTTPS, incluye certificados:
+
+```go:js
+import { readFileSync } from "fs";
+import { createServer } from "https";
+import { Server } from "socket.io";
+
+const httpsServer = createServer({
+  key: readFileSync("/path/to/my/key.pem"),
+  cert: readFileSync("/path/to/my/cert.pem")
+});
+
+const io = new Server(httpsServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+httpsServer.listen(3000);
+```
+
+Consulta la [documentación de Node.js](https://nodejs.org/api/https.html) para más detalles.
+
+### Autenticacion con certificados de cliente
+
+Para autenticación con certificados de cliente, configura el servidor y el cliente:
+
+**Servidor**:
+
+```go:js
+import { readFileSync } from "fs";
+import { createServer } from "https";
+import { Server } from "socket.io";
+
+const httpsServer = createServer({
+  key: readFileSync("/path/to/server-key.pem"),
+  cert: readFileSync("/path/to/server-cert.pem"),
+  requestCert: true,
+  ca: [readFileSync("/path/to/client-cert.pem")]
+});
+
+const io = new Server(httpsServer, { /* opciones */ });
+
+io.engine.on("connection", (rawSocket) => {
+  rawSocket.peerCertificate = rawSocket.request.client.getPeerCertificate();
+});
+
+io.on("connection", (socket) => {
+  console.log(socket.conn.peerCertificate);
+});
+
+httpsServer.listen(3000);
+```
+
+**Cliente**:
+
+```go:js
+import { readFileSync } from "fs";
+import { io } from "socket.io-client";
+
+const socket = io("https://example.com", {
+  key: readFileSync("/path/to/client-key.pem"),
+  cert: readFileSync("/path/to/client-cert.pem"),
+  ca: [readFileSync("/path/to/server-cert.pem")]
+});
+```
+
+### Configuracion con HTTP/2
+
+Para usar HTTP/2, configura un servidor seguro con `http2`:
+
+```go:js
+import { readFileSync } from "fs";
+import { createSecureServer } from "http2";
+import { Server } from "socket.io";
+
+const httpServer = createSecureServer({
+  allowHTTP1: true,
+  key: readFileSync("/path/to/my/key.pem"),
+  cert: readFileSync("/path/to/my/cert.pem")
+});
+
+const io = new Server(httpServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+httpServer.listen(3000);
+```
+
+### Integracion con frameworks
+
+#### Con Express
+
+Integra Socket.IO con Express usando un servidor HTTP:
+
+```go:js
+import * as express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+httpServer.listen(3000);
+```
+
+> **Precaucion**: No uses `app.listen(3000)`, ya que crea un nuevo servidor HTTP. Más detalles en [Documentación de Express](https://expressjs.com/).
+
+#### Con Koa
+
+Configura Socket.IO con Koa:
+
+```go:js
+import * as Koa from "koa";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const app = new Koa();
+const httpServer = createServer(app.callback());
+const io = new Server(httpServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+httpServer.listen(3000);
+```
+
+Más información en [Documentación de Koa](https://koajs.com/).
+
+#### Con Fastify
+
+Usa el plugin `fastify-socket.io`:
+
+```go:js
+import fastify from "fastify";
+import fastifyIO from "fastify-socket.io";
+
+const server = fastify();
+server.register(fastifyIO);
+
+server.get("/", (req, reply) => {
+  server.io.emit("hello");
+});
+
+server.ready().then(() => {
+  server.io.on("connection", (socket) => {
+    console.log("Cliente conectado");
+  });
+});
+
+server.listen({ port: 3000 });
+```
+
+#### Con NestJS
+
+Consulta la [documentación de NestJS](https://docs.nestjs.com/websockets/gateways). Nota que NestJS v7 y anteriores usan Socket.IO v2, mientras que v8 usa v4.
+
+#### Con uWebSockets.js
+
+Integra Socket.IO con `µWebSockets.js`:
+
+```go:js
+import { App } from "uWebSockets.js";
+import { Server } from "socket.io";
+
+const app = App();
+const io = new Server();
+
+io.attachApp(app);
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+
+app.listen(3000, (token) => {
+  if (!token) {
+    console.warn("Puerto en uso");
+  }
+});
+```
+
+Más detalles en [µWebSockets.js](https://github.com/uNetworking/uWebSockets.js).
+
+#### Con Hono (Node.js)
+
+Configura Socket.IO con Hono:
+
+```go:js
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import { Server } from "socket.io";
+
+const app = new Hono();
+const httpServer = serve({ fetch: app.fetch, port: 3000 });
+const io = new Server(httpServer, { /* opciones */ });
+
+io.on("connection", (socket) => {
+  console.log("Cliente conectado");
+});
+```
+
+Más información en [Documentación de Hono](https://hono.dev/).
+
+### Opciones de configuracion
+
+Revisa todas las opciones disponibles en la [documentación oficial de Socket.IO](https://socket.io/docs/v4/server-options/).
+
+### Consejos para optimizar
+
+1. **Usa servidores ligeros**: `µWebSockets.js` es ideal para aplicaciones de alto tráfico.
+2. **Prueba con TypeScript**: Añade tipos para eventos y mejora la mantenibilidad.
+3. **Evita errores comunes**: No uses `app.listen()` con Express o Koa; crea un servidor HTTP explícito.
+4. **Monitorea el puerto**: Verifica si el puerto está en uso para evitar conflictos.
+
+Con esta guía, puedes inicializar un servidor Socket.IO en cualquier entorno, optimizando su configuración para aplicaciones en tiempo real.

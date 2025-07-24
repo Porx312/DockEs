@@ -3,7 +3,7 @@ export const technologies = [
     name: "Next.js",
     ispro: true,
     comingSoon: false,
-    slug: "/docs/nextjs/empezando/guias",
+    slug: "/docs/nextjs/documentacion/empezando",
     iconDark: "/icons/nextjs.svg",
     description:
       "Librería de React para construir interfaces de usuario interactivas.",
@@ -53,6 +53,16 @@ export const technologies = [
     description:
       "Framework minimalista para construir APIs y servidores con Node.js.",
     category: "backend",
+  },
+  {
+    name: "Socket.IO",
+    comingSoon: false,
+    slug: "/docs/socketio/documentacion/empezando/instalacion",
+    iconDark: "/icons/socket.svg",
+    iconLight: "/icons/socketl.svg",
+    description:
+      "Librería para aplicaciones web en tiempo real mediante WebSockets.",
+    category: "library",
   },
   {
     name: "React",
@@ -133,16 +143,6 @@ export const technologies = [
     iconDark: "/icons/stripe.svg",
     description: "Plataforma de pagos para aplicaciones web y móviles.",
     category: "other",
-  },
-  {
-    name: "Socket.IO",
-    comingSoon: true,
-    slug: "/docs/socketio/empezando/instalacion",
-    iconDark: "/icons/socket.svg",
-    iconLight: "/icons/socketl.svg",
-    description:
-      "Librería para aplicaciones web en tiempo real mediante WebSockets.",
-    category: "library",
   },
   {
     name: "NestJS",

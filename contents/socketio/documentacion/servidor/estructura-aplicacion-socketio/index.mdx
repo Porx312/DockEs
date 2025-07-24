@@ -1,0 +1,143 @@
+---
+title: Como estructurar aplicaciones en Socket.IO
+description: Guia para organizar manejadores de eventos en aplicaciones Socket.IO
+href: /estructura-aplicacion-socketio
+subtitle: Estructura de aplicaciones en Socket.IO
+---
+
+Organizar los manejadores de eventos en una aplicación Socket.IO es clave para mantener un código limpio y escalable. Esta guía presenta dos enfoques para registrar eventos: distribuirlos en archivos separados o centralizarlos en el archivo principal. Ambos son sugerencias adaptables según tus necesidades.
+
+### Enfoque 1: Manejadores en archivos separados
+
+En este enfoque, cada archivo registra sus propios manejadores de eventos, manteniendo el archivo principal (`index.js`) limpio. Es ideal para aplicaciones grandes, aunque los eventos pueden ser menos visibles sin una buena convención de nombres.
+
+**index.js**:
+
+```go:js
+const httpServer = require("http").createServer();
+const io = require("socket.io")(httpServer);
+
+const registerOrderHandlers = require("./orderHandler");
+const registerUserHandlers = require("./userHandler");
+
+const onConnection = (socket) => {
+  registerOrderHandlers(io, socket);
+  registerUserHandlers(io, socket);
+};
+
+io.on("connection", onConnection);
+
+httpServer.listen(3000);
+```
+
+**orderHandler.js**:
+
+```go:js
+module.exports = (io, socket) => {
+  const createOrder = (payload) => {
+    console.log("Orden creada:", payload);
+    // Lógica para crear una orden
+  };
+
+  const readOrder = (orderId, callback) => {
+    console.log("Leyendo orden:", orderId);
+    // Lógica para leer una orden
+    callback({ id: orderId, status: "success" });
+  };
+
+  socket.on("order:create", createOrder);
+  socket.on("order:read", readOrder);
+};
+```
+
+**Ventajas**:
+
+- Código modular y organizado.
+- Escalable para aplicaciones grandes.
+- Fácil de mantener por equipos.
+
+**Desventajas**:
+
+- Los eventos están distribuidos, lo que puede dificultar su búsqueda sin una convención clara.
+
+> **Consejo**: Usa nombres de eventos descriptivos (ej. `order:create`, `user:update`) y herramientas como `ctrl+f` para facilitar la navegación.
+
+### Enfoque 2: Manejadores centralizados en index.js
+
+En este enfoque, todos los manejadores se registran en el archivo principal (`index.js`), mejorando la visibilidad de los eventos, pero puede volverse inmanejable en aplicaciones medianas o grandes.
+
+**index.js**:
+
+```go:js
+const httpServer = require("http").createServer();
+const io = require("socket.io")(httpServer);
+
+const { createOrder, readOrder } = require("./orderHandler")(io);
+const { updatePassword } = require("./userHandler")(io);
+
+const onConnection = (socket) => {
+  socket.on("order:create", createOrder);
+  socket.on("order:read", readOrder);
+  socket.on("user:update-password", updatePassword);
+};
+
+io.on("connection", onConnection);
+
+httpServer.listen(3000);
+```
+
+**orderHandler.js**:
+
+```go:js
+module.exports = (io) => {
+  const createOrder = function (payload) {
+    const socket = this; // Usa función clásica, no arrow function
+    console.log("Orden creada:", payload);
+    // Lógica para crear una orden
+  };
+
+  const readOrder = function (orderId, callback) {
+    console.log("Leyendo orden:", orderId);
+    // Lógica para leer una orden
+    callback({ id: orderId, status: "success" });
+  };
+
+  return { createOrder, readOrder };
+};
+```
+
+**Ventajas**:
+
+- Todos los eventos están en un solo lugar, facilitando su descubrimiento.
+- Ideal para aplicaciones pequeñas o medianas.
+
+**Desventajas**:
+
+- El archivo `index.js` puede crecer demasiado en proyectos complejos.
+- Menor modularidad.
+
+> **Precaucion**: Evita funciones flecha (`=>`) en manejadores, ya que `this` no se vinculará al socket. Usa funciones clásicas (`function`).
+
+### Comparacion de enfoques
+
+| Característica             | Archivos separados          | Centralizado                 |
+| -------------------------- | --------------------------- | ---------------------------- |
+| **Escalabilidad**          | Alta                        | Media/Baja                   |
+| **Visibilidad de eventos** | Media (necesita búsqueda)   | Alta (todo en un lugar)      |
+| **Mantenimiento**          | Fácil en equipos grandes    | Simple en proyectos pequeños |
+| **Complejidad**            | Mayor configuración inicial | Más simple inicialmente      |
+
+### Consejos para optimizar
+
+1. **Usa convenciones de nombres**: Define eventos claros como `modulo:accion` (ej. `order:create`).
+2. **Modulariza en proyectos grandes**: Prefiere el enfoque de archivos separados para aplicaciones complejas.
+3. **Documenta eventos**: Mantén un registro de eventos en un archivo o herramienta para facilitar el mantenimiento.
+4. **Prueba la visibilidad**: Usa herramientas de búsqueda o IDEs para localizar manejadores en el enfoque modular.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de inicialización del servidor](/inicializacion-servidor-socketio)
+- [Guía de middlewares](/middlewares-socketio)
+
+Con esta guía, puedes estructurar los manejadores de eventos en Socket.IO según las necesidades de tu proyecto, logrando un código organizado y escalable.

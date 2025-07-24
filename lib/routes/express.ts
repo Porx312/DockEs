@@ -70,7 +70,7 @@ export const EXPRESS_ROUTES: EachRoute = {
           title: "Express con proxies",
           href: "/express-detras-proxies",
         },
-         {
+        {
           title: "Bases de datos en Express",
           href: "/integracion-bases-datos-express",
         },

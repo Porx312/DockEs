@@ -1,0 +1,161 @@
+---
+title: Registro y depuracion en Socket.IO Guia practica
+description: Aprende a usar el modulo debug en Socket.IO para registrar y depurar aplicaciones en tiempo real de forma eficiente
+href: /registro-depuracion-socketio
+subtitle: Registro y depuracion Socket.IO
+---
+
+El registro y la depuración son esenciales para desarrollar aplicaciones en tiempo real con Socket.IO. Desde la versión 1.0, Socket.IO utiliza el módulo `debug` de TJ Holowaychuk para ofrecer un sistema de registro minimalista y potente. Este artículo explica cómo activar y configurar el registro, filtrar mensajes y optimizar tu aplicación.
+
+## Que es el modulo debug en Socket.IO
+
+Socket.IO está completamente instrumentado con el módulo `debug`, que permite inspeccionar los procesos internos de la biblioteca. A diferencia de versiones anteriores a 1.0, donde se registraba todo en la consola, ahora el registro está silenciado por defecto para reducir el ruido. Puedes activarlo mediante la variable de entorno `DEBUG` (Node.js) o la propiedad `localStorage.debug` (navegadores).
+
+Conoce más sobre el [módulo debug](https://github.com/debug-js/debug) y su uso en [Socket.IO](https://socket.io/docs/v4/).
+
+## Como activar el registro en Socket.IO
+
+Para habilitar el registro, utiliza la variable `DEBUG` en el servidor o el cliente. Esto activa los mensajes de depuración según los _scopes_ (ámbitos) definidos.
+
+### Registro en el servidor (Node.js)
+
+Ejecuta tu aplicación con la variable `DEBUG`:
+
+```go:bash
+DEBUG=* node tu-archivo.js
+```
+
+Esto muestra todos los mensajes de depuración disponibles. Para filtrar por módulos específicos, especifica los _scopes_:
+
+```go:bash
+DEBUG=socket.io:client* node tu-archivo.js
+```
+
+Esto muestra solo los mensajes del cliente Socket.IO. Para combinar módulos, usa comas:
+
+```go:bash
+DEBUG=engine,socket.io* node tu-archivo.js
+```
+
+### Registro en el navegador
+
+En el navegador, activa el registro mediante `localStorage.debug`:
+
+```go:js
+localStorage.debug = '*';
+```
+
+Para filtrar por un módulo específico:
+
+```go:js
+localStorage.debug = 'socket.io:client*';
+```
+
+Prueba esta configuración directamente en la consola de desarrollador de tu navegador.
+
+## Scopes disponibles en Socket.IO
+
+Socket.IO ofrece varios _scopes_ para depuración, incluyendo:
+
+- `socket.io`: Mensajes relacionados con la API de alto nivel.
+- `socket.io:client`: Operaciones del cliente Socket.IO.
+- `engine`: Funcionamiento de Engine.IO (transporte y conexión).
+- `engine:ws`: Detalles del transporte WebSocket.
+
+Para ver todos los _scopes_ disponibles, usa el comodín `*` y filtra según tus necesidades. Consulta la lista completa en la [documentación de Socket.IO](https://socket.io/docs/v4/debugging/).
+
+## Optimizacion del bundle en navegadores
+
+El módulo `debug` añade aproximadamente 4 KB (minificado y comprimido) al _bundle_ del navegador. Para aplicaciones en producción, puedes excluirlo usando el _bundle_ ligero de Socket.IO o herramientas como `webpack-remove-debug`.
+
+### Ejemplo con Webpack
+
+Configura Webpack para eliminar `debug`:
+
+```go:json
+{
+  "module": {
+    "rules": [
+      {
+        "test": /\.js$/,
+        "loader": "webpack-remove-debug"
+      }
+    ]
+  }
+}
+```
+
+Obtén más detalles sobre los _bundles_ de Socket.IO en la [documentación oficial](https://socket.io/docs/v4/client-installation/#browser-bundles).
+
+## Errores en la consola del navegador
+
+Algunos errores en la consola, como:
+
+- `net::ERR_INTERNET_DISCONNECTED`
+- `net::ERR_CONNECTION_REFUSED`
+- `WebSocket is already in CLOSING or CLOSED state`
+- `Cross-Origin Request Blocked`
+- `The connection to xxx was interrupted`
+
+**no son generados por Socket.IO**, sino por el navegador. Estos están fuera del control de la biblioteca y suelen estar relacionados con problemas de red, CORS o cierres de conexión.
+
+Aprende a configurar CORS en Socket.IO en la [guía oficial](https://socket.io/docs/v4/handling-cors/).
+
+## Ejemplo practico de depuracion
+
+Supongamos que quieres depurar una conexión Socket.IO en el servidor:
+
+1. Inicia el servidor con depuración:
+
+```go:bash
+DEBUG=socket.io*,engine node servidor.js
+```
+
+2. En el navegador, activa el registro:
+
+```go:js
+localStorage.debug = 'socket.io:client*';
+```
+
+3. Observa los mensajes en la consola para identificar problemas, como fallos en el _handshake_ o desconexiones.
+
+### Ejemplo de codigo del servidor
+
+```go:js
+const { Server } = require("socket.io");
+const io = new Server(3000);
+
+io.on("connection", (socket) => {
+  console.log("Usuario conectado:", socket.id);
+  socket.on("mensaje", (data) => {
+    console.log("Mensaje recibido:", data);
+    io.emit("mensaje", data);
+  });
+});
+```
+
+### Ejemplo de codigo del cliente
+
+```go:js
+const socket = io("http://localhost:3000");
+socket.on("connect", () => {
+  console.log("Conectado al servidor");
+});
+socket.on("mensaje", (data) => {
+  console.log("Mensaje:", data);
+});
+socket.emit("mensaje", "Hola, mundo!");
+```
+
+## Tabla de configuracion de depuracion
+
+| Entorno    | Método                       | Ejemplo                                    |
+| ---------- | ---------------------------- | ------------------------------------------ |
+| Servidor   | Variable `DEBUG`             | `DEBUG=socket.io* node app.js`             |
+| Navegador  | `localStorage.debug`         | `localStorage.debug = 'socket.io:client*'` |
+| Filtrado   | Especificar _scopes_         | `DEBUG=engine,socket.io*`                  |
+| Producción | Eliminar `debug` con Webpack | Usar `webpack-remove-debug`                |
+
+## Conclusión
+
+El módulo `debug` de Socket.IO ofrece una forma flexible y potente de registrar y depurar aplicaciones en tiempo real. Activa los _scopes_ relevantes para diagnosticar problemas y optimiza el _bundle_ para producción. Con esta guía, puedes mejorar el desarrollo y mantenimiento de tus aplicaciones Socket.IO.

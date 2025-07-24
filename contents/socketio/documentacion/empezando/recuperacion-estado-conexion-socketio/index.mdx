@@ -1,0 +1,172 @@
+---
+title: Recuperacion de estado en Socket.IO Guia completa
+description: Aprende como Socket.IO recupera el estado tras desconexiones temporales y asegura la entrega de paquetes perdidos
+href: /recuperacion-estado-conexion-socketio
+subtitle: Recuperacion de estado Socket.IO
+---
+
+La **recuperación del estado de conexión** en Socket.IO permite restaurar el estado de un cliente tras una desconexión temporal, incluyendo paquetes perdidos. Introducida en la versión 4.6.0 (febrero de 2023), esta función es ideal para aplicaciones en tiempo real que requieren continuidad. Este artículo explica cómo funciona, cómo habilitarla y sus limitaciones.
+
+## Que es la recuperacion de estado
+
+La recuperación del estado de conexión es una característica que permite a un cliente Socket.IO recuperar su estado (ID, salas y datos) tras una desconexión inesperada, asegurando que los eventos perdidos se entreguen al reconectar. Esto mejora la experiencia del usuario en aplicaciones como chats o juegos multijugador.
+
+Consulta las [notas de lanzamiento de la versión 4.6.0](https://github.com/socketio/socket.io/releases/tag/4.6.0) para más detalles.
+
+### Limitaciones importantes
+
+Aunque esta función mejora la fiabilidad, no garantiza una recuperación perfecta:
+
+- Los paquetes y sesiones se almacenan por un tiempo limitado (definido por `maxDisconnectionDuration`).
+- Si la desconexión excede este tiempo, la recuperación fallará, y la aplicación debe sincronizar manualmente el estado del cliente y el servidor.
+
+## Como habilitar la recuperacion de estado
+
+Para usar esta función, habilítala en el servidor con la opción `connectionStateRecovery`:
+
+```go:js
+const { Server } = require("socket.io");
+const io = new Server(httpServer, {
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutos
+    skipMiddlewares: true // Omite middlewares al recuperar
+  }
+});
+```
+
+### Comportamiento en el servidor
+
+Tras una desconexión inesperada (sin `socket.disconnect()`), el servidor almacena el `id`, las `rooms` y el atributo `data` del socket. Al reconectar, intenta restaurar el estado:
+
+```go:js
+io.on("connection", (socket) => {
+  if (socket.recovered) {
+    console.log("Recuperación exitosa: estado restaurado");
+  } else {
+    console.log("Nueva sesión o recuperación fallida");
+  }
+});
+```
+
+### Comportamiento en el cliente
+
+El cliente verifica si la recuperación fue exitosa mediante la propiedad `recovered`:
+
+```go:js
+import { io } from "socket.io-client";
+
+const socket = io({
+  reconnectionDelay: 10000,
+  reconnectionDelayMax: 10000
+});
+
+socket.on("connect", () => {
+  console.log("¿Recuperado?", socket.recovered);
+});
+```
+
+Prueba esta funcionalidad en [CodeSandbox](https://codesandbox.io/) o [StackBlitz](https://stackblitz.com/).
+
+## Como probar la recuperacion
+
+Puedes simular una desconexión cerrando la conexión de bajo nivel:
+
+```go:js
+socket.on("connect", () => {
+  console.log("¿Recuperado?", socket.recovered);
+  setTimeout(() => {
+    if (socket.io.engine) {
+      socket.io.engine.close(); // Forzar desconexión
+    }
+  }, 10000);
+});
+```
+
+## Compatibilidad con adaptadores
+
+La recuperación del estado depende del adaptador utilizado. Aquí una tabla de compatibilidad:
+
+| Adaptador            | Soporte                       |
+| -------------------- | ----------------------------- |
+| Adaptador en memoria | SÍ ✅                         |
+| Adaptador Redis      | NO (incompatible con PUB/SUB) |
+| Redis Streams        | SÍ ✅                         |
+| MongoDB              | SÍ ✅ (desde v0.3.0)          |
+| Postgres             | En desarrollo                 |
+| Cluster              | En desarrollo                 |
+
+Consulta más sobre adaptadores en la [documentación de Socket.IO](https://socket.io/docs/v4/adapter/).
+
+## Como funciona internamente
+
+La recuperación del estado en Socket.IO opera de la siguiente manera:
+
+1. **Envío de IDs en el handshake**:
+   - El servidor envía un ID público (`sid`) y un ID privado (`pid`) durante el _handshake_:
+
+     ```go:json
+     40{"sid":"GNpWD7LbGCBNCr8GAAAB","pid":"YHcX2sdAF1z452-HAAAW"}
+     ```
+
+     - `4`: Tipo de mensaje de Engine.IO.
+     - `0`: Tipo CONNECT de Socket.IO.
+     - `sid`: ID público de la sesión.
+     - `pid`: ID privado de la sesión.
+
+2. **Offset en paquetes**:
+   - Cada paquete incluye un _offset_ para rastrear eventos:
+
+     ```go:json
+     42["foo","MzUPkW0"]
+     ```
+
+     - `4`: Tipo de mensaje de Engine.IO.
+     - `2`: Tipo EVENT de Socket.IO.
+     - `foo`: Nombre del evento.
+     - `MzUPkW0`: Offset del evento.
+
+   **Nota**: La recuperación requiere que el servidor envíe al menos un evento para inicializar el _offset_ en el cliente.
+
+3. **Almacenamiento y recuperación**:
+   - Tras una desconexión, el servidor guarda el estado del cliente durante `maxDisconnectionDuration`.
+   - Al reconectar, el cliente envía el `pid` y el último _offset_ procesado:
+
+     ```go:json
+     40{"pid":"YHcX2sdAF1z452-HAAAW","offset":"MzUPkW0"}
+     ```
+
+   - El servidor usa esta información para restaurar el estado y enviar eventos perdidos.
+
+## Por que usar la recuperacion de estado
+
+Esta función es esencial para aplicaciones en tiempo real donde las desconexiones temporales son comunes, como chats, notificaciones o juegos. Mejora la continuidad, pero requiere una sincronización adicional para casos donde la recuperación falla.
+
+### Ejemplo practico
+
+Supongamos un chat donde los mensajes no deben perderse:
+
+```go:js
+// Servidor
+io.on("connection", (socket) => {
+  if (socket.recovered) {
+    console.log("Mensajes previos restaurados");
+  }
+  socket.on("mensaje", (msg) => {
+    io.emit("mensaje", msg);
+  });
+});
+
+// Cliente
+socket.on("connect", () => {
+  if (socket.recovered) {
+    console.log("Mensajes perdidos recibidos");
+  }
+});
+socket.on("mensaje", (msg) => {
+  console.log("Mensaje:", msg);
+});
+```
+
+## Conclusión
+
+La recuperación del estado de conexión en Socket.IO (disponible desde v4.6.0) asegura la continuidad tras desconexiones temporales, restaurando el estado y entregando paquetes perdidos. Aunque no es infalible, es una herramienta poderosa para aplicaciones en tiempo real. Configúrala con cuidado y combina con lógica personalizada para casos extremos.

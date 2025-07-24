@@ -1,0 +1,147 @@
+---
+title: Como funciona Socket.IO Guia completa
+description: Descubre como funciona Socket.IO con WebSocket y HTTP long-polling para conexiones bidireccionales en tiempo real
+href: /como-funciona-socketio
+subtitle: Como funciona Socket.IO
+---
+
+Socket.IO es una biblioteca poderosa que permite la comunicación bidireccional en tiempo real entre servidores y clientes. En este artículo, exploramos cómo funciona Socket.IO, desde su núcleo Engine.IO hasta los transportes WebSocket y HTTP long-polling, optimizando la experiencia del usuario y la fiabilidad. Ideal para desarrolladores que buscan implementar aplicaciones en tiempo real.
+
+## Que es Socket.IO
+
+Socket.IO es una biblioteca de JavaScript que facilita la comunicación bidireccional de baja latencia entre un servidor (usualmente Node.js) y un cliente (navegador, Node.js u otros lenguajes). Utiliza WebSocket como transporte principal y HTTP long-polling como alternativa, garantizando conectividad incluso en entornos con restricciones.
+
+Conoce más sobre [Node.js](https://nodejs.org/) y [WebSocket](https://developer.mozilla.org/es/docs/Web/API/WebSockets_API).
+
+## Estructura de Socket.IO
+
+Socket.IO se divide en dos capas principales:
+
+- **Engine.IO**: Gestiona la conexión de bajo nivel entre servidor y cliente.
+- **Socket.IO**: Proporciona una API de alto nivel con funciones avanzadas como reconexión automática, salas y namespaces.
+
+### Engine.IO El motor de Socket.IO
+
+Engine.IO es el núcleo que establece y mantiene la conexión entre el servidor y el cliente. Sus responsabilidades incluyen:
+
+- **Gestión de transportes**: Soporta WebSocket y HTTP long-polling.
+- **Detección de desconexión**: Identifica interrupciones en la conexión.
+- **Mecanismo de actualización**: Permite cambiar de HTTP long-polling a WebSocket.
+
+Consulta el [protocolo de Engine.IO](https://github.com/socketio/engine.io-protocol) y su código fuente:
+
+- Servidor: [github.com/socketio/engine.io](https://github.com/socketio/engine.io)
+- Cliente: [github.com/socketio/engine.io-client](https://github.com/socketio/engine.io-client)
+- Parser: [github.com/socketio/engine.io-parser](https://github.com/socketio/engine.io-parser)
+
+## Transportes en Socket.IO
+
+Socket.IO utiliza dos transportes principales para la comunicación:
+
+### HTTP long-polling
+
+El transporte HTTP long-polling utiliza solicitudes HTTP continuas:
+
+- **GET prolongadas**: Reciben datos del servidor.
+- **POST cortas**: Envían datos al cliente.
+
+Este método es ideal para entornos donde WebSocket no está disponible, como en redes con proxies corporativos. Múltiples emisiones pueden concatenarse en una sola solicitud HTTP, optimizando el rendimiento.
+
+### WebSocket
+
+WebSocket ofrece un canal de comunicación bidireccional de baja latencia. Cada emisión se envía en un marco WebSocket independiente, lo que garantiza rapidez y eficiencia.
+
+Aprende más sobre [WebSocket en MDN](https://developer.mozilla.org/es/docs/Web/API/WebSockets_API).
+
+## Proceso de handshake
+
+El proceso de conexión comienza con un _handshake_ donde el servidor envía información clave:
+
+```go:json
+{
+  "sid": "FSDjX-WRwSA4zTZMALqx",
+  "upgrades": ["websocket"],
+  "pingInterval": 25000,
+  "pingTimeout": 20000
+}
+```
+
+- **sid**: ID de la sesión, usado en todas las solicitudes HTTP posteriores.
+- **upgrades**: Lista de transportes soportados (por ejemplo, WebSocket).
+- **pingInterval y pingTimeout**: Configuran el mecanismo de latido (_heartbeat_).
+
+## Mecanismo de actualizacion
+
+Por defecto, la conexión inicia con HTTP long-polling para garantizar fiabilidad. Si WebSocket está disponible, el cliente intenta actualizar el transporte mediante:
+
+1. Vaciar el búfer de salida.
+2. Cambiar el transporte actual a modo solo lectura.
+3. Establecer una conexión WebSocket.
+4. Cerrar el transporte HTTP si la conexión WebSocket es exitosa.
+
+Este enfoque prioriza la experiencia del usuario, evitando demoras causadas por conexiones WebSocket fallidas en entornos con restricciones.
+
+## Deteccion de desconexion
+
+Engine.IO detecta desconexiones cuando:
+
+- Falla una solicitud HTTP (GET o POST).
+- Se cierra la conexión WebSocket (por ejemplo, al cerrar el navegador).
+- Se invoca `socket.disconnect()` en el servidor o cliente.
+
+Además, un mecanismo de _heartbeat_ verifica la conexión:
+
+- El servidor envía un paquete PING cada `pingInterval` (por ejemplo, 25 segundos).
+- El cliente responde con un PONG dentro de `pingTimeout` (por ejemplo, 20 segundos).
+- Si no se recibe respuesta, la conexión se considera cerrada.
+
+Consulta las razones de desconexión: [servidor](https://github.com/socketio/engine.io#disconnection-reasons) y [cliente](https://github.com/socketio/engine.io-client#disconnection-reasons).
+
+## Caracteristicas avanzadas de Socket.IO
+
+Socket.IO añade funcionalidades sobre Engine.IO para mejorar la experiencia del desarrollador:
+
+- **Reconexión automática**: Restablece la conexión tras interrupciones.
+- **Búfer de paquetes**: Almacena datos durante reconexiones.
+- **Confirmaciones (acknowledgments)**: Permite confirmar la recepción de datos.
+- **Emisión a grupos**: Soporta broadcasting a todos los clientes o a subgrupos (_Rooms_).
+- **Namespaces**: Permite multiplexación para organizar la comunicación.
+
+Explora el [protocolo de Socket.IO](https://github.com/socketio/socket.io-protocol) y su código fuente:
+
+- Servidor: [github.com/socketio/socket.io](https://github.com/socketio/socket.io)
+- Cliente: [github.com/socketio/socket.io-client](https://github.com/socketio/socket.io-client)
+- Parser: [github.com/socketio/socket.io-parser](https://github.com/socketio/socket.io-parser)
+
+## Por que usar Socket.IO
+
+Socket.IO es ideal para aplicaciones en tiempo real como chats, juegos multijugador o paneles de control. Su enfoque en fiabilidad y experiencia del usuario lo hace robusto incluso en entornos con limitaciones de red.
+
+### Ejemplo practico
+
+A continuación, un ejemplo básico de un servidor Socket.IO:
+
+```go:js
+const io = require('socket.io')(3000);
+
+io.on('connection', (socket) => {
+  console.log('Usuario conectado');
+  socket.on('mensaje', (data) => {
+    io.emit('mensaje', data); // Emite a todos los clientes
+  });
+});
+```
+
+Y el cliente correspondiente:
+
+```go:js
+const socket = io('http://localhost:3000');
+socket.on('mensaje', (data) => {
+  console.log('Mensaje recibido:', data);
+});
+socket.emit('mensaje', 'Hola, mundo!');
+```
+
+## Conclusión
+
+Socket.IO combina la fiabilidad de Engine.IO con una API de alto nivel para crear aplicaciones en tiempo real robustas y escalables. Su capacidad para alternar entre WebSocket y HTTP long-polling asegura una experiencia fluida, incluso en condiciones adversas. Si buscas implementar comunicación bidireccional, Socket.IO es una opción líder.

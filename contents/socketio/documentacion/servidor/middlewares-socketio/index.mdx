@@ -1,0 +1,166 @@
+---
+title: Como usar middlewares en Socket.IO
+description: Guia para implementar middlewares en Socket.IO para autenticacion y mas
+href: /middlewares-socketio
+subtitle: Middlewares en Socket.IO
+---
+
+Los middlewares en Socket.IO son funciones que se ejecutan para cada conexión entrante, permitiendo tareas como autenticación, logging o limitación de tasa. Esta guía explica cómo registrar middlewares, manejar credenciales, gestionar errores y compatibilizarlos con Express, optimizando aplicaciones en tiempo real.
+
+### Que son los middlewares
+
+Los middlewares en Socket.IO se ejecutan una vez por conexión, incluso si esta implica múltiples solicitudes HTTP. Son útiles para:
+
+- **Logging**: Registrar detalles de conexiones.
+- **Autenticación/Autorización**: Verificar credenciales de clientes.
+- **Limitación de tasa**: Controlar el volumen de solicitudes.
+
+> **Nota**: Los middlewares de Socket.IO no son directamente compatibles con los de Express. Consulta la sección de compatibilidad para más detalles.
+
+### Registro de middlewares
+
+Un middleware tiene acceso a la instancia del socket y a la función `next`. Regístralos con `io.use`:
+
+```go:js
+io.use((socket, next) => {
+  if (isValid(socket.request)) {
+    next();
+  } else {
+    next(new Error("No válido"));
+  }
+});
+```
+
+Puedes registrar múltiples middlewares, que se ejecutan secuencialmente:
+
+```go:js
+io.use((socket, next) => {
+  console.log("Primer middleware");
+  next();
+});
+
+io.use((socket, next) => {
+  next(new Error("Acceso denegado"));
+});
+
+io.use((socket, next) => {
+  // No se ejecuta si el middleware anterior devuelve un error
+  next();
+});
+```
+
+> **Precaucion**: Siempre llama a `next()`, o la conexión quedará en espera hasta que se cierre por timeout.
+
+> **Nota importante**: El socket no está completamente conectado cuando se ejecuta el middleware, por lo que el evento `disconnect` no se emite si la conexión falla. Ejemplo:
+
+```go:js
+io.use((socket, next) => {
+  setTimeout(() => {
+    next(); // Llamado tras desconexión del cliente
+  }, 1000);
+  socket.on("disconnect", () => {
+    // No se activa
+  });
+});
+```
+
+### Envio de credenciales desde el cliente
+
+El cliente puede enviar credenciales mediante la opción `auth`:
+
+```go:js
+// Cliente: objeto plano
+const socket = io({
+  auth: { token: "abc" }
+});
+
+// Cliente: función
+const socket = io({
+  auth: (cb) => {
+    cb({ token: "abc" });
+  }
+});
+```
+
+En el servidor, accede a las credenciales vía `socket.handshake.auth`:
+
+```go:js
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (token === "abc") {
+    next();
+  } else {
+    next(new Error("Token inválido"));
+  }
+});
+```
+
+### Manejo de errores en middlewares
+
+Si `next` se llama con un objeto `Error`, la conexión se rechaza y el cliente recibe un evento `connect_error`:
+
+```go:js
+// Servidor
+io.use((socket, next) => {
+  const err = new Error("No autorizado");
+  err.data = { content: "Intenta de nuevo más tarde" };
+  next(err);
+});
+
+// Cliente
+socket.on("connect_error", (err) => {
+  console.log(err.message); // "No autorizado"
+  console.log(err.data.content); // "Intenta de nuevo más tarde"
+});
+```
+
+### Compatibilidad con middlewares de Express
+
+Desde Socket.IO 4.6.0, los middlewares de Express son compatibles a nivel del motor (`io.engine.use`), aplicándose a cada solicitud HTTP, incluyendo las de actualización WebSocket:
+
+```go:js
+import session from "express-session";
+
+io.engine.use(session({
+  secret: "keyboard cat",
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true }
+}));
+```
+
+Para aplicar un middleware solo al handshake inicial, verifica la ausencia del parámetro `sid`:
+
+```go:js
+io.engine.use((req, res, next) => {
+  const isHandshake = req._query.sid === undefined;
+  if (isHandshake) {
+    passport.authenticate("jwt", { session: false })(req, res, next);
+  } else {
+    next();
+  }
+});
+```
+
+Ejemplo con `helmet` para seguridad:
+
+```go:js
+import helmet from "helmet";
+
+io.engine.use(helmet());
+```
+
+### Consejos para optimizar middlewares
+
+1. **Valida credenciales**: Usa `socket.handshake.auth` para autenticación segura.
+2. **Maneja errores**: Implementa `connect_error` en el cliente para informar al usuario.
+3. **Usa Express con cuidado**: Aplica middlewares de Express solo cuando sea necesario, ya que afectan todas las solicitudes HTTP.
+4. **Evita bloqueos**: Asegúrate de llamar a `next()` en todos los casos para evitar conexiones colgadas.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [Guía de inicialización del servidor](/inicializacion-servidor-socketio)
+- [API de middlewares](https://socket.io/docs/v4/middlewares/)
+
+Con esta guía, puedes implementar middlewares en Socket.IO para optimizar la autenticación y gestión de conexiones en aplicaciones en tiempo real.

@@ -1,0 +1,247 @@
+---
+title: TypeScript con Socket.IO Guia completa
+description: Aprende a usar TypeScript con Socket.IO para tipado seguro en servidores y clientes en aplicaciones en tiempo real
+href: /typescript-socketio
+subtitle: TypeScript en Socket.IO
+---
+
+Desde la versión 3, Socket.IO ofrece soporte nativo para TypeScript, proporcionando tipado seguro para eventos y datos en servidores y clientes. Esta guía explica cómo configurar y usar TypeScript con Socket.IO, incluyendo ejemplos prácticos para namespaces y mejores prácticas para aplicaciones en tiempo real.
+
+## Por que usar TypeScript con Socket.IO
+
+TypeScript mejora la desarrollo de aplicaciones Socket.IO al:
+
+- Detectar errores en tiempo de compilación.
+- Mejorar la autocompletación en editores de código.
+- Facilitar el mantenimiento y escalabilidad del código.
+
+Esta guía cubre la configuración en el servidor, cliente y namespaces personalizados, asegurando un código robusto y tipado.
+
+Consulta la [documentación oficial de Socket.IO](https://socket.io/docs/) y [TypeScript](https://www.typescriptlang.org/).
+
+## Configuracion en el servidor
+
+Define interfaces para los eventos y datos antes de crear el servidor:
+
+```go:ts
+interface ServerToClientEvents {
+  noArg: () => void;
+  basicEmit: (a: number, b: string, c: Buffer) => void;
+  withAck: (d: string, callback: (e: number) => void) => void;
+}
+
+interface ClientToServerEvents {
+  hello: () => void;
+}
+
+interface InterServerEvents {
+  ping: () => void;
+}
+
+interface SocketData {
+  name: string;
+  age: number;
+}
+```
+
+Usa estas interfaces al instanciar el servidor:
+
+```go:ts
+import { Server } from "socket.io";
+
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>();
+```
+
+### Emision de eventos
+
+Los eventos en `ServerToClientEvents` se usan para emitir y difundir:
+
+```go:ts
+io.on("connection", (socket) => {
+  socket.emit("noArg");
+  socket.emit("basicEmit", 1, "2", Buffer.from([3]));
+  socket.emit("withAck", "4", (e) => {
+    // e es inferido como number
+  });
+
+  // Difusión a todos
+  io.emit("noArg");
+
+  // Difusión a una sala
+  io.to("sala1").emit("basicEmit", 1, "2", Buffer.from([3]));
+});
+```
+
+### Recepcion de eventos
+
+Los eventos en `ClientToServerEvents` se usan para recibir:
+
+```go:ts
+io.on("connection", (socket) => {
+  socket.on("hello", () => {
+    // Manejar el evento
+  });
+});
+```
+
+### Comunicacion entre servidores
+
+Los eventos en `InterServerEvents` (desde v4.1.0) se usan para comunicación entre servidores:
+
+```go:ts
+io.serverSideEmit("ping");
+
+io.on("ping", () => {
+  // Manejar el evento
+});
+```
+
+### Datos del socket
+
+El tipo `SocketData` (desde v4.4.0) tipa el atributo `socket.data`:
+
+```go:ts
+io.on("connection", (socket) => {
+  socket.data.name = "Juan";
+  socket.data.age = 42;
+});
+```
+
+**Advertencia**: Valida siempre los datos de entrada, ya que los tipos no reemplazan la sanitización.
+
+## Configuracion en el cliente
+
+Reutiliza las interfaces `ServerToClientEvents` y `ClientToServerEvents`:
+
+```go:ts
+import { io, Socket } from "socket.io-client";
+
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
+```
+
+### Emision de eventos
+
+Usa `ClientToServerEvents` para emitir:
+
+```go:ts
+socket.emit("hello");
+```
+
+### Recepcion de eventos
+
+Usa `ServerToClientEvents` para recibir:
+
+```go:ts
+socket.on("noArg", () => {
+  // Manejar evento
+});
+
+socket.on("basicEmit", (a, b, c) => {
+  // a: number, b: string, c: Buffer
+});
+
+socket.on("withAck", (d, callback) => {
+  // d: string, callback: (e: number) => void
+});
+```
+
+## Tipado en namespaces personalizados
+
+Cada namespace puede tener sus propios eventos y datos. Define interfaces específicas:
+
+```go:ts
+import { Server, Namespace } from "socket.io";
+
+interface NamespaceSpecificClientToServerEvents {
+  foo: (arg: string) => void;
+}
+
+interface NamespaceSpecificServerToClientEvents {
+  bar: (arg: string) => void;
+}
+
+interface NamespaceSpecificInterServerEvents {
+  // ...
+}
+
+interface NamespaceSpecificSocketData {
+  // ...
+}
+
+const myNamespace: Namespace<
+  NamespaceSpecificClientToServerEvents,
+  NamespaceSpecificServerToClientEvents,
+  NamespaceSpecificInterServerEvents,
+  NamespaceSpecificSocketData
+> = io.of("/mi-namespace");
+
+myNamespace.on("connection", (socket) => {
+  socket.on("foo", (arg) => {
+    // arg: string
+  });
+  socket.emit("bar", "123");
+});
+```
+
+En el cliente:
+
+```go:ts
+import { io, Socket } from "socket.io-client";
+
+const socket: Socket<
+  NamespaceSpecificServerToClientEvents,
+  NamespaceSpecificClientToServerEvents
+> = io("/mi-namespace");
+
+socket.on("bar", (arg) => {
+  console.log(arg); // "123"
+});
+```
+
+## Mejores practicas
+
+1. **Define interfaces claras**: Usa nombres descriptivos para eventos y datos.
+2. **Valida entradas**: No confíes solo en el tipado; implementa sanitización.
+3. **Prueba con Jest**: Combina TypeScript con pruebas para garantizar robustez. Consulta la [guía de pruebas](https://socket.io/docs/v4/testing/).
+4. **Usa namespaces**: Organiza eventos en namespaces para aplicaciones complejas.
+
+### Ejemplo practico
+
+Un chat con eventos tipados:
+
+```go:ts
+interface ChatEvents {
+  mensaje: (texto: string, usuario: string) => void;
+}
+
+interface ChatData {
+  usuario: string;
+}
+
+const io = new Server<ChatEvents, ChatEvents, never, ChatData>();
+
+io.on("connection", (socket) => {
+  socket.data.usuario = "Usuario1";
+  socket.on("mensaje", (texto, usuario) => {
+    io.emit("mensaje", texto, socket.data.usuario);
+  });
+});
+```
+
+## Tabla de caracteristicas de TypeScript en Socket.IO
+
+| Característica                | Versión | Descripción                                                  |
+| ----------------------------- | ------- | ------------------------------------------------------------ |
+| Tipado de eventos             | v3+     | Soporte para `ServerToClientEvents` y `ClientToServerEvents` |
+| Comunicación entre servidores | v4.1.0+ | Usa `InterServerEvents`                                      |
+| Tipado de `socket.data`       | v4.4.0+ | Soporte para `SocketData`                                    |
+| Namespaces personalizados     | v3+     | Tipado específico por namespace                              |
+
+## Conclusión
+
+El soporte de TypeScript en Socket.IO (desde v3) facilita el desarrollo de aplicaciones en tiempo real con tipado seguro. Configura interfaces para eventos y datos, usa namespaces para aplicaciones complejas, y combina con pruebas para garantizar calidad. Con esta guía, puedes aprovechar al máximo TypeScript en tus proyectos Socket.IO.

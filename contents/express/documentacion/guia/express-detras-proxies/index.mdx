@@ -15,14 +15,14 @@ La configuración `app.set('trust proxy', valor)` ajusta cómo Express interpret
 
 ### Opciones de trust proxy
 
-| Tipo          | Valor                                                                                  |
-|---------------|-----------------------------------------------------------------------------------------|
-| **Booleano**  | - `true`: Usa la IP más a la izquierda en `X-Forwarded-For`.                           |
-|               |   Asegúrate de que el último proxy confiable sobrescriba las cabeceras.                |
-|               | - `false`: Usa `req.socket.remoteAddress` (predeterminado, sin proxy).                 |
-| **Direcciones IP** | Especifica IPs o subredes confiables (por ejemplo, `loopback`, `127.0.0.1`).     |
-| **Número**     | Número de saltos confiables desde la aplicación. `0` indica sin proxy.                |
-| **Función**    | Implementación personalizada para determinar IPs confiables.                          |
+| Tipo               | Valor                                                                        |
+| ------------------ | ---------------------------------------------------------------------------- |
+| **Booleano**       | - `true`: Usa la IP más a la izquierda en `X-Forwarded-For`.                 |
+|                    | Asegúrate de que el último proxy confiable sobrescriba las cabeceras.        |
+|                    | - `false`: Usa `req.socket.remoteAddress` (predeterminado, sin proxy).       |
+| **Direcciones IP** | Especifica IPs o subredes confiables (por ejemplo, `loopback`, `127.0.0.1`). |
+| **Número**         | Número de saltos confiables desde la aplicación. `0` indica sin proxy.       |
+| **Función**        | Implementación personalizada para determinar IPs confiables.                 |
 
 ### Ejemplo con subredes preconfiguradas
 

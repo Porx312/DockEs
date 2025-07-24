@@ -1,0 +1,82 @@
+---
+title: Uso de memoria en servidores Socket.IO optimizado
+description: Descubre como optimizar el uso de memoria en Socket.IO segun clientes conectados y mensajes enviados
+href: /uso-memoria-socketio
+subtitle: Uso de memoria en Socket.IO
+---
+
+El uso de memoria en un servidor Socket.IO depende de varios factores clave, como el número de clientes conectados y la cantidad de mensajes enviados y recibidos por segundo. En este artículo, exploramos cómo optimizar el consumo de memoria en servidores Socket.IO, comparamos diferentes implementaciones de WebSocket y ofrecemos consejos prácticos para mejorar el rendimiento.
+
+### Factores que afectan el uso de memoria
+
+El consumo de memoria en un servidor Socket.IO está influenciado por:
+
+- **Número de clientes conectados**: La memoria aumenta linealmente con el número de usuarios conectados.
+- **Mensajes procesados por segundo**: Incluye emisiones básicas, emisiones con confirmación y transmisiones (_broadcasts_).
+- **Configuración del servidor**: La implementación del servidor WebSocket subyacente impacta significativamente el uso de memoria.
+
+> **Nota**: El uso de memoria crece de forma lineal con los clientes conectados, por lo que es crucial optimizar la configuración para aplicaciones con alta concurrencia.
+
+### Como reducir el uso de memoria
+
+Por defecto, Socket.IO almacena una referencia a la primera solicitud HTTP de cada sesión, útil para integraciones como `express-session`. Sin embargo, puedes liberar esta memoria si no es necesaria con el siguiente código:
+
+```go:js
+io.engine.on("connection", (rawSocket) => {
+  rawSocket.request = null;
+});
+```
+
+Este ajuste es especialmente útil en aplicaciones con muchos usuarios simultáneos, ya que reduce el consumo de memoria.
+
+### Comparacion de implementaciones WebSocket
+
+El uso de memoria varía según la implementación del servidor WebSocket subyacente. A continuación, presentamos una comparación basada en pruebas realizadas en Ubuntu 22.04 LTS con Node.js v20.3.0, utilizando las siguientes versiones de paquetes:
+
+- `socket.io@4.7.2`
+- `eiows@6.7.2`
+- `uWebSockets.js@20.33.0`
+- `ws@8.11.0`
+
+#### Resultados de uso de memoria
+
+| Implementación               | Uso de memoria (0-10,000 clientes) |
+| ---------------------------- | ---------------------------------- |
+| Socket.IO con ws             | Moderado, crece linealmente        |
+| Socket.IO con eiows          | Bajo, optimizado para C++          |
+| Socket.IO con µWebSockets.js | Muy bajo, ideal para alto tráfico  |
+| WebSocket puro con ws        | Similar a Socket.IO con ws         |
+
+> **Consejo**: Para aplicaciones de alto tráfico, considera usar `µWebSockets.js` para minimizar el consumo de memoria. Consulta los pasos de instalación en [µWebSockets.js](https://github.com/uWebSockets/uWebSockets.js).
+
+### Comportamiento del uso de memoria con el tiempo
+
+El uso de memoria aumenta con cada cliente conectado y disminuye cuando los clientes se desconectan, especialmente si se gestiona la recolección de basura. En las pruebas, se llamó manualmente al recolector de basura para demostrar este comportamiento:
+
+```go:js
+io.on("connection", (socket) => {
+  socket.on("disconnect", () => {
+    const lastToDisconnect = io.of("/").sockets.size === 0;
+    if (lastToDisconnect) {
+      gc();
+    }
+  });
+});
+```
+
+> **Nota**: No es necesario invocar manualmente el recolector de basura en producción, ya que Node.js lo gestiona automáticamente.
+
+### Consejos para optimizar el rendimiento
+
+1. **Usa implementaciones eficientes**: Opta por `eiows` o `µWebSockets.js` para reducir el uso de memoria en aplicaciones con alta concurrencia.
+2. **Libera referencias innecesarias**: Implementa el código para descartar referencias HTTP si no usas `express-session`.
+3. **Pruebas de carga**: Realiza pruebas de carga para evaluar el rendimiento de tu servidor. Consulta más detalles en [Pruebas de carga](https://socket.io/docs/v4/load-testing/).
+4. **Monitoreo constante**: Usa herramientas como [New Relic](https://newrelic.com) para supervisar el uso de memoria en tiempo real.
+
+### Recursos adicionales
+
+- [Código fuente de las pruebas](https://github.com/socketio/socket.io)
+- [Documentación oficial de Socket.IO](https://socket.io/docs/v4/)
+- [Optimización de rendimiento](https://socket.io/docs/v4/performance-tuning/)
+
+Optimizar el uso de memoria en Socket.IO es esencial para garantizar un rendimiento escalable en aplicaciones en tiempo real. Con las configuraciones adecuadas y la elección de la implementación correcta, puedes minimizar el impacto en los recursos del servidor.

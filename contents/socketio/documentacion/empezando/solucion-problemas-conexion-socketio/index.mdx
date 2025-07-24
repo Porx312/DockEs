@@ -1,0 +1,330 @@
+---
+title: Solucion de problemas de conexion Socket“
+description: Guia para resolver problemas de conexion en Socket.IO como desconexiones y errores de WebSocket o CORS
+href: /solucion-problemas-conexion-socketio
+subtitle: Problemas de conexion Socket.IO
+---
+
+Socket.IO es clave para aplicaciones en tiempo real, pero pueden surgir problemas como conexiones fallidas, desconexiones inesperadas o el uso exclusivo de HTTP long-polling. Esta guía detalla cómo diagnosticar y resolver estos problemas con pasos prácticos y ejemplos de código, optimizada para desarrolladores que buscan soluciones rápidas.
+
+**Consejo**: Usa la [Interfaz de Administración de Socket.IO](https://socket.io/docs/v4/admin-ui/) para obtener información adicional sobre el estado de tu despliegue.
+
+## Problema El socket no puede conectar
+
+Si el cliente no establece conexión con el servidor, sigue estos pasos para diagnosticar el problema.
+
+### Pasos para diagnosticar
+
+#### En el cliente
+
+Escucha el evento `connect_error` para obtener detalles:
+
+```go:js
+socket.on("connect_error", (err) => {
+  console.log("Error:", err.message); // Ejemplo: "xhr poll error"
+  console.log("Descripción:", err.description); // Código de estado HTTP
+  console.log("Contexto:", err.context); // Objeto XMLHttpRequest
+});
+```
+
+#### En el servidor
+
+Escucha el evento `connection_error` para más información:
+
+```go:js
+io.engine.on("connection_error", (err) => {
+  console.log("Solicitud:", err.req); // Objeto de solicitud
+  console.log("Código:", err.code); // Ejemplo: 1
+  console.log("Mensaje:", err.message); // Ejemplo: "Session ID unknown"
+  console.log("Contexto:", err.context); // Contexto adicional
+});
+```
+
+### Codigos de error comunes
+
+| Código | Mensaje                      | Posible causa                                                                        |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------ |
+| 0      | Transport unknown            | Error raro, indica problemas internos.                                               |
+| 1      | Session ID unknown           | Sesiones pegajosas (_sticky sessions_) no habilitadas en despliegues multi-servidor. |
+| 2      | Bad handshake method         | Error raro, indica problemas en el protocolo.                                        |
+| 3      | Bad request                  | Proxy no reenvía correctamente los encabezados WebSocket.                            |
+| 4      | Forbidden                    | Conexión denegada por el método `allowRequest`.                                      |
+| 5      | Unsupported protocol version | Cliente y servidor usan versiones incompatibles.                                     |
+
+### Posibles causas y soluciones
+
+#### Intentas conectar a un servidor WebSocket puro
+
+Socket.IO no es una implementación directa de WebSocket. Este código fallará:
+
+```go:js
+const socket = io("ws://echo.websocket.org", { transports: ["websocket"] });
+```
+
+**Solución**: Asegúrate de conectar a un servidor Socket.IO. Verifica la URL con:
+
+```go:bash
+curl "<URL-del-servidor>/socket.io/?EIO=4&transport=polling"
+```
+
+Deberías recibir:
+
+```go:json
+0{"sid":"Lbo5JLzTotvW3g2LAAAA","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":20000}
+```
+
+Si no, revisa si el servidor está activo o si hay bloqueos en la red.
+
+#### Servidor no accesible
+
+Confirma que el servidor Socket.IO esté en ejecución y accesible. Problemas comunes incluyen firewalls o configuraciones de red incorrectas.
+
+#### Versiones incompatibles
+
+Las versiones del cliente y servidor deben ser compatibles. Por ejemplo, un cliente v1/v2 no puede conectar con un servidor v3/v4, devolviendo:
+
+```go:json
+{"code":5,"message":"Unsupported protocol version"}
+```
+
+**Tabla de compatibilidad (Cliente JS)**:
+
+| Cliente JS | Servidor 1.x | 2.x | 3.x | 4.x |
+|------------|--------------|-----彼此|-----|-----|
+| 1.x | SÍ ✅ | NO | NO | NO |
+| 2.x | NO | SÍ ✅ | SÍ¹ | SÍ¹ |
+| 3.x | NO | NO | SÍ ✅ | SÍ ✅ |
+| 4.x | NO | NO | SÍ ✅ | SÍ ✅ |
+
+¹ Con `allowEIO3: true`
+
+**Solución**: Actualiza el cliente o servidor a versiones compatibles o usa `allowEIO3: true` en el servidor. Consulta la [guía de compatibilidad](https://socket.io/docs/v4/migrating-from-2-x-to-3-0/).
+
+#### Falta de encabezados CORS
+
+Si ves el error `Cross-Origin Request Blocked`, revisa:
+
+- Si la URL del servidor es correcta.
+- Si el servidor tiene CORS habilitado:
+
+```go:js
+const io = new Server(httpServer, { cors: { origin: "*" } });
+```
+
+Consulta la [guía de CORS](https://socket.io/docs/v4/handling-cors/).
+
+#### Sesiones pegajosas no habilitadas
+
+En despliegues multi-servidor, asegúrate de que las solicitudes de una misma sesión lleguen al mismo servidor. Si no, obtendrás:
+
+```go:json
+{"code":1,"message":"Session ID unknown"}
+```
+
+**Solución**: Configura sesiones pegajosas. Revisa la [documentación de escalado](https://socket.io/docs/v4/using-multiple-nodes/).
+
+#### Ruta de solicitud incorrecta
+
+Asegúrate de que la ruta (`path`) coincida en cliente y servidor. Por defecto, es `/socket.io/`.
+
+**Servidor**:
+
+```go:js
+const io = new Server({ path: "/mi-ruta-personalizada/" });
+```
+
+**Cliente**:
+
+```go:js
+const socket = io(SERVER_URL, { path: "/mi-ruta-personalizada/" });
+```
+
+## Problema El socket se desconecta
+
+Las desconexiones son normales debido a:
+
+- Fallos temporales en la red.
+- Reinicio del servidor por políticas de autoescalado.
+- Cambio de red (WiFi a 4G).
+- Pestañas inactivas en el navegador.
+
+El cliente intenta reconectar automáticamente a menos que se desactive.
+
+### Pasos para diagnosticar
+
+Escucha el evento `disconnect`:
+
+```go:js
+socket.on("disconnect", (reason, details) => {
+  console.log("Razón:", reason); // Ejemplo: "transport error"
+  console.log("Detalles:", details.message); // Ejemplo: "xhr post error"
+  console.log("Descripción:", details.description); // Código de estado HTTP
+  console.log("Contexto:", details.context); // Objeto XMLHttpRequest
+});
+```
+
+Consulta las [razones de desconexión](https://socket.io/docs/v4/client-api/#event-disconnect).
+
+### Posibles causas y soluciones
+
+#### Conexion cerrada por un intermediario
+
+Proxies como Nginx o Apache pueden cerrar conexiones si el tiempo de espera (`proxy_read_timeout` o `ProxyTimeout`, 60s por defecto) es menor que `pingInterval + pingTimeout` (45s por defecto).
+
+**Solución**: Aumenta el tiempo de espera del proxy:
+
+```go:nginx
+proxy_read_timeout 60s;
+```
+
+#### Pestaña minimizada y fallo de heartbeat
+
+En Socket.IO v2, los navegadores que limitan temporizadores en pestañas inactivas podían causar desconexiones por _ping timeout_. En v4, el servidor envía los PING, reduciendo este problema.
+
+**Solución**: Aumenta `pingTimeout` en el servidor:
+
+```go:js
+const io = new Server({ pingTimeout: 60000 });
+```
+
+#### Versiones incompatibles
+
+Desconexiones regulares (cada 30s en v2) indican incompatibilidad. Revisa la tabla de compatibilidad anterior.
+
+#### Carga util masiva
+
+Si envías datos grandes, puedes superar `maxHttpBufferSize` (1 MB por defecto) o el _heartbeat_ puede fallar durante la carga.
+
+**Solución**: Ajusta los valores:
+
+```go:js
+const io = new Server(httpServer, {
+  maxHttpBufferSize: 1e8, // 100 MB
+  pingTimeout: 60000
+});
+```
+
+## Problema El socket queda en HTTP long-polling
+
+Si el cliente no pasa a WebSocket, revisa el monitor de red. Deberías ver:
+
+1. Handshake de Engine.IO (contiene el ID de sesión).
+2. Solicitud de handshake de Socket.IO.
+3. Respuesta de handshake de Socket.IO (contiene `Socket#id`).
+4. Conexión WebSocket (HTTP 101 Switching Protocols).
+5. Solicitud HTTP long-polling (cerrada tras WebSocket).
+
+Si no hay respuesta HTTP 101, algo bloquea la conexión WebSocket.
+
+### Pasos para diagnosticar
+
+Verifica el transporte actual:
+
+**Cliente**:
+
+```go:js
+socket.on("connect", () => {
+  console.log("Transporte:", socket.io.engine.transport.name); // Ejemplo: "polling"
+  socket.io.engine.on("upgrade", () => {
+    console.log("Transporte actualizado:", socket.io.engine.transport.name); // Ejemplo: "websocket"
+  });
+});
+```
+
+**Servidor**:
+
+```go:js
+io.on("connection", (socket) => {
+  console.log("Transporte:", socket.conn.transport.name); // Ejemplo: "polling"
+  socket.conn.on("upgrade", () => {
+    console.log("Transporte actualizado:", socket.conn.transport.name); // Ejemplo: "websocket"
+  });
+});
+```
+
+### Posibles causas
+
+#### Proxy no acepta WebSocket
+
+Un proxy mal configurado puede causar un error `TRANSPORT_MISMATCH`:
+
+```go:js
+io.engine.on("connection_error", (err) => {
+  console.log("Código:", err.code); // 3
+  console.log("Mensaje:", err.message); // "Bad request"
+  console.log("Contexto:", err.context); // { name: 'TRANSPORT_MISMATCH', ... }
+});
+```
+
+**Solución**: Configura el proxy para aceptar encabezados WebSocket. Revisa la [guía de proxies](https://socket.io/docs/v4/using-multiple-nodes/).
+
+#### Interferencia de express-status-monitor
+
+El módulo `express-status-monitor` usa su propia instance de Socket.IO, causando conflictos.
+
+**Solución**: Desactiva `express-status-monitor` o configúralo para evitar conflictos. Consulta la [solución específica](https://socket.io/docs/v4/troubleshooting/#express-status-monitor-runs-its-own-socketio-instance).
+
+## Otros problemas comunes
+
+### Registro duplicado de eventos
+
+Registra los eventos fuera del listener de `connect`:
+
+**Malo** ⚠️:
+
+```go:js
+socket.on("connect", () => {
+  socket.on("foo", () => { /* ... */ });
+});
+```
+
+**Bueno** 👍:
+
+```go:js
+socket.on("connect", () => { /* ... */ });
+socket.on("foo", () => { /* ... */ });
+```
+
+### Registro tardio de eventos
+
+Evita operaciones asíncronas antes de registrar eventos:
+
+**Malo** ⚠️:
+
+```go:js
+io.on("connection", async (socket) => {
+  await operacionLarga();
+  socket.on("hola", () => { /* ... */ });
+});
+```
+
+**Bueno** 👍:
+
+```go:js
+io.on("connection", async (socket) => {
+  socket.on("hola", () => { /* ... */ });
+  await operacionLarga();
+});
+```
+
+### Uso incorrecto de socket.id
+
+A menos que uses la [recuperación de estado](https://socket.io/docs/v4/connection-state-recovery/), evita depender de `socket.id`, ya que:
+
+- Se regenera en cada reconexión.
+- Cada pestaña del navegador tiene un ID diferente.
+- No hay cola de mensajes para un ID desconectado.
+
+**Solución**: Usa un ID de sesión personalizado (en cookies o `localStorage` con `auth`).
+
+Consulta la [guía de mensajes privados](https://socket.io/docs/v4/private-messages-part-2/) y [manejo de cookies](https://socket.io/docs/v4/handling-cookies/).
+
+### Despliegue en plataformas serverless
+
+Plataformas como Vercel facturan por duración de solicitud, lo que hace que conexiones largas (como Socket.IO o WebSocket) no sean recomendables.
+
+Consulta las guías para [Vercel](https://vercel.com/guides/do-vercel-serverless-functions-support-websocket-connections) y [AWS API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
+
+## Conclusión
+
+Resolver problemas de conexión en Socket.IO requiere diagnosticar errores con eventos como `connect_error` y `disconnect`, verificar configuraciones de CORS, proxies y versiones, y evitar errores comunes como registros duplicados. Con esta guía, puedes asegurar conexiones estables y optimizar tu aplicación en tiempo real.

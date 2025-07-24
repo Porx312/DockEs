@@ -1,0 +1,208 @@
+---
+title: Como usar la instancia del servidor Socket.IO
+description: Guia para gestionar la instancia del servidor Socket.IO y sus metodos
+href: /instancia-servidor-socketio
+subtitle: Instancia del servidor Socket.IO
+---
+
+## Como usar la instancia del servidor Socket.IO
+
+La instancia del servidor Socket.IO (comúnmente llamada `io`) es el núcleo para gestionar conexiones y eventos en aplicaciones en tiempo real. Esta guía explora los atributos y métodos clave de la instancia, como `engine`, `socketsJoin`, `fetchSockets` y `serverSideEmit`, optimizados para entornos de alto tráfico.
+
+### Atributos principales de la instancia
+
+La instancia `io` ofrece varios atributos útiles:
+
+- **Server#engine**: Referencia al servidor Engine.IO subyacente, que gestiona conexiones de bajo nivel (HTTP long-polling o WebSocket).
+- **Métodos heredados**: Incluye métodos del espacio de nombres principal, como `namespace.use()` y `namespace.allSockets()`. Consulta la [documentación de Socket.IO](https://socket.io/docs/v4/namespaces/).
+
+### Uso del atributo engine
+
+El atributo `engine` permite acceder a información sobre conexiones y personalizar comportamientos. Por ejemplo, para contar clientes conectados:
+
+```go:js
+const count = io.engine.clientsCount;
+const count2 = io.of("/").sockets.size;
+console.log(`Clientes conectados: ${count}`);
+```
+
+Para generar un ID de sesión personalizado (usando `uuid`):
+
+```go:js
+const uuid = require("uuid");
+
+io.engine.generateId = (req) => {
+  return uuid.v4(); // Debe ser único en todos los servidores Socket.IO
+};
+```
+
+#### Eventos especiales de Engine.IO
+
+Desde Socket.IO 4.1.0, el servidor Engine.IO emite tres eventos:
+
+1. **initial_headers**: Permite personalizar los encabezados de la primera solicitud HTTP:
+
+```go:js
+io.engine.on("initial_headers", (headers, req) => {
+  headers["test"] = "123";
+  headers["set-cookie"] = "mycookie=456";
+});
+```
+
+2. **headers**: Personaliza los encabezados de cada solicitud HTTP (incluyendo WebSocket):
+
+```go:js
+io.engine.on("headers", (headers, req) => {
+  headers["test"] = "789";
+});
+```
+
+3. **connection_error**: Se activa cuando una conexión se cierra anormalmente:
+
+```go:js
+io.engine.on("connection_error", (err) => {
+  console.log(err.req);      // Objeto de la solicitud
+  console.log(err.code);     // Código de error, ej. 1
+  console.log(err.message);  // Mensaje, ej. "Session ID unknown"
+  console.log(err.context);  // Contexto adicional
+});
+```
+
+#### Codigos de error posibles
+
+| Código | Mensaje                      |
+| ------ | ---------------------------- |
+| 0      | Transport unknown            |
+| 1      | Session ID unknown           |
+| 2      | Bad handshake method         |
+| 3      | Bad request                  |
+| 4      | Forbidden                    |
+| 5      | Unsupported protocol version |
+
+### Metodos de utilidad
+
+Desde Socket.IO 4.0.0, se añadieron métodos para gestionar instancias de sockets y salas:
+
+#### socketsJoin
+
+Une instancias de sockets a salas específicas:
+
+```go:js
+// Une todos los sockets a "room1"
+io.socketsJoin("room1");
+
+// Une sockets en "room1" a "room2" y "room3"
+io.in("room1").socketsJoin(["room2", "room3"]);
+
+// Une sockets de un espacio de nombres
+io.of("/admin").in("room1").socketsJoin("room2");
+
+// Une un socket específico
+io.in(theSocketId).socketsJoin("room1");
+```
+
+#### socketsLeave
+
+Saca instancias de sockets de salas específicas:
+
+```go:js
+// Saca todos los sockets de "room1"
+io.socketsLeave("room1");
+
+// Saca sockets en "room1" de "room2" y "room3"
+io.in("room1").socketsLeave(["room2", "room3"]);
+```
+
+#### disconnectSockets
+
+Desconecta instancias de sockets:
+
+```go:js
+// Desconecta todos los sockets
+io.disconnectSockets();
+
+// Desconecta sockets en "room1" con baja de conexión
+io.in("room1").disconnectSockets(true);
+
+// Desconecta un socket específico
+io.of("/admin").in(theSocketId).disconnectSockets();
+```
+
+#### fetchSockets
+
+Obtiene las instancias de sockets que coinciden con un criterio:
+
+```go:js
+// Obtiene todos los sockets del espacio principal
+const sockets = await io.fetchSockets();
+
+// Obtiene sockets en "room1"
+const sockets = await io.in("room1").fetchSockets();
+
+// Accede a propiedades de los sockets
+for (const socket of sockets) {
+  console.log(socket.id, socket.handshake, socket.rooms, socket.data);
+  socket.emit("mensaje", "Hola");
+  socket.join("room1");
+}
+```
+
+> **Nota**: El atributo `socket.data` permite compartir información entre servidores Socket.IO, útil en clústeres:
+
+```go:js
+// Servidor A
+io.on("connection", (socket) => {
+  socket.data.username = "alice";
+});
+
+// Servidor B
+const sockets = await io.fetchSockets();
+console.log(sockets[0].data.username); // "alice"
+```
+
+#### serverSideEmit
+
+Permite emitir eventos entre servidores Socket.IO en un clúster (desde 4.1.0):
+
+```go:js
+// Servidor A
+io.serverSideEmit("ping", (err, responses) => {
+  console.log(responses[0]); // "pong"
+});
+
+// Servidor B
+io.on("ping", (cb) => {
+  cb("pong");
+});
+```
+
+> **Advertencia**: Los eventos `connection`, `connect` y `new_namespace` están reservados y no deben usarse.
+
+### Evento principal
+
+La instancia del servidor emite el evento `connection` cuando se conecta un cliente:
+
+```go:js
+io.on("connection", (socket) => {
+  console.log("Cliente conectado:", socket.id);
+});
+```
+
+### Compatibilidad con Redis
+
+Los métodos `socketsJoin`, `socketsLeave`, `disconnectSockets` y `fetchSockets` son compatibles con el adaptador Redis (desde `socket.io-redis@6.1.0`), lo que permite gestionarlos en múltiples servidores Socket.IO.
+
+### Consejos para optimizar
+
+1. **Personaliza encabezados**: Usa `initial_headers` y `headers` para añadir cookies o metadatos.
+2. **Gestiona errores**: Implementa `connection_error` para monitorear problemas de conexión.
+3. **Usa Redis en clústeres**: Asegura escalabilidad con el adaptador Redis.
+4. **Optimiza IDs**: Genera IDs únicos con `uuid` para entornos multi-servidor.
+
+### Recursos adicionales
+
+- [Documentación de Socket.IO](https://socket.io/docs/v4/)
+- [API completa del servidor](https://socket.io/docs/v4/server-api/)
+- [Guía de instalación de Socket.IO](/instalacion-servidor-socketio)
+
+Con esta guía, puedes aprovechar al máximo la instancia del servidor Socket.IO para gestionar conexiones y optimizar aplicaciones en tiempo real.

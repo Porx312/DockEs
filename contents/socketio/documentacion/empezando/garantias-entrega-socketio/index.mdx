@@ -1,0 +1,131 @@
+---
+title: Garantias de entrega en Socket.IO Guia completa
+description: Aprende como Socket.IO garantiza el orden de mensajes y como implementar entregas fiables en aplicaciones en tiempo real
+href: /garantias-entrega-socketio
+subtitle: Garantias de entrega Socket.IO
+---
+
+Socket.IO es una herramienta clave para aplicaciones en tiempo real, pero ¿cómo maneja el orden y la entrega de mensajes? Este artículo explica las garantías de entrega de Socket.IO, cómo asegura el orden de los mensajes y cómo implementar entregas fiables, ya sea desde el cliente al servidor o viceversa. Perfecto para desarrolladores que buscan robustez en sus aplicaciones.
+
+## Orden de los mensajes en Socket.IO
+
+Socket.IO garantiza el **orden de los mensajes** independientemente del transporte utilizado (WebSocket o HTTP long-polling), incluso durante una actualización de transporte. Esto se logra gracias a:
+
+- La fiabilidad de la conexión TCP subyacente.
+- El diseño cuidadoso del mecanismo de actualización de transporte.
+
+### Ejemplo de orden de mensajes
+
+Considera el siguiente código en el cliente:
+
+```go:js
+socket.emit("evento1");
+socket.emit("evento2");
+socket.emit("evento3");
+```
+
+Los eventos siempre se recibirán en el mismo orden en el servidor (`evento1`, `evento2`, `evento3`), siempre que lleguen correctamente.
+
+Conoce más sobre el [mecanismo de actualización de Socket.IO](https://socket.io/docs/v4/engine.io-protocol/).
+
+## Garantias de entrega en Socket.IO
+
+Por defecto, Socket.IO ofrece una garantía de entrega **"a lo sumo una vez"** (_at most once_). Esto significa que:
+
+- Si la conexión se interrumpe durante el envío de un evento, no se garantiza que el otro lado lo reciba.
+- No hay reintentos automáticos tras una reconexión, a menos que se implementen manualmente.
+- Los clientes desconectados almacenan eventos en un búfer hasta la reconexión, pero el servidor no retiene eventos perdidos para clientes desconectados.
+
+Para necesidades específicas, las garantías de entrega deben implementarse en la aplicación.
+
+### Entrega al menos una vez desde el cliente
+
+Para garantizar que un evento se envíe **al menos una vez** desde el cliente al servidor, puedes usar la opción `retries` en la configuración del cliente:
+
+```go:js
+const socket = io({
+  retries: 3,
+  ackTimeout: 10000
+});
+```
+
+Con esta configuración, el cliente intentará enviar el evento hasta 4 veces (3 reintentos + 1 intento inicial) hasta recibir una confirmación (_acknowledgment_) del servidor.
+
+**Advertencia**: Si el usuario recarga la pestaña, los eventos pendientes se perderán.
+
+Consulta más sobre la configuración del cliente en la [documentación de Socket.IO](https://socket.io/docs/v4/client-options/).
+
+### Entrega al menos una vez desde el servidor
+
+Para garantizar la entrega desde el servidor al cliente, debes implementar un sistema personalizado que incluya:
+
+1. Asignar un **ID único** a cada evento.
+2. Almacenar los eventos en una base de datos.
+3. Guardar el **offset** del último evento recibido en el cliente y enviarlo al servidor tras la reconexión.
+
+#### Ejemplo de implementacion
+
+**Cliente**:
+
+```go:js
+const socket = io({
+  auth: {
+    offset: undefined
+  }
+});
+
+socket.on("mi-evento", ({ id, data }) => {
+  // Procesar los datos
+  console.log("Evento recibido:", data);
+  // Actualizar el offset
+  socket.auth.offset = id;
+});
+```
+
+**Servidor**:
+
+```go:js
+io.on("connection", async (socket) => {
+  const offset = socket.handshake.auth.offset;
+  if (offset) {
+    // Reconexión: enviar eventos perdidos
+    for (const event of await fetchMissedEventsFromDatabase(offset)) {
+      socket.emit("mi-evento", event);
+    }
+  } else {
+    // Primera conexión
+  }
+});
+
+setInterval(async () => {
+  const event = {
+    id: generateUniqueId(),
+    data: new Date().toISOString()
+  };
+  await persistEventToDatabase(event);
+  io.emit("mi-evento", event);
+}, 1000);
+```
+
+**Notas**:
+
+- Las funciones `fetchMissedEventsFromDatabase`, `generateUniqueId`, y `persistEventToDatabase` son específicas de la base de datos y deben implementarse según tus necesidades.
+- Este enfoque asegura que los clientes reciban eventos perdidos tras una reconexión.
+
+Explora más sobre `socket.auth` en el [cliente](https://socket.io/docs/v4/client-api/#socket-auth) y `socket.handshake` en el [servidor](https://socket.io/docs/v4/server-api/#socket-handshake).
+
+## Por que implementar garantias personalizadas
+
+Las aplicaciones en tiempo real, como chats o sistemas de notificaciones, a menudo requieren garantías de entrega robustas. Socket.IO proporciona una base sólida, pero la implementación de garantías como _al menos una vez_ depende de la lógica de la aplicación. Esto permite flexibilidad para adaptarse a casos de uso específicos.
+
+### Tabla de garantias de entrega
+
+| Garantía            | Descripción                                               | Implementación en Socket.IO                                |
+| ------------------- | --------------------------------------------------------- | ---------------------------------------------------------- |
+| A lo sumo una vez   | El mensaje se envía una vez, sin reintentos si falla      | Comportamiento por defecto                                 |
+| Al menos una vez    | El mensaje se envía hasta que se confirma su recepción    | Usar `retries` (cliente) o lógica personalizada (servidor) |
+| Exactamente una vez | El mensaje se entrega exactamente una vez, sin duplicados | Requiere lógica personalizada                              |
+
+## Conclusión
+
+Socket.IO garantiza el orden de los mensajes gracias a TCP y su mecanismo de actualización. Sin embargo, las garantías de entrega dependen de la configuración y la lógica de la aplicación. Usar opciones como `retries` para el cliente o un sistema de _offset_ y base de datos para el servidor permite implementar entregas fiables. Si desarrollas aplicaciones en tiempo real, estas técnicas son esenciales para asegurar robustez.
