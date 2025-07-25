@@ -1,0 +1,128 @@
+---
+title: Como instalar Socket.IO cliente v4.x
+description: Guia para instalar Socket.IO cliente v4.x con opciones de CDN, NPM y configuracion optimizada
+href: /instalacion-socketio-cliente
+subtitle: Instalacion Socket.IO
+---
+
+
+Socket.IO es una biblioteca que facilita la comunicación en tiempo real entre cliente y servidor. Esta guía detalla cómo instalar la versión 4.x del cliente Socket.IO, compatible con la última versión 4.8.1 (octubre 2024), optimizada para proyectos web y Node.js. Aprende las opciones de instalación, compatibilidad y mejores prácticas.
+
+## Requisitos previos
+
+Antes de instalar Socket.IO cliente, asegúrate de:
+
+- Tener un entorno de desarrollo configurado (navegador moderno o Node.js).
+- Consultar la [tabla de compatibilidad](#compatibilidad-con-el-servidor) para verificar la versión del servidor Socket.IO.
+- Revisar las [notas de lanzamiento](https://socket.io/docs/v4/changelog/) para detalles sobre la versión 4.8.1.
+
+## Opciones de instalacion
+
+### 1. Uso del bundle independiente
+
+El servidor Socket.IO expone por defecto un bundle en `/socket.io/socket.io.js`. Este método es ideal para proyectos simples.
+
+```go:html
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+</script>
+```
+
+**Nota**: Puedes desactivar esta funcionalidad en el servidor si no la necesitas:
+
+```go:js
+const { Server } = require("socket.io");
+const io = new Server({
+  serveClient: false
+});
+```
+
+### 2. Instalacion desde un CDN
+
+Incluye Socket.IO desde un CDN para una configuración rápida y sin dependencias locales. Usa la versión minificada para producción:
+
+```go:html
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+```
+
+Otras opciones de CDN:
+
+- [cdnjs](https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.min.js)
+- [jsDelivr](https://cdn.jsdelivr.net/npm/socket.io-client@4.8.1/dist/socket.io.min.js)
+- [unpkg](https://unpkg.com/socket.io-client@4.8.1/dist/socket.io.min.js)
+
+| Bundle | Tamaño | Descripción |
+|--------|--------|-------------|
+| socket.io.js | 34.7 kB (gzip) | Versión sin minificar, con debug |
+| socket.io.min.js | 14.7 kB (min+gzip) | Versión optimizada para producción |
+| socket.io.msgpack.min.js | 15.3 kB (min+gzip) | Incluye parser msgpack, sin debug |
+
+**Recomendación**: Usa `socket.io.js` durante el desarrollo con `localStorage.debug = 'socket.io-client:socket'` para ver eventos en la consola. Para producción, opta por `socket.io.min.js`.
+
+### 3. Instalacion con NPM
+
+Para proyectos con bundlers como Webpack o Browserify, instala Socket.IO cliente con NPM:
+
+```go:bash
+npm install socket.io-client
+```
+
+También es compatible con Yarn, pnpm o Bun. Ejemplo de uso en un proyecto:
+
+```go:js
+import { io } from "socket.io-client";
+const socket = io();
+```
+
+**Nota para TypeScript**: Los tipos están incluidos en `socket.io-client`, por lo que no necesitas `@types/socket.io-client`. Evita errores como:
+
+```
+Object literal may only specify known properties, and 'extraHeaders' does not exist in type 'ConnectOpts'
+```
+
+**Optimización**: En producción, excluye el paquete `debug` usando [webpack-remove-debug](https://www.npmjs.com/package/webpack-remove-debug).
+
+## Compatibilidad con el servidor
+
+La compatibilidad entre cliente y servidor Socket.IO es crucial. Consulta la siguiente tabla:
+
+| JS Client version | Socket.IO server 1.x | 2.x | 3.x | 4.x |
+|-------------------|----------------------|-----|-----|-----|
+| 1.x               | SÍ                   | NO  | NO  | NO  |
+| 2.x               | NO                   | SÍ  | SÍ* | SÍ* |
+| 3.x               | NO                   | NO  | SÍ  | SÍ  |
+| 4.x               | NO                   | NO  | SÍ  | SÍ  |
+
+*Requiere `allowEIO3: true` en el servidor.
+
+Consulta las guías de migración:
+
+- [De v2 a v3](https://socket.io/docs/v4/migrating-from-2-x-to-3-0/)
+- [De v3 a v4](https://socket.io/docs/v4/migrating-from-3-x-to-4-0/)
+
+## Soporte de navegadores
+
+Socket.IO cliente soporta navegadores modernos, desde IE9 en adelante. IE6/7/8 no son compatibles. La compatibilidad se prueba con [Sauce Labs](https://saucelabs.com/).
+
+## Dependencias y versiones
+
+Una instalación básica incluye 9 paquetes, 5 mantenidos por el equipo de Socket.IO:
+
+- `socket.io-client@4.8.1`
+- `@socket.io/component-emitter@3.1.2`
+- `debug@4.3.7`
+- `engine.io-client@6.6.3`
+- `ws@8.17.1` (para Node.js, en navegadores se usa la API WebSocket nativa)
+
+| socket.io-client | engine.io-client | ws (Node.js) |
+|------------------|------------------|--------------|
+| 4.8.x            | 6.6.x            | 8.17.x       |
+| 4.7.x            | 6.5.x            | 8.17.x       |
+| 4.6.x            | 6.4.x            | 8.11.x       |
+
+Más detalles sobre el funcionamiento en [Cómo funciona Socket.IO](https://socket.io/docs/v4/how-it-works/).
+
+## Conclusión
+
+Instalar Socket.IO cliente v4.x es sencillo y flexible, ya sea mediante un bundle independiente, un CDN o NPM. Asegúrate de verificar la compatibilidad con el servidor y optimizar para producción excluyendo el paquete de debug. Para más información, visita la [documentación oficial](https://socket.io/docs/v4/client-installation/).

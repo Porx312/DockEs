@@ -1,0 +1,131 @@
+---
+title: Como inicializar Socket.IO cliente v4.x
+description: Guia para inicializar el cliente Socket.IO v4.x con opciones de dominio y namespaces
+href: /inicializacion-socketio-cliente
+subtitle: Inicializacion Socket.IO
+---
+
+
+Una vez instalado el cliente Socket.IO v4.x, puedes inicializarlo para establecer comunicación en tiempo real. Esta guía explica cómo configurar el cliente en diferentes escenarios, incluyendo dominios, namespaces personalizados y opciones avanzadas. Consulta la [documentación oficial](https://socket.io/docs/v4/client-installation/) para más detalles.
+
+## Requisitos previos
+
+- Instala Socket.IO cliente v4.x siguiendo nuestra [guía de instalación](/instalacion-socketio-cliente).
+- Verifica que el servidor Socket.IO esté configurado y accesible.
+- Para TypeScript, usa tipos incluidos en `socket.io-client`. Más detalles en la [guía de TypeScript](https://socket.io/docs/v4/typescript/).
+
+## Importacion del cliente
+
+El objeto `io` se obtiene de las siguientes formas:
+
+### 1. Importacion mediante script
+
+```go:html
+<script src="/socket.io/socket.io.js"></script>
+```
+
+### 2. Importacion ESM desde CDN
+
+```go:html
+<script type="module">
+  import { io } from "https://cdn.socket.io/4.8.1/socket.io.esm.min.js";
+</script>
+```
+
+### 3. Importacion con NPM
+
+```go:js
+import { io } from "socket.io-client";
+```
+
+Compatible con CommonJS, ES Modules y TypeScript.
+
+## Inicializacion basica
+
+### Desde el mismo dominio
+
+Si el cliente y el servidor están en el mismo dominio, usa:
+
+```go:js
+const socket = io();
+```
+
+El URL del servidor se deduce automáticamente de `window.location`.
+
+### Desde un dominio diferente
+
+Para conectar desde un dominio distinto, especifica el URL del servidor:
+
+```go:js
+const socket = io("https://server-domain.com");
+```
+
+**Nota**: Habilita CORS en el servidor para conexiones entre dominios. Más información en la [documentación de CORS](https://socket.io/docs/v4/handling-cors/).
+
+Puedes usar los siguientes formatos (equivalentes en navegadores con HTTPS):
+
+```go:js
+const socket = io("https://server-domain.com");
+const socket = io("wss://server-domain.com");
+const socket = io("server-domain.com"); // Solo en navegadores con HTTPS
+```
+
+**Advertencia**: La última opción no funciona en Node.js.
+
+## Uso de namespaces personalizados
+
+Por defecto, el cliente se conecta al namespace principal (`/`). Para la mayoría de los casos, esto es suficiente. Si necesitas un namespace personalizado:
+
+### Mismo dominio
+
+```go:js
+const socket = io("/admin");
+```
+
+### Dominio diferente
+
+```go:js
+const socket = io("https://server-domain.com/admin");
+```
+
+Consulta más sobre namespaces en la [documentación oficial](https://socket.io/docs/v4/namespaces/).
+
+## Opciones avanzadas
+
+Socket.IO permite configurar opciones avanzadas al inicializar el cliente, como reconexión automática o cabeceras personalizadas. Ejemplo:
+
+```go:js
+const socket = io("https://server-domain.com", {
+  reconnection: true,
+  reconnectionAttempts: 5,
+  extraHeaders: {
+    "x-custom-header": "value"
+  }
+});
+```
+
+Revisa la [lista completa de opciones](https://socket.io/docs/v4/client-options/) para personalizar la conexión.
+
+## Consejos para TypeScript
+
+Para usuarios de TypeScript, define tipos para los eventos:
+
+```go:ts
+import { io, Socket } from "socket.io-client";
+
+interface ServerToClientEvents {
+  message: (data: string) => void;
+}
+
+interface ClientToServerEvents {
+  sendMessage: (data: string) => void;
+}
+
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
+```
+
+Más detalles en la [guía de TypeScript](https://socket.io/docs/v4/typescript/).
+
+## Conclusión
+
+Inicializar el cliente Socket.IO v4.x es sencillo, ya sea en el mismo dominio, un dominio diferente o con namespaces personalizados. Asegúrate de configurar CORS para conexiones entre dominios y revisa las opciones avanzadas para optimizar tu aplicación. Para más información, consulta la [documentación oficial](https://socket.io/docs/v4/client-installation/).

@@ -1,0 +1,180 @@
+---
+title: Como usar la instancia Socket.IO cliente v4.x
+description: Guia para interactuar con la instancia Socket.IO cliente v4.x y sus eventos
+href: /instancia-socketio-cliente
+subtitle: Instancia Socket.IO
+---
+
+
+La instancia `Socket` es la clase principal para interactuar con el servidor en Socket.IO v4.x. Hereda métodos del `EventEmitter` de Node.js, como `emit`, `on`, `once` y `off`, permitiendo comunicación bidireccional en tiempo real. Esta guía detalla sus atributos, eventos y mejores prácticas para su uso. Consulta la [documentación oficial](https://socket.io/docs/v4/client-api/) para más detalles.
+
+## Requisitos previos
+
+- Instala e inicializa el cliente Socket.IO v4.x siguiendo nuestras guías de [instalación](/instalacion-socketio-cliente) e [inicialización](/inicializacion-socketio-cliente).
+- Asegúrate de que el servidor Socket.IO esté configurado correctamente.
+
+## Atributos principales
+
+### Socket#id
+
+Cada conexión recibe un identificador aleatorio de 20 caracteres, sincronizado con el servidor. Este ID es efímero y no debe usarse para lógica de aplicación, salvo para depuración.
+
+```go:js
+// Cliente
+socket.on("connect", () => {
+  console.log(socket.id); // Ejemplo: x8WIv7-mJelg7on_ALbx
+});
+
+socket.on("disconnect", () => {
+  console.log(socket.id); // undefined
+});
+```
+
+**Precaución**: El `id` se regenera tras cada reconexión (por ejemplo, al refrescar la página o perder la conexión WebSocket). Usa un ID de sesión persistente (en cookies o `localStorage`) para seguimiento. Más información en la [guía de mensajes privados](https://socket.io/docs/v4/tutorial/private-messaging-part-2/) y [manejo de cookies](https://socket.io/docs/v4/handling-cookies/).
+
+### Socket#connected
+
+Indica si el socket está conectado al servidor.
+
+```go:js
+socket.on("connect", () => {
+  console.log(socket.connected); // true
+});
+
+socket.on("disconnect", () => {
+  console.log(socket.connected); // false
+});
+```
+
+### Socket#io
+
+Proporciona acceso al `Manager` subyacente, útil para monitorear el transporte (polling o WebSocket).
+
+```go:js
+socket.on("connect", () => {
+  const engine = socket.io.engine;
+  console.log(engine.transport.name); // Ejemplo: "polling"
+
+  engine.once("upgrade", () => {
+    console.log(engine.transport.name); // Ejemplo: "websocket"
+  });
+
+  engine.on("packet", ({ type, data }) => {
+    // Paquete recibido
+  });
+
+  engine.on("packetCreate", ({ type, data }) => {
+    // Paquete enviado
+  });
+
+  engine.on("drain", () => {
+    // Buffer de escritura vaciado
+  });
+
+  engine.on("close", (reason) => {
+    // Conexión cerrada
+  });
+});
+```
+
+## Eventos principales
+
+La instancia `Socket` emite tres eventos especiales: `connect`, `connect_error` y `disconnect`. Desde la versión 3.x, los eventos de reconexión se manejan en el `Manager` (`socket.io`).
+
+### Evento connect
+
+Se dispara al conectar o reconectar.
+
+```go:js
+socket.on("connect", () => {
+  console.log("Conectado al servidor");
+});
+```
+
+**Buena práctica**: No registres manejadores de eventos dentro del manejador de `connect`, ya que se registrarán múltiples veces en reconexiones.
+
+```go:js
+// MAL
+socket.on("connect", () => {
+  socket.on("data", () => { /* ... */ });
+});
+
+// BIEN
+socket.on("connect", () => {
+  // Lógica de conexión
+});
+socket.on("data", () => { /* ... */ });
+```
+
+### Evento connect_error
+
+Se dispara al fallar la conexión. El atributo `socket.active` indica si se intentará reconectar automáticamente.
+
+```go:js
+socket.on("connect_error", (error) => {
+  if (socket.active) {
+    console.log("Fallo temporal, reconectando...");
+  } else {
+    console.log("Error permanente:", error.message);
+    // Reconectar manualmente con socket.connect()
+  }
+});
+```
+
+| Razón del error | ¿Reconexión automática? |
+|-----------------|-------------------------|
+| No se establece la conexión (fallo temporal) | SÍ |
+| Servidor denegó la conexión (middleware) | NO |
+
+### Evento disconnect
+
+Se dispara al desconectarse, con un motivo y detalles adicionales.
+
+```go:js
+socket.on("disconnect", (reason, details) => {
+  console.log("Desconectado:", reason);
+  if (socket.active) {
+    console.log("Reconexión automática en curso...");
+  } else {
+    console.log("Reconexión manual necesaria");
+  }
+});
+```
+
+| Motivo | Descripción | ¿Reconexión automática? |
+|--------|-------------|-------------------------|
+| io server disconnect | Servidor desconectó forzosamente | NO |
+| io client disconnect | Cliente desconectó manualmente | NO |
+| ping timeout | Servidor no envió PING a tiempo | SÍ |
+| transport close | Conexión cerrada (ej. cambio de red) | SÍ |
+| transport error | Error en la conexión (ej. servidor caído) | SÍ |
+
+**Precaución**: No uses nombres de eventos reservados (`connect`, `connect_error`, `disconnect`, `disconnecting`, `newListener`, `removeListener`) en tu aplicación, ya que causarán errores.
+
+## Eventos de reconexion
+
+Desde Socket.IO v3, los eventos de reconexión se manejan en el `Manager`:
+
+```go:js
+socket.io.on("reconnect_attempt", () => {
+  console.log("Intentando reconectar...");
+});
+
+socket.io.on("reconnect", () => {
+  console.log("Reconexión exitosa");
+});
+```
+
+Consulta la [guía de migración](https://socket.io/docs/v4/migrating-from-3-x-to-4-0/) para más detalles.
+
+## Ciclo de vida
+
+El ciclo de vida de la conexión incluye conexión, desconexión y reconexión. Revisa el [diagrama del ciclo de vida](https://socket.io/docs/v4/client-lifecycle/) para entender el flujo.
+
+## API completa
+
+Explora la [API completa de la instancia Socket](https://socket.io/docs/v4/client-api/) para métodos adicionales como `emit`, `on`, y más.
+
+## Conclusión
+
+La instancia `Socket` de Socket.IO v4.x es clave para la comunicación en tiempo real. Usa sus atributos (`id`, `connected`, `io`) y eventos (`connect`, `connect_error`, `disconnect`) para gestionar conexiones de manera eficiente. Evita errores comunes como registrar manejadores en `connect` y utiliza identificadores de sesión persistentes en lugar de `socket.id`. Para más información, visita la [documentación oficial](https://socket.io/docs/v4/client-api/).

@@ -57,5 +57,17 @@ export const SOCKET_ROUTES: EachRoute = {
         { title: "Bundlers", href: "/bundlers-socketio" },
       ],
     },
+    {
+      title: "Cliente",
+      href: "/client",
+      noLink: true,
+      items: [
+        { title: "Instalacion", href: "/Instalacion" },
+        { title: "Inicializacion", href: "/inicializacion-socketio-cliente" },
+        { title: "Instancia", href: "/instancia-socketio-cliente" },
+      { title: "Comportamiento offline", href: "/comportamiento-socketio-offline" },
+         { title: "Socket.IO con bundlers", href: "/uso-socketio-cliente-bundlers" },
+      ],
+    },
   ],
 };

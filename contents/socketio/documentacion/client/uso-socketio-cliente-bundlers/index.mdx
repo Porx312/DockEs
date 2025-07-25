@@ -1,0 +1,184 @@
+---
+title: Como usar Socket.IO cliente con bundlers
+description: Guia para configurar Socket.IO cliente v4.x con Webpack y Rollup en navegador y Node.js
+href: /uso-socketio-cliente-bundlers
+subtitle: Socket.IO con bundlers
+---
+
+
+Integrar Socket.IO cliente v4.x con bundlers como Webpack y Rollup optimiza el desarrollo y despliegue de aplicaciones en navegador o Node.js. Esta guía detalla las configuraciones para Webpack 5 y Rollup.js, asegurando compatibilidad y rendimiento. Consulta la [documentación oficial de Socket.IO](https://socket.io/docs/v4/client-installation/) para más información.
+
+## Requisitos previos
+
+- Instala Socket.IO cliente v4.x siguiendo la [guía de instalación](/instalacion-socketio-cliente).
+- Familiarízate con la [inicialización del cliente](/inicializacion-socketio-cliente) y la [instancia Socket](/instancia-socketio-cliente).
+- Asegúrate de tener un entorno de desarrollo con Node.js y un bundler (Webpack o Rollup).
+
+## Configuracion con Webpack 5
+
+### Navegador
+
+Configura Socket.IO para navegadores, asegurando compatibilidad con navegadores antiguos (como IE11) y eliminando el paquete `debug` para optimizar el tamaño del bundle.
+
+**Instalación**:
+
+```go:bash
+npm i -D socket.io-client webpack webpack-cli babel-loader @babel/core @babel/preset-env @babel/plugin-transform-object-assign webpack-remove-debug
+```
+
+**Archivo de configuración** (`webpack.config.js`):
+
+```go:js
+module.exports = {
+  entry: "./index.js",
+  output: {
+    filename: "bundle.js",
+  },
+  mode: "production",
+  node: false,
+  module: {
+    rules: [
+      {
+        test: /\.m?js$/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: ["@babel/preset-env"],
+            plugins: ["@babel/plugin-transform-object-assign"],
+          },
+        },
+      },
+      {
+        test: /\.js$/,
+        loader: "webpack-remove-debug",
+      },
+    ],
+  },
+};
+```
+
+**Notas**:
+- `@babel/preset-env` asegura compatibilidad con navegadores antiguos.
+- `@babel/plugin-transform-object-assign` soporta IE11.
+- `webpack-remove-debug` elimina el paquete `debug` para reducir el tamaño del bundle.
+- Usa [webpack-bundle-analyzer](https://www.npmjs.com/package/webpack-bundle-analyzer) para analizar el tamaño del bundle.
+
+### Node.js
+
+Configura Socket.IO para conexiones servidor-servidor en Node.js, evitando errores relacionados con el entorno del navegador.
+
+**Instalación**:
+
+```go:bash
+npm i -D socket.io-client webpack webpack-cli
+```
+
+**Archivo de configuración** (`webpack.config.js`):
+
+```go:js
+module.exports = {
+  entry: "./index.js",
+  output: {
+    filename: "bundle.js",
+  },
+  mode: "production",
+  target: "node",
+  externals: {
+    bufferutil: "bufferutil",
+    "utf-8-validate": "utf-8-validate",
+  },
+};
+```
+
+**Nota**: Establecer `target: "node"` evita errores como `ReferenceError: document is not defined`.
+
+## Configuracion con Rollup.js
+
+### Navegador
+
+Configura Rollup para generar un bundle optimizado para navegadores.
+
+**Instalación**:
+
+```go:bash
+npm i -D socket.io-client rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs @rollup/plugin-babel rollup-plugin-uglify @babel/core @babel/preset-env
+```
+
+**Archivo de configuración** (`rollup.config.js`):
+
+```go:js
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import babel from "@rollup/plugin-babel";
+import { uglify } from "rollup-plugin-uglify";
+
+export default {
+  input: "index.js",
+  output: {
+    file: "bundle.js",
+    format: "cjs",
+  },
+  plugins: [
+    resolve({
+      browser: true,
+    }),
+    commonjs(),
+    babel({
+      include: ["**.js", "node_modules/**"],
+      babelHelpers: "bundled",
+      presets: ["@babel/preset-env"],
+    }),
+    uglify(),
+  ],
+};
+```
+
+**Notas**:
+- `@rollup/plugin-babel` y `@babel/preset-env` aseguran compatibilidad con navegadores antiguos.
+- `rollup-plugin-uglify` minifica el bundle para producción.
+
+### Node.js
+
+Configura Rollup para entornos Node.js, optimizando para conexiones servidor-servidor.
+
+**Instalación**:
+
+```go:bash
+npm i -D socket.io-client rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs rollup-plugin-uglify
+```
+
+**Archivo de configuración** (`rollup.config.js`):
+
+```go:js
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import { uglify } from "rollup-plugin-uglify";
+
+export default {
+  input: "index.js",
+  output: {
+    file: "bundle.js",
+    format: "cjs",
+  },
+  plugins: [
+    resolve({
+      preferBuiltins: true,
+    }),
+    commonjs(),
+    uglify(),
+  ],
+};
+```
+
+**Nota**: `preferBuiltins: true` prioriza módulos nativos de Node.js.
+
+## Mejores practicas
+
+- **Optimización para producción**: Usa siempre el modo `production` en Webpack o plugins como `uglify` en Rollup para reducir el tamaño del bundle.
+- **Compatibilidad con navegadores**: Incluye `@babel/preset-env` y plugins necesarios para soportar navegadores antiguos si tu aplicación lo requiere.
+- **Evita errores en Node.js**: Configura `target: "node"` en Webpack o `preferBuiltins: true` en Rollup para entornos Node.js.
+- **Análisis del bundle**: Usa herramientas como [webpack-bundle-analyzer](https://www.npmjs.com/package/webpack-bundle-analyzer) para identificar oportunidades de optimización.
+
+## Conclusión
+
+Configurar Socket.IO cliente v4.x con Webpack o Rollup es sencillo con las configuraciones adecuadas para navegador o Node.js. Asegúrate de optimizar el bundle para producción y verificar la compatibilidad con tu entorno. Para más detalles, consulta la [documentación de Webpack](https://webpack.js.org/concepts/) o la [documentación de Rollup](https://rollupjs.org/guide/en/).

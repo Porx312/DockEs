@@ -1,0 +1,66 @@
+---
+title: Comportamiento offline Socket.IO v4.x
+description: Guia para manejar eventos offline en Socket.IO cliente v4.x con eventos almacenados
+href: /comportamiento-socketio-offline
+subtitle: Comportamiento offline
+---
+
+
+Socket.IO v4.x gestiona automáticamente los eventos emitidos cuando el cliente está desconectado, almacenándolos en un búfer hasta que se restablece la conexión. Esta guía explica cómo funciona este comportamiento y cómo controlarlo para evitar problemas como picos de eventos al reconectar. Consulta la [documentación oficial](https://socket.io/docs/v4/client-api/) para más detalles.
+
+## Requisitos previos
+
+- Instala e inicializa el cliente Socket.IO v4.x siguiendo nuestras guías de [instalación](/instalacion-socketio-cliente) e [inicialización](/inicializacion-socketio-cliente).
+- Familiarízate con la [instancia Socket](/instancia-socketio-cliente) y sus eventos, como `connect` y `disconnect`.
+
+## Eventos almacenados en el bufer
+
+Por defecto, los eventos emitidos mientras el socket está desconectado se almacenan en un búfer y se envían al servidor al reconectar. Esto es útil para reconexiones breves, pero puede causar un pico de eventos si la desconexión es prolongada.
+
+Ejemplo de comportamiento predeterminado:
+
+```go:js
+socket.emit("mensaje", "Hola, servidor!");
+// Si está desconectado, "mensaje" se almacena y se envía al reconectar
+```
+
+**Problema potencial**: Un búfer grande puede saturar el servidor o la red al reconectar, afectando el rendimiento.
+
+## Soluciones para gestionar eventos offline
+
+Para evitar picos de eventos, Socket.IO ofrece varias estrategias según tu caso de uso:
+
+### 1. Verificar el estado de conexion
+
+Usa el atributo `socket.connected` para emitir eventos solo cuando el socket está conectado.
+
+```go:js
+if (socket.connected) {
+  socket.emit("mensaje", "Hola, servidor!");
+} else {
+  console.log("Socket desconectado, evento no enviado");
+  // Opcional: Guardar el evento en una cola personalizada
+}
+```
+
+**Ventaja**: Evitas que los eventos se almacenen en el búfer predeterminado, dándote control total.
+
+**Caso de uso**: Aplicaciones donde los eventos offline no son críticos o deben manejarse manualmente.
+
+### 2. Usar eventos volatiles
+
+Los eventos `volatile` se descartan si el socket no está conectado, evitando el almacenamiento en el búfer.
+
+```go:js
+socket.volatile.emit("mensaje", "Hola, servidor!");
+// Si está desconectado, el evento se ignora
+```
+
+**Ventaja**: Ideal para datos no críticos, como actualizaciones en tiempo real que pierden relevancia si no se entregan de inmediato.
+
+**Caso de uso**: Notificaciones en vivo, métricas en tiempo real o datos que no requieren persistencia.
+
+## Mejores practicas
+
+- **Evalúa la criticidad de los eventos**: Usa eventos `volatile` para datos prescindibles y `socket.connected` para eventos que requieran manejo personalizado.
+- **Implementa una cola personalizada**: Si necesitas almacenar eventos
